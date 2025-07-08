@@ -264,3 +264,38 @@ manual-debate:
 claude-ai:
 	@echo "Opening claude.ai..."
 	@open https://claude.ai || xdg-open https://claude.ai || echo "Please open https://claude.ai"
+
+# Run auto-evolution script
+auto-evolve:
+	@echo "🚀 Starting Auto Evolution..."
+	@if [ ! -f .env ]; then \
+		echo "❌ .env file not found"; \
+		exit 1; \
+	fi
+	@if ! grep -q "AUTO_EVOLVE_ENABLED=true" .env; then \
+		echo "❌ Auto-evolution is disabled. Set AUTO_EVOLVE_ENABLED=true in .env"; \
+		exit 1; \
+	fi
+	@if [ ! -d "venv" ]; then \
+		echo "❌ Virtual environment not found. Run 'make setup' first"; \
+		exit 1; \
+	fi
+	@echo "Installing playwright if needed..."
+	@./venv/bin/pip install playwright python-dotenv > /dev/null 2>&1
+	@./venv/bin/playwright install chromium > /dev/null 2>&1
+	@./venv/bin/python scripts/auto_evolve.py
+
+# Configure auto-evolution
+configure-auto-evolve:
+	@echo "Configuring auto-evolution..."
+	@if [ ! -f .env ]; then \
+		cp .env.example .env; \
+	fi
+	@if grep -q "AUTO_EVOLVE_ENABLED=false" .env; then \
+		sed -i '' 's/AUTO_EVOLVE_ENABLED=false/AUTO_EVOLVE_ENABLED=true/' .env; \
+		echo "✓ Auto-evolution enabled"; \
+	else \
+		echo "✓ Auto-evolution already enabled"; \
+	fi
+	@echo "  Interval: $$(grep AUTO_EVOLVE_INTERVAL .env | cut -d= -f2)"
+	@echo "  URL: $$(grep AUTO_EVOLVE_URL .env | cut -d= -f2)"
