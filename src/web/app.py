@@ -7,19 +7,55 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, field_validator
 from typing import Optional, Dict, Any
 import asyncio
 from src.core.nucleus import DebateNucleus
 from services.pr_review_service import PRReviewService
 from domain.models import PullRequest
+from src.core.error_handler import get_error_handler
 import os
 import json
 
 app = FastAPI(title="Debate Nucleus API")
 nucleus = DebateNucleus()
 pr_review_service = PRReviewService()
+
+# Import and include error handling endpoints
+from src.web.error_endpoints import router as error_router
+app.include_router(error_router)
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    """Global exception handler for unhandled errors"""
+    error_handler = get_error_handler()
+    
+    # Extract useful context
+    context = {
+        "path": request.url.path,
+        "method": request.method,
+        "client": request.client.host if request.client else None
+    }
+    
+    # Log error
+    await error_handler.handle_error(
+        error=exc,
+        component="api",
+        operation=f"{request.method} {request.url.path}",
+        context=context
+    )
+    
+    # Return error response
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "Internal server error",
+            "message": str(exc),
+            "path": request.url.path
+        }
+    )
 
 # Mount static files
 static_dir = Path(__file__).parent / "static"

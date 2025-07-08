@@ -20,6 +20,33 @@ from src.core.evolution_tracker import EvolutionTracker
 from services.ai_client_factory import AIClientFactory
 from services.pr_service import PRService
 from domain.models import Decision, Debate, DecisionType, ImplementationAssignee
+# Error handling imports - these will be initialized later to avoid circular imports
+try:
+    from src.core.error_handler import with_error_handling, get_error_handler
+    from src.core.resilience import retry_async, timeout_async, with_resilience, RetryPolicy
+except ImportError:
+    # Fallback decorators if imports fail
+    def with_error_handling(*args, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
+    
+    def retry_async(*args, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
+    
+    def timeout_async(*args, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
+    
+    class RetryPolicy:
+        def __init__(self, *args, **kwargs):
+            pass
+    
+    def get_error_handler():
+        return None
 
 # Load environment variables
 load_dotenv()
@@ -207,6 +234,9 @@ class DebateNucleus:
             "time": debate_state["end_time"],
         }
     
+    @with_error_handling(component="nucleus", operation="claude_response", reraise=False)
+    @retry_async(RetryPolicy(max_attempts=3, initial_delay=2.0))
+    @timeout_async(30.0)
     async def _get_claude_response(self, question: str, context: str) -> str:
         """Get Claude Opus 4's perspective"""
         prompt = f"""You are participating in a technical debate about system architecture decisions.
@@ -230,8 +260,18 @@ Be analytical and critical. Don't just agree - really think about what could go 
             )
             return response.content[0].text
         except Exception as e:
+            # Log error for monitoring
+            await get_error_handler().handle_error(
+                error=e,
+                component="nucleus",
+                operation="claude_response",
+                context={"question": question, "context_length": len(context)}
+            )
             return f"Claude error: {str(e)}"
     
+    @with_error_handling(component="nucleus", operation="gemini_response", reraise=False)
+    @retry_async(RetryPolicy(max_attempts=3, initial_delay=2.0))
+    @timeout_async(30.0)
     async def _get_gemini_response(self, question: str, context: str, complexity: str = "simple") -> str:
         """Get Gemini 2.5 Pro's perspective"""
         prompt = f"""You are participating in a technical debate about system architecture decisions.
@@ -251,6 +291,13 @@ Be skeptical and thorough. Challenge assumptions. Consider if this is really nec
             response = await self.gemini_client.generate_content_async(prompt, complexity)
             return response.text
         except Exception as e:
+            # Log error for monitoring
+            await get_error_handler().handle_error(
+                error=e,
+                component="nucleus",
+                operation="gemini_response",
+                context={"question": question, "complexity": complexity}
+            )
             return f"Gemini error: {str(e)}"
     
     def _ensure_debates_dir(self):
