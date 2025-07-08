@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zamaz Debate System</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .stats {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 4px;
+            background: #f0f4f8;
+        }
+        .result h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+        .method {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #e3f2fd;
+            border-radius: 3px;
+            font-size: 14px;
+            color: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Zamaz Debate System</h1>
+        
+        <div class="stats" id="stats">
+            Loading stats...
+        </div>
+
+        <form id="debate-form">
+            <div class="form-group">
+                <label for="question">Decision Question</label>
+                <input type="text" id="question" name="question" 
+                       placeholder="e.g., Should we use TypeScript for this project?" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="context">Context (optional)</label>
+                <textarea id="context" name="context" 
+                          placeholder="Provide any additional context or constraints..."></textarea>
+            </div>
+            
+            <button type="submit" id="submit-btn">Make Decision</button>
+            <button type="button" id="evolve-btn">Trigger Evolution</button>
+        </form>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        
+        // Load stats on page load
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_URL}/stats`);
+                const data = await response.json();
+                document.getElementById('stats').innerHTML = `
+                    <strong>Version:</strong> ${data.version} | 
+                    <strong>Decisions Made:</strong> ${data.decisions_made} | 
+                    <strong>Debates Run:</strong> ${data.debates_run}
+                `;
+            } catch (error) {
+                document.getElementById('stats').innerHTML = 'Failed to load stats';
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('debate-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const question = document.getElementById('question').value;
+            const context = document.getElementById('context').value;
+            const submitBtn = document.getElementById('submit-btn');
+            const resultsDiv = document.getElementById('results');
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+            resultsDiv.innerHTML = '<div class="loading">AI agents are debating your question...</div>';
+            
+            try {
+                const response = await fetch(`${API_URL}/decide`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ question, context }),
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                resultsDiv.innerHTML = `
+                    <div class="result">
+                        <h3>Decision Result</h3>
+                        <p><strong>Decision:</strong> ${data.decision}</p>
+                        <p><strong>Method:</strong> <span class="method">${data.method}</span></p>
+                        <p><strong>Rounds:</strong> ${data.rounds}</p>
+                        <p><strong>Time:</strong> ${data.time}</p>
+                    </div>
+                `;
+                
+                // Reload stats
+                loadStats();
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>Error</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Make Decision';
+            }
+        });
+
+        // Handle evolution trigger
+        document.getElementById('evolve-btn').addEventListener('click', async () => {
+            const evolveBtn = document.getElementById('evolve-btn');
+            const resultsDiv = document.getElementById('results');
+            
+            evolveBtn.disabled = true;
+            evolveBtn.textContent = 'Evolving...';
+            resultsDiv.innerHTML = '<div class="loading">System is analyzing itself for improvements...</div>';
+            
+            try {
+                const response = await fetch(`${API_URL}/evolve`, {
+                    method: 'POST',
+                });
+                
+                const data = await response.json();
+                
+                resultsDiv.innerHTML = `
+                    <div class="result">
+                        <h3>Evolution Result</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>Error</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                evolveBtn.disabled = false;
+                evolveBtn.textContent = 'Trigger Evolution';
+            }
+        });
+
+        // Load stats on page load
+        loadStats();
+        
+        // Refresh stats every 10 seconds
+        setInterval(loadStats, 10000);
+    </script>
+</body>
+</html>
