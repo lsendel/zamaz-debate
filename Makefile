@@ -1,7 +1,7 @@
 # Zamaz Debate System Makefile
 # Run various commands for the debate system
 
-.PHONY: help install setup run stop test clean debate evolve check-env web logs status
+.PHONY: help install setup run stop test clean debate evolve auto-evolve check-env web logs status
 
 # Default target - show help
 help:
@@ -15,6 +15,7 @@ help:
 	@echo "  make clean      - Clean up generated files"
 	@echo "  make debate     - Run a test debate"
 	@echo "  make evolve     - Trigger system evolution"
+	@echo "  make auto-evolve - Run continuous auto-evolution"
 	@echo "  make check-env  - Verify environment setup"
 	@echo "  make web        - Open web interface in browser"
 	@echo "  make logs       - Show web interface logs"
