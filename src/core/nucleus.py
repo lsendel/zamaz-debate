@@ -7,6 +7,7 @@ A self-improving debate system using Claude Opus 4 and Gemini 2.5 Pro
 import os
 import json
 import asyncio
+import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -162,7 +163,8 @@ class DebateNucleus:
         self._ensure_clients()
         self._ensure_debates_dir()
         
-        debate_id = f"debate_{self.debate_count}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        # Use UUID for unique debate IDs to prevent conflicts
+        debate_id = f"debate_{uuid.uuid4().hex[:8]}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         debate_state = {
             "id": debate_id,
             "question": question,

@@ -1,0 +1,16 @@
+{
+  "id": "debate_1_20250708_074952",
+  "question": "",
+  "context": "Some context",
+  "complexity": "moderate",
+  "rounds": [
+    {
+      "round": 1,
+      "claude": "For architectural decisions, consider these factors: scalability, maintainability, and performance...",
+      "gemini": "Gemini error: MockGeminiClient.generate_content_async() takes 2 positional arguments but 3 were given"
+    }
+  ],
+  "start_time": "2025-07-08T07:49:52.148387",
+  "final_decision": "Claude's Analysis:\nFor architectural decisions, consider these factors: scalability, maintainability, and performance...\n\nGemini's Analysis:\nGemini error: MockGeminiClient.generate_content_async() takes 2 positional arguments but 3 were given\n\nConsensus: No",
+  "end_time": "2025-07-08T07:49:52.148415"
+}
