@@ -19,7 +19,7 @@ from dotenv import load_dotenv
 from src.core.evolution_tracker import EvolutionTracker
 from services.ai_client_factory import AIClientFactory
 from services.pr_service import PRService
-from domain.models import Decision, Debate, DecisionType
+from domain.models import Decision, Debate, DecisionType, ImplementationAssignee
 
 # Load environment variables
 load_dotenv()
@@ -318,6 +318,7 @@ Be skeptical and thorough. Challenge assumptions. Consider if this is really nec
                         improvement['evolution_tracked'] = True
                         
                         # Create Decision object for PR creation
+                        # Evolution improvements are always assigned to Claude for implementation
                         decision = Decision(
                             id=f"evolution_{debate_id}",
                             question=evolution_question,
@@ -326,7 +327,8 @@ Be skeptical and thorough. Challenge assumptions. Consider if this is really nec
                             decision_type=DecisionType.EVOLUTION,
                             method="debate",
                             rounds=len(debate_data["rounds"]),
-                            timestamp=datetime.now()
+                            timestamp=datetime.now(),
+                            implementation_assignee=ImplementationAssignee.CLAUDE
                         )
                         
                         # Create Debate object
