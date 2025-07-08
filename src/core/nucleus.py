@@ -16,7 +16,7 @@ import sys
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
 from dotenv import load_dotenv
-from src.core.evolution_tracker import EvolutionTracker
+from src.core.evolution_tracker_v2 import EvolutionTrackerV2 as EvolutionTracker
 from services.ai_client_factory import AIClientFactory
 from services.pr_service import PRService
 from domain.models import Decision, Debate, DecisionType, ImplementationAssignee

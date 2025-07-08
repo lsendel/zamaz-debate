@@ -1,0 +1,136 @@
+{
+  "current_version": "0.12.0",
+  "version_history": [
+    {
+      "version": "0.1.0",
+      "timestamp": "2025-07-08T09:38:11.957604",
+      "changes": [
+        "Initial release"
+      ],
+      "evolution_count": 0
+    },
+    {
+      "version": "0.2.0",
+      "timestamp": "2025-07-08T09:38:11.957874",
+      "changes": [
+        "Added feature: user_interface",
+        "Claude suggests: Claude error: 'function' object has no attribute 'create'\n\nGemini suggests: **Impro"
+      ],
+      "evolution_count": 0,
+      "evolution_id": "evo_1_20250708_093811"
+    },
+    {
+      "version": "0.3.0",
+      "timestamp": "2025-07-08T09:38:11.964700",
+      "changes": [
+        "Added feature: api_enhancement",
+        "Claude suggests: Claude error: 'function' object has no attribute 'create'\n\nGemini suggests: Given t"
+      ],
+      "evolution_count": 1,
+      "evolution_id": "evo_2_20250708_093811"
+    },
+    {
+      "version": "0.4.0",
+      "timestamp": "2025-07-08T09:38:11.975018",
+      "changes": [
+        "Added feature: logging_system",
+        "Claude suggests: The ONE most important improvement to make next is **implementing proper async/awai"
+      ],
+      "evolution_count": 2,
+      "evolution_id": "evo_3_20250708_093811"
+    },
+    {
+      "version": "0.5.0",
+      "timestamp": "2025-07-08T09:38:11.983079",
+      "changes": [
+        "Added feature: testing_framework",
+        "Add unit tests"
+      ],
+      "evolution_count": 3,
+      "evolution_id": "evo_4_20250708_093811"
+    },
+    {
+      "version": "0.6.0",
+      "timestamp": "2025-07-08T09:38:11.996048",
+      "changes": [
+        "Added feature: caching_system",
+        "Claude suggests: Based on the context and evolution history, the ONE most important improvement to m"
+      ],
+      "evolution_count": 4,
+      "evolution_id": "evo_5_20250708_093811"
+    },
+    {
+      "version": "0.7.0",
+      "timestamp": "2025-07-08T09:38:12.005920",
+      "changes": [
+        "Added feature: plugin_architecture",
+        "Claude's Analysis:\n## Critical Analysis: Next System Improvement\n\n### 1. Potential Problems and Risk"
+      ],
+      "evolution_count": 5,
+      "evolution_id": "evo_6_20250708_093812"
+    },
+    {
+      "version": "0.8.0",
+      "timestamp": "2025-07-08T09:38:12.015772",
+      "changes": [
+        "Added feature: performance_optimization",
+        "Claude's Analysis:\n## Critical Analysis: Next System Architecture Improvement\n\n### Current State Ass"
+      ],
+      "evolution_count": 6,
+      "evolution_id": "evo_7_20250708_093812"
+    },
+    {
+      "version": "0.9.0",
+      "timestamp": "2025-07-08T09:38:12.025899",
+      "changes": [
+        "Added feature: performance_profiling",
+        "Claude's Analysis:\nLooking at the evolution history, I see a concerning pattern: 4 consecutive \"perf"
+      ],
+      "evolution_count": 7,
+      "evolution_id": "evo_8_20250708_093812"
+    },
+    {
+      "version": "0.10.0",
+      "timestamp": "2025-07-08T09:38:12.030888",
+      "changes": [
+        "Added feature: automated_testing",
+        "Claude's Analysis:\n## Critical Analysis: Next System Improvement\n\n### Current State Assessment\nLooki"
+      ],
+      "evolution_count": 8,
+      "evolution_id": "evo_9_20250708_093812"
+    },
+    {
+      "version": "0.11.0",
+      "timestamp": "2025-07-08T09:38:12.035287",
+      "changes": [
+        "Added feature: metrics_tracking",
+        "Claude's Analysis:\nLooking at this debate system's evolution history, I see several concerning patte"
+      ],
+      "evolution_count": 9,
+      "evolution_id": "evo_10_20250708_093812"
+    },
+    {
+      "version": "0.12.0",
+      "timestamp": "2025-07-08T09:38:12.040262",
+      "changes": [
+        "Added feature: documentation",
+        "Claude's Analysis:\n## Critical Analysis of Next System Improvement\n\n### 1. Potential Problems and Ri"
+      ],
+      "evolution_count": 10,
+      "evolution_id": "evo_11_20250708_093812"
+    }
+  ],
+  "evolution_version_map": {
+    "evo_1_20250708_093811": "0.2.0",
+    "evo_2_20250708_093811": "0.3.0",
+    "evo_3_20250708_093811": "0.4.0",
+    "evo_4_20250708_093811": "0.5.0",
+    "evo_5_20250708_093811": "0.6.0",
+    "evo_6_20250708_093812": "0.7.0",
+    "evo_7_20250708_093812": "0.8.0",
+    "evo_8_20250708_093812": "0.9.0",
+    "evo_9_20250708_093812": "0.10.0",
+    "evo_10_20250708_093812": "0.11.0",
+    "evo_11_20250708_093812": "0.12.0"
+  }
+}

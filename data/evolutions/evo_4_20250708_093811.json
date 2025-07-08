@@ -1,0 +1,10 @@
+{
+  "type": "feature",
+  "feature": "testing_framework",
+  "description": "Add unit tests",
+  "priority": "medium",
+  "id": "evo_4_20250708_093811",
+  "timestamp": "2025-07-08T09:38:11.983074",
+  "fingerprint": "bccae07f47701ce7614b761daac63b1a",
+  "version": "0.5.0"
+}
