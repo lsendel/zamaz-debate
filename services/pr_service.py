@@ -6,6 +6,7 @@ Handles creation of GitHub PRs for decisions
 import os
 import json
 import subprocess
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional, List
@@ -45,6 +46,12 @@ class PRService:
         """Create a pull request for a decision"""
         if not self.enabled:
             return False
+
+        # Check for existing similar PRs
+        existing_prs = self._find_similar_prs(decision)
+        if existing_prs:
+            print(f"⚠️ Similar PR already exists: {existing_prs[0]}")
+            return None
 
         # Generate PR content
         pr = self._generate_pr(decision, debate)
@@ -156,14 +163,22 @@ class PRService:
             # Extract key improvement from decision text
             decision_text = decision.decision_text.lower()
             
-            # Common improvement patterns to look for
-            if "testing" in decision_text or "test" in decision_text:
+            # Extract specific feature from consensus analysis
+            # Look for specific patterns in the decision text
+            feature = None
+            
+            # Check for ADR/architectural decisions
+            if "adr" in decision_text or "architectural decision" in decision_text:
+                feature = "Implement Architectural Decision Records (ADRs)"
+            elif "usability" in decision_text or "ui/ux" in decision_text or "user experience" in decision_text:
+                feature = "Improve usability and user experience"
+            elif "testing framework" in decision_text:
                 feature = "Add comprehensive testing framework"
             elif "monitoring" in decision_text or "observability" in decision_text:
                 feature = "Implement monitoring and observability"
             elif "error handling" in decision_text or "error" in decision_text:
                 feature = "Improve error handling and recovery"
-            elif "performance" in decision_text:
+            elif "performance" in decision_text and "optimization" in decision_text:
                 feature = "Optimize system performance"
             elif "documentation" in decision_text or "docs" in decision_text:
                 feature = "Enhance documentation"
@@ -171,20 +186,11 @@ class PRService:
                 feature = "Strengthen security measures"
             elif "refactor" in decision_text or "technical debt" in decision_text:
                 feature = "Refactor and reduce technical debt"
-            elif "api" in decision_text:
-                feature = "Enhance API functionality"
-            elif "ui" in decision_text or "interface" in decision_text:
-                feature = "Improve user interface"
-            elif "database" in decision_text or "persistence" in decision_text:
-                feature = "Implement data persistence layer"
-            elif "cache" in decision_text or "caching" in decision_text:
-                feature = "Add caching system"
-            elif "plugin" in decision_text:
-                feature = "Implement plugin architecture"
-            elif "logging" in decision_text:
-                feature = "Add comprehensive logging system"
-            else:
-                # Try to extract first meaningful sentence
+            elif "consolidation" in decision_text:
+                feature = "Consolidate and refactor architecture"
+            
+            if not feature:
+                # Try to extract the recommendation from the consensus
                 lines = decision.decision_text.split('\n')
                 for line in lines:
                     line = line.strip()
@@ -194,7 +200,12 @@ class PRService:
                 else:
                     feature = "System improvement"
             
-            return f"[Evolution] {feature}"[:max_title_length]
+            # Include last 6 chars of decision ID for uniqueness
+            id_suffix = decision.id[-6:] if decision.id and len(decision.id) > 6 else ""
+            if id_suffix:
+                return f"[Evolution-{id_suffix}] {feature}"[:max_title_length]
+            else:
+                return f"[Evolution] {feature}"[:max_title_length]
         
         elif decision.decision_type == DecisionType.COMPLEX:
             # For complex decisions, extract the core question
@@ -239,10 +250,59 @@ class PRService:
             labels.append(f"complexity-{decision.implementation_complexity}")
 
         return labels
+    
+    def _find_similar_prs(self, decision: Decision) -> List[str]:
+        """Find existing PRs with similar content"""
+        try:
+            # List open PRs with evolution label
+            if decision.decision_type == DecisionType.EVOLUTION:
+                result = subprocess.run(
+                    ["gh", "pr", "list", "--state", "open", "--label", "evolution", "--json", "title,number"],
+                    capture_output=True,
+                    text=True
+                )
+                if result.returncode == 0 and result.stdout:
+                    import json
+                    prs = json.loads(result.stdout)
+                    # Check if any PR has similar decision ID in title
+                    similar_prs = []
+                    for pr in prs:
+                        # Check if PR title contains part of the decision ID
+                        if decision.id and any(part in pr["title"] for part in decision.id.split("_")[-2:]):
+                            similar_prs.append(f"#{pr['number']}: {pr['title']}")
+                    return similar_prs
+        except Exception as e:
+            print(f"Error checking for similar PRs: {e}")
+        return []
 
     async def _create_branch(self, branch_name: str) -> bool:
-        """Create a new git branch"""
+        """Create a new git branch with conflict detection"""
         try:
+            # Check if branch exists locally
+            result = subprocess.run(
+                ["git", "rev-parse", "--verify", branch_name],
+                capture_output=True,
+                text=True
+            )
+            if result.returncode == 0:
+                print(f"⚠️ Branch {branch_name} already exists locally")
+                # Generate alternative branch name with timestamp
+                import time
+                branch_name = f"{branch_name}_v{int(time.time())}"
+                print(f"Using alternative branch name: {branch_name}")
+            
+            # Check if branch exists on remote
+            result = subprocess.run(
+                ["git", "ls-remote", "--heads", "origin", branch_name],
+                capture_output=True,
+                text=True
+            )
+            if result.stdout.strip():
+                print(f"⚠️ Branch {branch_name} already exists on remote")
+                import time
+                branch_name = f"{branch_name}_v{int(time.time())}"
+                print(f"Using alternative branch name: {branch_name}")
+            
             # First, ensure we're on the base branch
             subprocess.run(
                 ["git", "checkout", self.base_branch],
