@@ -9,13 +9,17 @@ from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict, Any
 import asyncio
 from src.core.nucleus import DebateNucleus
+from services.pr_review_service import PRReviewService
+from domain.models import PullRequest
 import os
+import json
 
 app = FastAPI(title="Debate Nucleus API")
 nucleus = DebateNucleus()
+pr_review_service = PRReviewService()
 
 # Mount static files
 static_dir = Path(__file__).parent / "static"
@@ -68,6 +72,74 @@ async def trigger_evolution():
     """Trigger self-improvement"""
     result = await nucleus.evolve_self()
     return result
+
+
+class PRReviewRequest(BaseModel):
+    pr_id: str
+    implementation_code: str
+    reviewer: str
+
+
+@app.post("/review-pr")
+async def review_pr(request: PRReviewRequest):
+    """Review a pull request"""
+    # Load PR details from draft
+    pr_drafts_dir = Path(__file__).parent.parent.parent / "data" / "pr_drafts"
+    pr_file = pr_drafts_dir / f"{request.pr_id}.json"
+    
+    if not pr_file.exists():
+        raise HTTPException(status_code=404, detail="PR draft not found")
+    
+    with open(pr_file, "r") as f:
+        pr_data = json.load(f)
+    
+    # Create PR object
+    pr = PullRequest(
+        id=request.pr_id,
+        title=pr_data["title"],
+        body=pr_data["body"],
+        branch_name=pr_data["branch"],
+        base_branch=pr_data["base"],
+        assignee=pr_data["assignee"],
+        labels=pr_data.get("labels", []),
+        decision=None  # Not needed for review
+    )
+    
+    # Perform review
+    review_result = await pr_review_service.review_pr(
+        pr, request.implementation_code, request.reviewer
+    )
+    
+    return review_result
+
+
+@app.get("/pending-reviews")
+async def get_pending_reviews():
+    """Get list of PRs pending review"""
+    pending = await pr_review_service.check_pending_reviews()
+    return {"pending_reviews": pending}
+
+
+@app.get("/pr-drafts")
+async def get_pr_drafts():
+    """Get list of PR drafts"""
+    pr_drafts_dir = Path(__file__).parent.parent.parent / "data" / "pr_drafts"
+    drafts = []
+    
+    if pr_drafts_dir.exists():
+        for pr_file in pr_drafts_dir.glob("*.json"):
+            with open(pr_file, "r") as f:
+                pr_data = json.load(f)
+            
+            drafts.append({
+                "id": pr_file.stem,
+                "title": pr_data.get("title", "Unknown"),
+                "assignee": pr_data.get("assignee", "Unknown"),
+                "reviewer": pr_data.get("reviewer", "Unknown"),
+                "created_at": pr_data.get("created_at", "Unknown")
+            })
+    
+    return {"pr_drafts": drafts}
 
 
 if __name__ == "__main__":
