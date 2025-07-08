@@ -46,30 +46,45 @@ class EvolutionTracker:
             json.dump(history_copy, f, indent=2)
 
     def _generate_fingerprint(self, evolution: Dict) -> str:
-        """Generate unique fingerprint for an evolution"""
+        """Generate unique fingerprint for an evolution with improved uniqueness"""
         # Create fingerprint from key aspects of the evolution
-        # Use type, feature, and key words from description
         key_parts = [
             evolution.get("type", "").lower().strip(),
             evolution.get("feature", "").lower().strip(),
         ]
         
-        # Extract key phrases from description to make fingerprint more specific
+        # Include more content for better uniqueness
         description = evolution.get("description", "").lower()
+        decision_text = evolution.get("decision_text", "").lower()
+        
+        # Include first 200 chars of description and decision text
+        if description:
+            key_parts.append(description[:200])
+        if decision_text:
+            key_parts.append(decision_text[:200])
+            
+        # Include debate_id if available for extra uniqueness
+        if evolution.get("debate_id"):
+            key_parts.append(evolution["debate_id"])
+        
+        # Extract key phrases from description to make fingerprint more specific
         key_phrases = [
             "performance", "security", "monitoring", "observability",
             "refactor", "optimization", "caching", "logging",
             "testing", "documentation", "api", "ui", "validation",
-            "error handling", "metrics", "profiling", "debugging"
+            "error handling", "metrics", "profiling", "debugging",
+            "adr", "architectural", "usability", "ux", "testing framework"
         ]
         
         # Add found key phrases to fingerprint
+        combined_text = (description + " " + decision_text).lower()
         for phrase in key_phrases:
-            if phrase in description:
+            if phrase in combined_text:
                 key_parts.append(phrase)
         
-        content = "|".join(sorted(set(key_parts)))  # Sort and dedupe for consistency
-        return hashlib.sha256(content.encode()).hexdigest()[:16]
+        content = "|".join(sorted(set(filter(None, key_parts))))  # Sort and dedupe for consistency
+        # Use longer hash (32 chars) to reduce collision probability
+        return hashlib.sha256(content.encode()).hexdigest()[:32]
 
     def is_duplicate(self, evolution: Dict) -> bool:
         """Check if evolution is similar to previous ones"""
@@ -109,6 +124,29 @@ class EvolutionTracker:
     def get_recent_evolutions(self, limit: int = 10) -> List[Dict]:
         """Get most recent evolutions"""
         return self.history["evolutions"][-limit:]
+    
+    def should_evolve(self) -> bool:
+        """Check if evolution should proceed based on throttling rules"""
+        recent_evolutions = self.get_recent_evolutions(10)
+        
+        # Check time since last evolution (5 minute cooldown)
+        if recent_evolutions:
+            last_evolution = recent_evolutions[-1]
+            last_time = datetime.fromisoformat(last_evolution['timestamp'])
+            time_since_last = (datetime.now() - last_time).seconds
+            if time_since_last < 300:  # 5 minutes
+                print(f"⏳ Evolution throttled: Only {time_since_last}s since last evolution (need 300s)")
+                return False
+        
+        # Check for too many recent evolutions (max 5 in last hour)
+        one_hour_ago = datetime.now().timestamp() - 3600
+        recent_count = sum(1 for evo in recent_evolutions 
+                          if datetime.fromisoformat(evo['timestamp']).timestamp() > one_hour_ago)
+        if recent_count >= 5:
+            print(f"⏳ Evolution throttled: {recent_count} evolutions in last hour (max 5)")
+            return False
+        
+        return True
 
     def get_evolution_summary(self) -> Dict:
         """Get summary of evolution history"""
