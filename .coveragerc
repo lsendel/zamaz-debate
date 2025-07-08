@@ -1,0 +1,19 @@
+[run]
+omit = 
+    */pr_service_original.py
+    */app_original.py
+    */test_*.py
+    */tests/*
+    */__pycache__/*
+    */venv/*
+    */backup_*/*
+    
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    pass

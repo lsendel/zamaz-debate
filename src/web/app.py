@@ -8,7 +8,7 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Optional, Dict, Any
 import asyncio
 from src.core.nucleus import DebateNucleus
@@ -30,6 +30,13 @@ if static_dir.exists():
 class DecisionRequest(BaseModel):
     question: str
     context: str = ""
+    
+    @field_validator('question')
+    @classmethod
+    def question_not_empty(cls, v):
+        if not v or not v.strip():
+            raise ValueError('Question cannot be empty')
+        return v
 
 
 class DecisionResponse(BaseModel):
