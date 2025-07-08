@@ -93,6 +93,9 @@ class PRService:
         )
 
         pr_content = template.render(decision, debate)
+        
+        # Improve PR title based on decision content
+        pr_content["title"] = self._generate_descriptive_title(decision, pr_content["title"])
 
         # Add implementation instructions to PR body
         if assignee_enum != ImplementationAssignee.NONE:
@@ -144,6 +147,75 @@ class PRService:
             return os.getenv("HUMAN_GITHUB_USERNAME", "human")
         else:
             return "unassigned"
+
+    def _generate_descriptive_title(self, decision: Decision, default_title: str) -> str:
+        """Generate a more descriptive PR title based on decision content"""
+        max_title_length = 100
+        
+        if decision.decision_type == DecisionType.EVOLUTION:
+            # Extract key improvement from decision text
+            decision_text = decision.decision_text.lower()
+            
+            # Common improvement patterns to look for
+            if "testing" in decision_text or "test" in decision_text:
+                feature = "Add comprehensive testing framework"
+            elif "monitoring" in decision_text or "observability" in decision_text:
+                feature = "Implement monitoring and observability"
+            elif "error handling" in decision_text or "error" in decision_text:
+                feature = "Improve error handling and recovery"
+            elif "performance" in decision_text:
+                feature = "Optimize system performance"
+            elif "documentation" in decision_text or "docs" in decision_text:
+                feature = "Enhance documentation"
+            elif "security" in decision_text:
+                feature = "Strengthen security measures"
+            elif "refactor" in decision_text or "technical debt" in decision_text:
+                feature = "Refactor and reduce technical debt"
+            elif "api" in decision_text:
+                feature = "Enhance API functionality"
+            elif "ui" in decision_text or "interface" in decision_text:
+                feature = "Improve user interface"
+            elif "database" in decision_text or "persistence" in decision_text:
+                feature = "Implement data persistence layer"
+            elif "cache" in decision_text or "caching" in decision_text:
+                feature = "Add caching system"
+            elif "plugin" in decision_text:
+                feature = "Implement plugin architecture"
+            elif "logging" in decision_text:
+                feature = "Add comprehensive logging system"
+            else:
+                # Try to extract first meaningful sentence
+                lines = decision.decision_text.split('\n')
+                for line in lines:
+                    line = line.strip()
+                    if line and len(line) > 10 and not line.startswith('#'):
+                        feature = line[:80] + "..." if len(line) > 80 else line
+                        break
+                else:
+                    feature = "System improvement"
+            
+            return f"[Evolution] {feature}"[:max_title_length]
+        
+        elif decision.decision_type == DecisionType.COMPLEX:
+            # For complex decisions, extract the core question
+            question = decision.question
+            # Remove common prefixes
+            question = question.replace("What is the ONE most important improvement to make to", "Improve")
+            question = question.replace("Should we", "")
+            question = question.replace("How should we", "")
+            question = question.strip()
+            
+            # Truncate if too long
+            if len(question) > 70:
+                question = question[:67] + "..."
+            
+            return f"[Complex] {question}"
+        
+        # For other types, use the default but ensure it's not too long
+        if len(default_title) > max_title_length:
+            return default_title[:max_title_length-3] + "..."
+        
+        return default_title
 
     def _get_labels_for_decision(self, decision: Decision) -> List[str]:
         """Get appropriate labels for a decision"""

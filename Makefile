@@ -281,9 +281,9 @@ auto-evolve:
 		exit 1; \
 	fi
 	@if [ -d "venv" ]; then \
-		./venv/bin/python scripts/auto_evolve_simple.py; \
+		./venv/bin/python scripts/auto_evolve_better.py; \
 	else \
-		python3 scripts/auto_evolve_simple.py; \
+		python3 scripts/auto_evolve_better.py; \
 	fi
 
 # Configure auto-evolution
