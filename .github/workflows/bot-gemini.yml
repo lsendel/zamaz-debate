@@ -6,7 +6,7 @@ on:
 
 jobs:
   respond:
-    if: github.event.comment.body contains '@bot_gemini'
+    if: contains(github.event.comment.body, '@bot_gemini')
     runs-on: ubuntu-latest
     steps:
       - name: Say Hello
