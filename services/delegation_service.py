@@ -74,6 +74,21 @@ class DelegationService:
 
         return assignee, impl_complexity
 
+    def determine_reviewer(self, implementer: ImplementationAssignee) -> str:
+        """
+        Determine who should review the PR based on the implementer
+        
+        Rules:
+        - If Claude implements → Gemini reviews
+        - If Gemini implements → Codex reviews and commits
+        """
+        if implementer == ImplementationAssignee.CLAUDE:
+            return "gemini-bot"  # Gemini reviews Claude's work
+        elif implementer == ImplementationAssignee.GEMINI:
+            return "codex"  # Codex reviews and commits Gemini's work
+        else:
+            return "human"  # Human reviews human work
+
     def _assess_implementation_complexity(
         self, decision: Decision, debate: Optional[Debate] = None
     ) -> str:
@@ -96,7 +111,8 @@ class DelegationService:
             complex_count += 1
 
         # Decision rules
-        if complex_count >= 2 or decision.decision_type == DecisionType.EVOLUTION:
+        # Evolution and Complex decision types are always complex
+        if complex_count >= 2 or decision.decision_type in [DecisionType.EVOLUTION, DecisionType.COMPLEX]:
             return "complex"
         elif simple_count >= 2:
             return "simple"
@@ -106,36 +122,23 @@ class DelegationService:
     def _determine_assignee(
         self, decision: Decision, impl_complexity: str, debate: Optional[Debate] = None
     ) -> ImplementationAssignee:
-        """Determine who should implement based on complexity and content"""
+        """Determine who should implement based on complexity and content
+        
+        New Rules:
+        - Complex tasks → Claude (with Gemini as reviewer)
+        - Regular tasks → Gemini (with Codex as reviewer and committer)
+        """
 
-        # Rule 1: Complex implementations go to Claude or Human
+        # Rule 1: Complex implementations go to Claude
         if impl_complexity == "complex":
-            # Evolution decisions typically need human oversight
-            if decision.decision_type == DecisionType.EVOLUTION:
-                return ImplementationAssignee.HUMAN
-            else:
-                return ImplementationAssignee.CLAUDE
-
-        # Rule 2: Check if it's something Gemini can handle
-        full_text = f"{decision.question} {decision.decision_text}".lower()
-        gemini_capable = any(
-            keyword in full_text for keyword in self.gemini_capable_keywords
-        )
-
-        # Rule 3: Simple and moderate implementations that Gemini can handle
-        if impl_complexity in ["simple", "moderate"] and gemini_capable:
-            # Additional check: if decision involves creating/implementing features
-            if any(
-                action in full_text
-                for action in ["implement", "create", "add", "build"]
-            ):
-                return ImplementationAssignee.GEMINI
-
-        # Rule 4: Default assignments
-        if impl_complexity == "simple":
-            return ImplementationAssignee.GEMINI
-        else:
             return ImplementationAssignee.CLAUDE
+
+        # Rule 2: Regular (simple and moderate) tasks go to Gemini
+        if impl_complexity in ["simple", "moderate"]:
+            return ImplementationAssignee.GEMINI
+
+        # Default to Claude for any edge cases
+        return ImplementationAssignee.CLAUDE
 
     def get_implementation_instructions(
         self, decision: Decision, assignee: ImplementationAssignee
@@ -157,6 +160,7 @@ class DelegationService:
 
 **Complexity**: {decision.implementation_complexity}
 **Priority**: {"High" if decision.decision_type == DecisionType.EVOLUTION else "Normal"}
+**Reviewer**: Codex (will review and commit the code)
 """
 
         elif assignee == ImplementationAssignee.CLAUDE:
@@ -173,7 +177,7 @@ class DelegationService:
 5. Consider edge cases and error scenarios
 
 **Complexity**: {decision.implementation_complexity}
-**Requires careful review**: Yes
+**Reviewer**: Gemini (will review the implementation)
 """
 
         else:  # HUMAN

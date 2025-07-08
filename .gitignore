@@ -163,7 +163,7 @@ nohup.out
 localhost_checks/
 pr_drafts/
 pr_history/
-decisions/
+# decisions/  # Commented out to allow PR creation
 
 # Spyder project settings
 .spyderproject

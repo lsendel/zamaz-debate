@@ -182,8 +182,16 @@ class DebateNucleus:
             "gemini": gemini_response
         })
         
-        # Full decision with both perspectives
-        decision = f"Claude suggests: {claude_response}\n\nGemini suggests: {gemini_response}"
+        # Analyze if they reached consensus
+        claude_yes = any(word in claude_response.lower() for word in ['yes', 'should', 'recommend', 'beneficial'])
+        claude_no = any(word in claude_response.lower() for word in ['no', 'should not', 'avoid', 'unnecessary'])
+        gemini_yes = any(word in gemini_response.lower() for word in ['yes', 'should', 'recommend', 'beneficial'])
+        gemini_no = any(word in gemini_response.lower() for word in ['no', 'should not', 'avoid', 'unnecessary'])
+        
+        consensus = (claude_yes and gemini_yes) or (claude_no and gemini_no)
+        
+        # Format decision with consensus indicator
+        decision = f"Claude's Analysis:\n{claude_response}\n\nGemini's Analysis:\n{gemini_response}\n\nConsensus: {'Yes' if consensus else 'No'}"
         
         debate_state["final_decision"] = decision
         debate_state["end_time"] = datetime.now().isoformat()
@@ -201,7 +209,18 @@ class DebateNucleus:
     
     async def _get_claude_response(self, question: str, context: str) -> str:
         """Get Claude Opus 4's perspective"""
-        prompt = f"Question: {question}\nContext: {context}\n\nProvide a concise, well-reasoned answer."
+        prompt = f"""You are participating in a technical debate about system architecture decisions.
+
+Question: {question}
+Context: {context}
+
+Provide a thorough analysis:
+1. First, identify potential PROBLEMS or RISKS with this proposal
+2. Consider alternative approaches that might be better
+3. Analyze the trade-offs (pros AND cons)
+4. Only then provide your recommendation with clear reasoning
+
+Be analytical and critical. Don't just agree - really think about what could go wrong."""
         
         try:
             response = self.claude_client.messages.create(
@@ -215,7 +234,18 @@ class DebateNucleus:
     
     async def _get_gemini_response(self, question: str, context: str) -> str:
         """Get Gemini 2.5 Pro's perspective"""
-        prompt = f"Question: {question}\nContext: {context}\n\nProvide a concise, well-reasoned answer."
+        prompt = f"""You are participating in a technical debate about system architecture decisions.
+
+Question: {question}
+Context: {context}
+
+Provide a critical analysis:
+1. What are the DOWNSIDES or CHALLENGES of this approach?
+2. What prerequisites or conditions must be met?
+3. What simpler alternatives should be considered first?
+4. Give your verdict with specific reasoning
+
+Be skeptical and thorough. Challenge assumptions. Consider if this is really necessary."""
         
         try:
             response = await self.gemini_client.generate_content_async(prompt)
