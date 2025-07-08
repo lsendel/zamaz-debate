@@ -321,10 +321,14 @@ Be skeptical and thorough. Challenge assumptions. Consider if this is really nec
         evolution_summary = self.evolution_tracker.get_evolution_summary()
         recent_evolutions = self.evolution_tracker.get_recent_evolutions(5)
         
+        # Get actual debate count from files on disk
+        self._ensure_debates_dir()
+        actual_debate_count = len(list(self.debates_dir.glob("*.json")))
+        
         context = f"""
         Current version: {self.VERSION}
         Decisions made: {self.decision_count}
-        Debates run: {self.debate_count}
+        Debates run: {actual_debate_count}
         
         Evolution History:
         Total evolutions: {evolution_summary['total_evolutions']}

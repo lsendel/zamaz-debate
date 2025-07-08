@@ -103,10 +103,16 @@ async def make_decision(request: DecisionRequest):
 @app.get("/stats")
 async def get_stats():
     """Get system statistics"""
+    # Get actual debate count from files on disk
+    debates_dir = Path(__file__).parent.parent.parent / "data" / "debates"
+    actual_debate_count = 0
+    if debates_dir.exists():
+        actual_debate_count = len(list(debates_dir.glob("*.json")))
+    
     return {
         "version": nucleus.VERSION,
         "decisions_made": nucleus.decision_count,
-        "debates_run": nucleus.debate_count,
+        "debates_run": actual_debate_count,
     }
 
 
