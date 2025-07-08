@@ -78,8 +78,8 @@ class DebateNucleus:
         self.debate_count += 1
         result = await self._run_debate(question, context, complexity)
         
-        # Create PR for complex decisions if enabled
-        if complexity == "complex" and self.pr_service.enabled:
+        # Create PR for complex and moderate decisions if enabled
+        if complexity in ["complex", "moderate"] and self.pr_service.enabled:
             decision_type = DecisionType.COMPLEX
             
             # Create Decision object
