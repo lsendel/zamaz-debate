@@ -18,6 +18,8 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 from dotenv import load_dotenv
 from src.core.evolution_tracker import EvolutionTracker
 from services.ai_client_factory import AIClientFactory
+from services.pr_service import PRService
+from domain.models import Decision, Debate, DecisionType, DebateRound
 
 # Load environment variables
 load_dotenv()
@@ -40,6 +42,9 @@ class DebateNucleus:
         
         # AI client factory
         self.ai_factory = AIClientFactory()
+        
+        # PR service for creating pull requests
+        self.pr_service = PRService()
         
         # Complexity detection
         self.complexity_keywords = {
