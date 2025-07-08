@@ -13,6 +13,7 @@ from typing import Optional, Dict, Any
 import asyncio
 from src.core.nucleus import DebateNucleus
 from services.pr_review_service import PRReviewService
+from services.adr_service import ADRService
 from domain.models import PullRequest
 import os
 import json
@@ -20,6 +21,7 @@ import json
 app = FastAPI(title="Debate Nucleus API")
 nucleus = DebateNucleus()
 pr_review_service = PRReviewService()
+adr_service = ADRService()
 
 # Mount static files
 static_dir = Path(__file__).parent / "static"
@@ -72,6 +74,31 @@ async def trigger_evolution():
     """Trigger self-improvement"""
     result = await nucleus.evolve_self()
     return result
+
+
+@app.get("/adrs")
+async def list_adrs():
+    """Get list of all Architectural Decision Records"""
+    return {
+        "adrs": adr_service.get_all_adrs(),
+        "total": len(adr_service.get_all_adrs())
+    }
+
+
+@app.get("/adrs/{number}")
+async def get_adr(number: str):
+    """Get a specific ADR by number"""
+    adr = adr_service.get_adr(number)
+    if not adr:
+        raise HTTPException(status_code=404, detail="ADR not found")
+    
+    # Read the file content
+    adr_file = adr_service.adr_dir / adr["filename"]
+    if adr_file.exists():
+        with open(adr_file, 'r') as f:
+            adr["content"] = f.read()
+    
+    return adr
 
 
 class PRReviewRequest(BaseModel):

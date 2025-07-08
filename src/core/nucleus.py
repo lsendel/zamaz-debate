@@ -19,6 +19,7 @@ from dotenv import load_dotenv
 from src.core.evolution_tracker import EvolutionTracker
 from services.ai_client_factory import AIClientFactory
 from services.pr_service import PRService
+from services.adr_service import ADRService
 from domain.models import Decision, Debate, DecisionType, ImplementationAssignee
 
 # Load environment variables
@@ -45,6 +46,9 @@ class DebateNucleus:
         
         # PR service for creating pull requests
         self.pr_service = PRService()
+        
+        # ADR service for architectural decisions
+        self.adr_service = ADRService()
         
         # Complexity detection
         self.complexity_keywords = {
@@ -121,6 +125,18 @@ class DebateNucleus:
                     result['pr_id'] = pr.id
                     result['pr_branch'] = pr.branch_name
                     result['pr_assignee'] = pr.assignee
+        
+        # Check if this decision warrants an ADR
+        if self._is_architectural_decision(question, result.get("decision", "")):
+            adr_filename = self.adr_service.create_adr_from_decision({
+                "question": question,
+                "context": context,
+                "decision_text": result.get("decision", ""),
+                "decision_type": complexity
+            })
+            if adr_filename:
+                result['adr_created'] = True
+                result['adr_filename'] = adr_filename
         
         return result
     
@@ -431,6 +447,18 @@ Be skeptical and thorough. Challenge assumptions. Consider if this is really nec
             return "documentation"
         
         return "enhancement"
+    
+    def _is_architectural_decision(self, question: str, decision_text: str) -> bool:
+        """Check if a decision is architectural in nature"""
+        architectural_keywords = [
+            "architecture", "design", "pattern", "structure", "framework",
+            "database", "api", "interface", "module", "component",
+            "integration", "deployment", "infrastructure", "adr"
+        ]
+        
+        combined_text = (question + " " + decision_text).lower()
+        
+        return any(keyword in combined_text for keyword in architectural_keywords)
 
 
 async def main():

@@ -1,7 +1,7 @@
 # Zamaz Debate System Makefile
 # Run various commands for the debate system
 
-.PHONY: help install setup run stop test clean debate evolve auto-evolve check-env web logs status
+.PHONY: help install setup run stop test clean debate evolve auto-evolve check-env web logs status adr-list adr-show
 
 # Default target - show help
 help:
@@ -21,6 +21,8 @@ help:
 	@echo "  make logs       - Show web interface logs"
 	@echo "  make status     - Check system status"
 	@echo "  make dev        - Run in development mode (with logs)"
+	@echo "  make adr-list   - List all ADRs"
+	@echo "  make adr-show   - Show a specific ADR (use ADR=number)"
 
 # Check if virtual environment exists
 VENV_EXISTS := $(shell test -d venv && echo 1 || echo 0)
@@ -301,3 +303,23 @@ configure-auto-evolve:
 	fi
 	@echo "  Interval: $$(grep AUTO_EVOLVE_INTERVAL .env | cut -d= -f2)"
 	@echo "  URL: $$(grep AUTO_EVOLVE_URL .env | cut -d= -f2)"
+
+# ADR commands
+adr-list:
+	@echo "=== Architectural Decision Records ==="
+	@if [ -d "venv" ]; then \
+		./venv/bin/python scripts/adr_cli.py list; \
+	else \
+		python3 scripts/adr_cli.py list; \
+	fi
+
+adr-show:
+	@if [ -z "$(ADR)" ]; then \
+		echo "❌ Please specify ADR number: make adr-show ADR=001"; \
+		exit 1; \
+	fi
+	@if [ -d "venv" ]; then \
+		./venv/bin/python scripts/adr_cli.py show $(ADR); \
+	else \
+		python3 scripts/adr_cli.py show $(ADR); \
+	fi

@@ -1,0 +1,21 @@
+{
+  "adrs": [
+    {
+      "number": "000",
+      "title": "Use Architectural Decision Records (ADRs)",
+      "filename": "000-use-adrs.md",
+      "status": "Accepted",
+      "created": "2025-07-08T08:30:00",
+      "updated": "2025-07-08T08:30:00"
+    },
+    {
+      "number": "001",
+      "title": "Implement Comprehensive Testing Framework",
+      "filename": "001-implement-testing-framework.md",
+      "status": "Accepted",
+      "created": "2025-07-08T08:30:00",
+      "updated": "2025-07-08T08:30:00"
+    }
+  ],
+  "next_number": 2
+}
