@@ -2,6 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Implementation Status
+
+**IMPORTANT**: There are currently 19 open PRs requiring implementation. Please refer to:
+- [Claude Implementation Guide](docs/CLAUDE_IMPLEMENTATION_GUIDE.md) - Best practices for implementing features
+- [PR Implementation Summary](docs/PR_IMPLEMENTATION_SUMMARY.md) - Specific details for each PR
+
+**Critical**: The evolution system needs to be fixed first (PR #77) before implementing other features.
+
 ## Project Overview
 
 The Zamaz Debate System is a self-improving AI debate framework that facilitates architectural decision-making through structured debates between Claude Opus 4 and Gemini 2.5 Pro. It implements a "dogfooding" approach, using AI debates to improve its own architecture.
