@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Zamaz UI Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 30px 0;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #333;
+            border-radius: 8px;
+        }
+        .api-test {
+            background: #f5f5f5;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .result {
+            background: #e8f5e9;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧬 Zamaz Debate System - UI Test Dashboard</h1>
+    
+    <div class="test-section">
+        <h2>📊 System Stats</h2>
+        <button onclick="getStats()">Get Current Stats</button>
+        <div id="stats-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>💡 Make a Decision</h2>
+        <form id="decision-form">
+            <div style="margin: 10px 0;">
+                <label>Question:</label><br>
+                <input type="text" id="question" style="width: 100%; padding: 8px;" 
+                       value="Should we implement WebSocket support for real-time updates?">
+            </div>
+            <div style="margin: 10px 0;">
+                <label>Context:</label><br>
+                <textarea id="context" style="width: 100%; padding: 8px; height: 60px;">Users want real-time notifications and live updates without page refresh</textarea>
+            </div>
+            <button type="submit">Submit Decision</button>
+        </form>
+        <div id="decision-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔄 Evolution Test</h2>
+        <button onclick="triggerEvolution()">Trigger System Evolution</button>
+        <div id="evolution-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📱 Live UI View</h2>
+        <iframe src="http://localhost:8000" title="Zamaz Debate System"></iframe>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+
+        async function getStats() {
+            try {
+                const response = await fetch(`${API_BASE}/stats`);
+                const data = await response.json();
+                document.getElementById('stats-result').innerHTML = 
+                    `<strong>Stats:</strong><br>` +
+                    `Version: ${data.version}<br>` +
+                    `Decisions Made: ${data.decisions_made}<br>` +
+                    `Debates Run: ${data.debates_run}`;
+            } catch (error) {
+                document.getElementById('stats-result').innerHTML = 
+                    `<span class="error">Error: ${error.message}</span>`;
+            }
+        }
+
+        document.getElementById('decision-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const question = document.getElementById('question').value;
+            const context = document.getElementById('context').value;
+            
+            document.getElementById('decision-result').innerHTML = 'Processing...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/decide`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({question, context})
+                });
+                const data = await response.json();
+                document.getElementById('decision-result').innerHTML = 
+                    `<strong>Decision:</strong><br>` +
+                    `Method: ${data.method}<br>` +
+                    `Complexity: ${data.complexity || 'N/A'}<br>` +
+                    `PR Created: ${data.pr_created || false}<br>` +
+                    `Decision: ${data.decision.substring(0, 200)}...`;
+            } catch (error) {
+                document.getElementById('decision-result').innerHTML = 
+                    `<span class="error">Error: ${error.message}</span>`;
+            }
+        });
+
+        async function triggerEvolution() {
+            document.getElementById('evolution-result').innerHTML = 'Triggering evolution...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/evolve`, {method: 'POST'});
+                const data = await response.json();
+                document.getElementById('evolution-result').innerHTML = 
+                    `<strong>Evolution Result:</strong><br>` +
+                    `Method: ${data.method}<br>` +
+                    `Evolution Tracked: ${data.evolution_tracked}<br>` +
+                    `PR Branch: ${data.pr_branch || 'N/A'}<br>` +
+                    `Decision: ${data.decision.substring(0, 200)}...`;
+            } catch (error) {
+                document.getElementById('evolution-result').innerHTML = 
+                    `<span class="error">Error: ${error.message}</span>`;
+            }
+        }
+
+        // Load stats on page load
+        getStats();
+    </script>
+</body>
+</html>
