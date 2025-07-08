@@ -1,0 +1,7 @@
+{
+  "id": "demo_new_format",
+  "question": "Should we implement real-time collaboration features?",
+  "context": "Users are requesting the ability to see live updates when multiple people are working on debates",
+  "decision": "Yes, implement WebSocket-based real-time collaboration with presence indicators and live cursor tracking",
+  "timestamp": "2025-07-08T01:15:00"
+}
