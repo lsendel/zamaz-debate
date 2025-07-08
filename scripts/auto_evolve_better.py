@@ -76,7 +76,12 @@ def main():
     print("🚀 Starting Auto Evolution")
     print(f"   - URL: {base_url}")
     print(f"   - Interval: {interval} seconds ({os.getenv('AUTO_EVOLVE_INTERVAL', '30m')})")
-    print("   - Press Ctrl+C to stop\n")
+    print("   - Press Ctrl+C to stop")
+    print("\n📊 Auto-evolution will:")
+    print("   • Monitor the system continuously")
+    print("   • Trigger AI debates about improvements")
+    print("   • Create PRs for suggested changes")
+    print("   • Show progress after each evolution\n")
     
     evolution_count = 0
     start_time = datetime.now()
