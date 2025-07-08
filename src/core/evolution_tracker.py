@@ -48,12 +48,27 @@ class EvolutionTracker:
     def _generate_fingerprint(self, evolution: Dict) -> str:
         """Generate unique fingerprint for an evolution"""
         # Create fingerprint from key aspects of the evolution
-        # Use only type and feature for fingerprint to catch duplicates
+        # Use type, feature, and key words from description
         key_parts = [
             evolution.get("type", "").lower().strip(),
             evolution.get("feature", "").lower().strip(),
         ]
-        content = "|".join(key_parts)
+        
+        # Extract key phrases from description to make fingerprint more specific
+        description = evolution.get("description", "").lower()
+        key_phrases = [
+            "performance", "security", "monitoring", "observability",
+            "refactor", "optimization", "caching", "logging",
+            "testing", "documentation", "api", "ui", "validation",
+            "error handling", "metrics", "profiling", "debugging"
+        ]
+        
+        # Add found key phrases to fingerprint
+        for phrase in key_phrases:
+            if phrase in description:
+                key_parts.append(phrase)
+        
+        content = "|".join(sorted(set(key_parts)))  # Sort and dedupe for consistency
         return hashlib.sha256(content.encode()).hexdigest()[:16]
 
     def is_duplicate(self, evolution: Dict) -> bool:

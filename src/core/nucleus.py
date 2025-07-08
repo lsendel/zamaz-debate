@@ -174,7 +174,7 @@ class DebateNucleus:
         
         # For v0.1.0, we'll do a simplified debate
         claude_response = await self._get_claude_response(question, context)
-        gemini_response = await self._get_gemini_response(question, context)
+        gemini_response = await self._get_gemini_response(question, context, complexity)
         
         debate_state["rounds"].append({
             "round": 1,
@@ -232,7 +232,7 @@ Be analytical and critical. Don't just agree - really think about what could go 
         except Exception as e:
             return f"Claude error: {str(e)}"
     
-    async def _get_gemini_response(self, question: str, context: str) -> str:
+    async def _get_gemini_response(self, question: str, context: str, complexity: str = "simple") -> str:
         """Get Gemini 2.5 Pro's perspective"""
         prompt = f"""You are participating in a technical debate about system architecture decisions.
 
@@ -248,7 +248,7 @@ Provide a critical analysis:
 Be skeptical and thorough. Challenge assumptions. Consider if this is really necessary."""
         
         try:
-            response = await self.gemini_client.generate_content_async(prompt)
+            response = await self.gemini_client.generate_content_async(prompt, complexity)
             return response.text
         except Exception as e:
             return f"Gemini error: {str(e)}"
@@ -372,9 +372,11 @@ Be skeptical and thorough. Challenge assumptions. Consider if this is really nec
         """Extract specific feature from decision text"""
         text_lower = decision_text.lower()
         
-        # Common feature patterns
+        # More comprehensive feature patterns
         features = {
+            "performance profiling": "performance_profiling",
             "performance tracking": "performance_tracking",
+            "performance optimization": "performance_optimization",
             "automated testing": "automated_testing",
             "test suite": "automated_testing",
             "plugin": "plugin_architecture",
@@ -389,11 +391,25 @@ Be skeptical and thorough. Challenge assumptions. Consider if this is really nec
             "error handling": "error_handling",
             "validation": "input_validation",
             "monitoring": "monitoring_system",
+            "observability": "observability_stack",
+            "refactor": "code_refactoring",
+            "code quality": "code_quality",
+            "configuration": "configuration_management",
+            "config management": "configuration_management",
+            "rate limit": "rate_limiting",
+            "debugging": "debugging_tools",
         }
         
+        # Check for feature patterns
         for pattern, feature in features.items():
             if pattern in text_lower:
                 return feature
+        
+        # Try to extract from common improvement phrases
+        if "observability" in text_lower and "monitoring" in text_lower:
+            return "observability_stack"
+        elif "performance" in text_lower and "profiling" in text_lower:
+            return "performance_profiling"
         
         return "general_improvement"
     
