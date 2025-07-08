@@ -19,7 +19,7 @@ from dotenv import load_dotenv
 from src.core.evolution_tracker import EvolutionTracker
 from services.ai_client_factory import AIClientFactory
 from services.pr_service import PRService
-from domain.models import Decision, Debate, DecisionType, DebateRound
+from domain.models import Decision, Debate, DecisionType
 
 # Load environment variables
 load_dotenv()
@@ -77,6 +77,51 @@ class DebateNucleus:
         # Complex decisions need debate
         self.debate_count += 1
         result = await self._run_debate(question, context, complexity)
+        
+        # Create PR for complex decisions if enabled
+        if complexity == "complex" and self.pr_service.enabled:
+            decision_type = DecisionType.COMPLEX
+            
+            # Create Decision object
+            decision = Decision(
+                id=result.get("debate_id", f"decision_{self.decision_count}"),
+                question=question,
+                context=context,
+                decision_text=result["decision"],
+                decision_type=decision_type,
+                method=result["method"],
+                rounds=result["rounds"],
+                timestamp=datetime.fromisoformat(result["time"])
+            )
+            
+            # Load debate data if available
+            debate_obj = None
+            if "debate_id" in result:
+                debate_file = self.debates_dir / f"{result['debate_id']}.json"
+                if debate_file.exists():
+                    with open(debate_file, 'r') as f:
+                        debate_data = json.load(f)
+                    
+                    debate_obj = Debate(
+                        id=result["debate_id"],
+                        question=question,
+                        context=context,
+                        rounds=debate_data["rounds"],
+                        final_decision=debate_data["final_decision"],
+                        complexity=debate_data.get("complexity", complexity),
+                        start_time=datetime.fromisoformat(debate_data["start_time"]),
+                        end_time=datetime.fromisoformat(debate_data["end_time"])
+                    )
+            
+            # Create PR if decision qualifies
+            if self.pr_service.should_create_pr(decision):
+                pr = await self.pr_service.create_pr_for_decision(decision, debate_obj)
+                if pr:
+                    result['pr_created'] = True
+                    result['pr_id'] = pr.id
+                    result['pr_branch'] = pr.branch_name
+                    result['pr_assignee'] = pr.assignee
+        
         return result
     
     def _assess_complexity(self, question: str) -> str:
@@ -241,6 +286,39 @@ class DebateNucleus:
                     
                     if self.evolution_tracker.add_evolution(evolution):
                         improvement['evolution_tracked'] = True
+                        
+                        # Create Decision object for PR creation
+                        decision = Decision(
+                            id=f"evolution_{debate_id}",
+                            question=evolution_question,
+                            context=context,
+                            decision_text=decision_text,
+                            decision_type=DecisionType.EVOLUTION,
+                            method="debate",
+                            rounds=len(debate_data["rounds"]),
+                            timestamp=datetime.now()
+                        )
+                        
+                        # Create Debate object
+                        debate_obj = Debate(
+                            id=debate_id,
+                            question=evolution_question,
+                            context=context,
+                            rounds=debate_data["rounds"],
+                            final_decision=decision_text,
+                            complexity=debate_data.get("complexity", "complex"),
+                            start_time=datetime.fromisoformat(debate_data["start_time"]),
+                            end_time=datetime.fromisoformat(debate_data["end_time"])
+                        )
+                        
+                        # Create PR if enabled
+                        if self.pr_service.should_create_pr(decision):
+                            pr = await self.pr_service.create_pr_for_decision(decision, debate_obj)
+                            if pr:
+                                improvement['pr_created'] = True
+                                improvement['pr_id'] = pr.id
+                                improvement['pr_branch'] = pr.branch_name
+                                improvement['pr_assignee'] = pr.assignee
                     else:
                         improvement['evolution_tracked'] = False
                         improvement['duplicate_detected'] = True

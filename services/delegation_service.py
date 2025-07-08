@@ -3,7 +3,8 @@ Delegation Service for Zamaz Debate System
 Determines who should implement decisions based on complexity
 """
 
-from typing import Any, Tuple
+from typing import Any, Tuple, Optional
+from domain.models import Decision, Debate, ImplementationAssignee, DecisionType
 
 
 class DelegationService:
