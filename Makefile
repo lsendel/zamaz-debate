@@ -111,6 +111,10 @@ evolve: check-env
 	@curl -X POST http://localhost:8000/evolve 2>/dev/null | python3 -m json.tool || \
 		echo "❌ Web interface not running. Run 'make run' first."
 
+# Simple evolve - triggers evolution once
+evolve-once:
+	@./venv/bin/python scripts/evolve_once.py || python3 scripts/evolve_once.py
+
 # Open web interface in browser
 web:
 	@echo "Opening web interface..."
