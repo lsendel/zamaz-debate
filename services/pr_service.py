@@ -54,11 +54,13 @@ class PRService:
         if not branch_created:
             return None
 
-        # Add decision file
-        await self._add_decision_file(decision, pr.branch_name)
+        # Skip git operations if auto_push is disabled
+        if self.auto_push:
+            # Add decision file
+            await self._add_decision_file(decision, pr.branch_name)
 
-        # Commit changes
-        await self._commit_changes(pr, decision)
+            # Commit changes
+            await self._commit_changes(pr, decision)
 
         if self.auto_push:
             # Push branch and create PR
