@@ -276,14 +276,11 @@ auto-evolve:
 		echo "❌ Auto-evolution is disabled. Set AUTO_EVOLVE_ENABLED=true in .env"; \
 		exit 1; \
 	fi
-	@if [ ! -d "venv" ]; then \
-		echo "❌ Virtual environment not found. Run 'make setup' first"; \
-		exit 1; \
+	@if [ -d "venv" ]; then \
+		./venv/bin/python scripts/auto_evolve_simple.py; \
+	else \
+		python3 scripts/auto_evolve_simple.py; \
 	fi
-	@echo "Installing playwright if needed..."
-	@./venv/bin/pip install playwright python-dotenv > /dev/null 2>&1
-	@./venv/bin/playwright install chromium > /dev/null 2>&1
-	@./venv/bin/python scripts/auto_evolve.py
 
 # Configure auto-evolution
 configure-auto-evolve:
