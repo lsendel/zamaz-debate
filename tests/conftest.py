@@ -1,6 +1,7 @@
 """
 Pytest configuration and fixtures for Zamaz Debate System tests
 """
+
 import pytest
 import asyncio
 import os

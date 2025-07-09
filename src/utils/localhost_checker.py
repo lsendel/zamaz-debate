@@ -29,9 +29,7 @@ async def check_localhost(url="http://localhost:8000", output_dir="localhost_che
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     print(f"Launching browser to check {url}...")
-    browser = await launch(
-        headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"]
-    )
+    browser = await launch(headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"])
 
     try:
         page = await browser.newPage()

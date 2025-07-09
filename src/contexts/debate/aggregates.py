@@ -169,11 +169,7 @@ class DebateSession:
             raise ValueError("Debate is already completed")
 
         self.consensus = consensus
-        self._publish_event(
-            ConsensusReached(
-                debate_id=self.id, consensus=consensus.value, occurred_at=datetime.now()
-            )
-        )
+        self._publish_event(ConsensusReached(debate_id=self.id, consensus=consensus.value, occurred_at=datetime.now()))
 
     def make_decision(self, decision: "Decision") -> None:
         """Make a final decision and complete the debate"""

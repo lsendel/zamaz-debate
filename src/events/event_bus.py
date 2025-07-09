@@ -58,9 +58,7 @@ class EventBus:
             logger.error(f"Failed to publish event {event.event_type}: {e}")
             raise
 
-    async def subscribe(
-        self, event_type: str, handler: Callable[[DomainEvent], None]
-    ) -> None:
+    async def subscribe(self, event_type: str, handler: Callable[[DomainEvent], None]) -> None:
         """
         Subscribe to events of a specific type
 
@@ -72,15 +70,11 @@ class EventBus:
             self._subscribers[event_type] = set()
 
         self._subscribers[event_type].add(handler)
-        self._stats["subscribers_count"] = sum(
-            len(handlers) for handlers in self._subscribers.values()
-        )
+        self._stats["subscribers_count"] = sum(len(handlers) for handlers in self._subscribers.values())
 
         logger.debug(f"Subscribed to {event_type} events")
 
-    async def unsubscribe(
-        self, event_type: str, handler: Callable[[DomainEvent], None]
-    ) -> None:
+    async def unsubscribe(self, event_type: str, handler: Callable[[DomainEvent], None]) -> None:
         """
         Unsubscribe from events of a specific type
 
@@ -95,9 +89,7 @@ class EventBus:
             if not self._subscribers[event_type]:
                 del self._subscribers[event_type]
 
-        self._stats["subscribers_count"] = sum(
-            len(handlers) for handlers in self._subscribers.values()
-        )
+        self._stats["subscribers_count"] = sum(len(handlers) for handlers in self._subscribers.values())
         logger.debug(f"Unsubscribed from {event_type} events")
 
     async def start(self) -> None:
@@ -149,9 +141,7 @@ class EventBus:
             logger.debug(f"No subscribers for event type: {event_type}")
             return
 
-        handlers = self._subscribers[
-            event_type
-        ].copy()  # Copy to avoid modification during iteration
+        handlers = self._subscribers[event_type].copy()  # Copy to avoid modification during iteration
 
         for handler in handlers:
             try:

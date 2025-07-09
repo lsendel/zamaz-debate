@@ -90,21 +90,15 @@ class DelegationService:
         else:
             return "human"  # Human reviews human work
 
-    def _assess_implementation_complexity(
-        self, decision: Decision, debate: Optional[Debate] = None
-    ) -> str:
+    def _assess_implementation_complexity(self, decision: Decision, debate: Optional[Debate] = None) -> str:
         """Assess how complex the implementation would be"""
 
         # Combine question and decision text for analysis
         full_text = f"{decision.question} {decision.decision_text}".lower()
 
         # Check for complex indicators
-        complex_count = sum(
-            1 for keyword in self.complex_keywords if keyword in full_text
-        )
-        simple_count = sum(
-            1 for keyword in self.simple_keywords if keyword in full_text
-        )
+        complex_count = sum(1 for keyword in self.complex_keywords if keyword in full_text)
+        simple_count = sum(1 for keyword in self.simple_keywords if keyword in full_text)
 
         # If debate exists, check if there was significant disagreement
         if debate and len(debate.rounds) > 1:
@@ -144,9 +138,7 @@ class DelegationService:
         # Default to Claude for any edge cases
         return ImplementationAssignee.CLAUDE
 
-    def get_implementation_instructions(
-        self, decision: Decision, assignee: ImplementationAssignee
-    ) -> str:
+    def get_implementation_instructions(self, decision: Decision, assignee: ImplementationAssignee) -> str:
         """Generate implementation instructions for the assignee"""
 
         if assignee == ImplementationAssignee.GEMINI:
@@ -239,7 +231,4 @@ class DelegationRules:
 
         full_text = f"{decision.question} {decision.decision_text}".lower()
 
-        return any(
-            keyword in full_text
-            for keyword in security_keywords + db_keywords + arch_keywords
-        )
+        return any(keyword in full_text for keyword in security_keywords + db_keywords + arch_keywords)

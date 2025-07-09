@@ -13,9 +13,7 @@ from domain.models import Debate, Decision, DecisionType
 class ImplementationPlanner:
     """Service for generating detailed implementation plans"""
 
-    def generate_implementation_plans(
-        self, decision: Decision, debate: Optional[Debate] = None
-    ) -> Dict[str, any]:
+    def generate_implementation_plans(self, decision: Decision, debate: Optional[Debate] = None) -> Dict[str, any]:
         """Generate multiple implementation approaches for a decision"""
 
         # Extract key concepts from decision
@@ -213,9 +211,7 @@ class ImplementationPlanner:
             "suitable_for": "Complex business logic, long-term strategic features",
         }
 
-    def _generate_event_driven_approach(
-        self, decision: Decision, concepts: List[str]
-    ) -> Dict:
+    def _generate_event_driven_approach(self, decision: Decision, concepts: List[str]) -> Dict:
         """Generate an event-driven architecture approach"""
         return {
             "name": "Event-Driven Architecture Implementation",
@@ -281,9 +277,7 @@ class ImplementationPlanner:
             "suitable_for": "Async workflows, microservices, high-scale features",
         }
 
-    def _identify_bounded_contexts(
-        self, decision: Decision, concepts: List[str]
-    ) -> List[Dict]:
+    def _identify_bounded_contexts(self, decision: Decision, concepts: List[str]) -> List[Dict]:
         """Identify potential bounded contexts from the decision"""
         contexts = []
 
@@ -311,9 +305,7 @@ class ImplementationPlanner:
                 }
             )
 
-        if any(
-            term in concepts for term in ["performance", "optimization", "benchmark"]
-        ):
+        if any(term in concepts for term in ["performance", "optimization", "benchmark"]):
             contexts.append(
                 {
                     "name": "Performance Context",
@@ -373,9 +365,7 @@ class ImplementationPlanner:
 
         # Feature-specific events
         if "test" in decision.decision_text.lower():
-            events.extend(
-                ["TestSuiteCreated", "TestExecuted", "TestFailed", "TestPassed"]
-            )
+            events.extend(["TestSuiteCreated", "TestExecuted", "TestFailed", "TestPassed"])
 
         if "error" in decision.decision_text.lower():
             events.extend(

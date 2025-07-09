@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 import os
 import sys
-sys.path.insert(0, 'scripts')
+
+sys.path.insert(0, "scripts")
 
 # Test the configuration
 from dotenv import load_dotenv
+
 load_dotenv()
 
 base_url = os.getenv("AUTO_EVOLVE_URL", "http://localhost:8000")

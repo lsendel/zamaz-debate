@@ -34,9 +34,7 @@ class ComplexityAssessment:
     def __init__(self):
         self.complexity_thresholds = {"simple": 0.3, "moderate": 0.6, "complex": 0.8}
 
-    def assess_decision_complexity(
-        self, question: str, context: Dict[str, Any] = None
-    ) -> DecisionCriteria:
+    def assess_decision_complexity(self, question: str, context: Dict[str, Any] = None) -> DecisionCriteria:
         """
         Assess the complexity of a decision based on the question and context
 
@@ -95,10 +93,7 @@ class ComplexityAssessment:
             return DecisionType.COMPLEX
         else:
             # Determine if it's architectural or strategic
-            if (
-                "architect" in criteria.impact.lower()
-                or "system" in criteria.impact.lower()
-            ):
+            if "architect" in criteria.impact.lower() or "system" in criteria.impact.lower():
                 return DecisionType.ARCHITECTURAL
             else:
                 return DecisionType.STRATEGIC
@@ -238,9 +233,7 @@ class ConsensusEvaluation:
         average_confidence = total_confidence / len(arguments)
 
         # Consider argument types
-        supporting_args = [
-            arg for arg in arguments if arg.type == ArgumentType.SUPPORTING
-        ]
+        supporting_args = [arg for arg in arguments if arg.type == ArgumentType.SUPPORTING]
         opposing_args = [arg for arg in arguments if arg.type == ArgumentType.OPPOSING]
 
         if not supporting_args and not opposing_args:
@@ -268,9 +261,7 @@ class ConsensusEvaluation:
     def _generate_consensus_value(self, arguments: List[Argument]) -> str:
         """Generate a consensus value based on arguments"""
         # Simple heuristic: use the most confident supporting argument
-        supporting_args = [
-            arg for arg in arguments if arg.type == ArgumentType.SUPPORTING
-        ]
+        supporting_args = [arg for arg in arguments if arg.type == ArgumentType.SUPPORTING]
 
         if supporting_args:
             best_arg = max(supporting_args, key=lambda x: x.confidence)
@@ -279,9 +270,7 @@ class ConsensusEvaluation:
         # Fallback to general consensus
         return "General consensus reached based on debate discussion"
 
-    def _generate_consensus_rationale(
-        self, arguments: List[Argument], level: ConsensusLevel
-    ) -> str:
+    def _generate_consensus_rationale(self, arguments: List[Argument], level: ConsensusLevel) -> str:
         """Generate rationale for the consensus"""
         arg_count = len(arguments)
         participant_count = len(set(arg.participant for arg in arguments))
@@ -289,13 +278,9 @@ class ConsensusEvaluation:
         rationale = f"Consensus reached based on {arg_count} arguments from {participant_count} participants. "
 
         if level == ConsensusLevel.STRONG:
-            rationale += (
-                "Strong agreement with high confidence across all participants."
-            )
+            rationale += "Strong agreement with high confidence across all participants."
         elif level == ConsensusLevel.MODERATE:
-            rationale += (
-                "Moderate agreement with reasonable confidence from most participants."
-            )
+            rationale += "Moderate agreement with reasonable confidence from most participants."
         else:
             rationale += "Weak agreement with some reservations from participants."
 
@@ -384,9 +369,7 @@ class DebateMetricsCalculator:
 
         # Calculate basic metrics
         total_rounds = len(debate_session.rounds)
-        total_arguments = sum(
-            len(round_obj.arguments) for round_obj in debate_session.rounds
-        )
+        total_arguments = sum(len(round_obj.arguments) for round_obj in debate_session.rounds)
 
         # Calculate average argument length
         all_arguments = []
@@ -394,9 +377,7 @@ class DebateMetricsCalculator:
             all_arguments.extend(round_obj.arguments)
 
         average_argument_length = (
-            sum(arg.word_count for arg in all_arguments) / len(all_arguments)
-            if all_arguments
-            else 0.0
+            sum(arg.word_count for arg in all_arguments) / len(all_arguments) if all_arguments else 0.0
         )
 
         # Calculate timing metrics
@@ -418,9 +399,7 @@ class DebateMetricsCalculator:
             participant_engagement=participant_engagement,
         )
 
-    def _calculate_participant_engagement(
-        self, arguments: List[Argument]
-    ) -> Dict[str, float]:
+    def _calculate_participant_engagement(self, arguments: List[Argument]) -> Dict[str, float]:
         """Calculate engagement scores for each participant"""
         if not arguments:
             return {}
@@ -443,9 +422,7 @@ class DebateMetricsCalculator:
 
         # Calculate engagement scores
         engagement_scores = {}
-        max_arguments = max(
-            stats["argument_count"] for stats in participant_stats.values()
-        )
+        max_arguments = max(stats["argument_count"] for stats in participant_stats.values())
 
         for participant, stats in participant_stats.items():
             # Normalize metrics
@@ -454,11 +431,7 @@ class DebateMetricsCalculator:
             avg_words = stats["total_words"] / stats["argument_count"]
 
             # Calculate engagement score (0.0 to 1.0)
-            engagement_score = (
-                argument_ratio * 0.4
-                + avg_confidence * 0.4
-                + min(1.0, avg_words / 100) * 0.2
-            )
+            engagement_score = argument_ratio * 0.4 + avg_confidence * 0.4 + min(1.0, avg_words / 100) * 0.2
 
             engagement_scores[participant] = min(1.0, engagement_score)
 

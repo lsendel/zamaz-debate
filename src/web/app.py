@@ -113,9 +113,7 @@ async def get_stats():
     decisions_dir = Path("data/decisions")
 
     debate_count = len(list(debates_dir.glob("*.json"))) if debates_dir.exists() else 0
-    decision_count = (
-        len(list(decisions_dir.glob("*.json"))) if decisions_dir.exists() else 0
-    )
+    decision_count = len(list(decisions_dir.glob("*.json"))) if decisions_dir.exists() else 0
 
     return {
         "version": nucleus.VERSION,
@@ -163,9 +161,7 @@ async def review_pr(request: PRReviewRequest):
     )
 
     # Perform review
-    review_result = await pr_review_service.review_pr(
-        pr, request.implementation_code, request.reviewer
-    )
+    review_result = await pr_review_service.review_pr(pr, request.implementation_code, request.reviewer)
 
     return review_result
 

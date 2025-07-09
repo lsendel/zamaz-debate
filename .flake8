@@ -1,6 +1,6 @@
 [flake8]
 max-line-length = 120
-exclude = .git,__pycache__,venv,build,dist,.tox,.eggs
+exclude = .git,__pycache__,venv,build,dist,.tox,.eggs,backup_*,scripts
 ignore = 
     # Allow imported but unused in __init__.py files
     F401,

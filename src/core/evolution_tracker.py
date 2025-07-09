@@ -99,9 +99,7 @@ class EvolutionTracker:
             if phrase in combined_text:
                 key_parts.append(phrase)
 
-        content = "|".join(
-            sorted(set(filter(None, key_parts)))
-        )  # Sort and dedupe for consistency
+        content = "|".join(sorted(set(filter(None, key_parts))))  # Sort and dedupe for consistency
         # Use longer hash (32 chars) to reduce collision probability
         return hashlib.sha256(content.encode()).hexdigest()[:32]
 
@@ -118,9 +116,7 @@ class EvolutionTracker:
         fingerprint = self._generate_fingerprint(evolution)
 
         # Add metadata
-        evolution[
-            "id"
-        ] = f"evo_{len(self.history['evolutions']) + 1}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        evolution["id"] = f"evo_{len(self.history['evolutions']) + 1}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         evolution["timestamp"] = datetime.now().isoformat()
         evolution["fingerprint"] = fingerprint
 
@@ -154,22 +150,16 @@ class EvolutionTracker:
             last_time = datetime.fromisoformat(last_evolution["timestamp"])
             time_since_last = (datetime.now() - last_time).seconds
             if time_since_last < 300:  # 5 minutes
-                print(
-                    f"⏳ Evolution throttled: Only {time_since_last}s since last evolution (need 300s)"
-                )
+                print(f"⏳ Evolution throttled: Only {time_since_last}s since last evolution (need 300s)")
                 return False
 
         # Check for too many recent evolutions (max 5 in last hour)
         one_hour_ago = datetime.now().timestamp() - 3600
         recent_count = sum(
-            1
-            for evo in recent_evolutions
-            if datetime.fromisoformat(evo["timestamp"]).timestamp() > one_hour_ago
+            1 for evo in recent_evolutions if datetime.fromisoformat(evo["timestamp"]).timestamp() > one_hour_ago
         )
         if recent_count >= 5:
-            print(
-                f"⏳ Evolution throttled: {recent_count} evolutions in last hour (max 5)"
-            )
+            print(f"⏳ Evolution throttled: {recent_count} evolutions in last hour (max 5)")
             return False
 
         return True
@@ -282,6 +272,4 @@ if __name__ == "__main__":
     else:
         print("Duplicate evolution detected!")
 
-    print(
-        f"\nEvolution Summary: {json.dumps(tracker.get_evolution_summary(), indent=2)}"
-    )
+    print(f"\nEvolution Summary: {json.dumps(tracker.get_evolution_summary(), indent=2)}")

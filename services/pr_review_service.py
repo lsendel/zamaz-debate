@@ -22,9 +22,7 @@ class PRReviewService:
         self.reviews_dir = Path(__file__).parent.parent / "data" / "pr_reviews"
         self.reviews_dir.mkdir(parents=True, exist_ok=True)
 
-    async def review_pr(
-        self, pr: PullRequest, implementation_code: str, reviewer: str
-    ) -> Dict[str, Any]:
+    async def review_pr(self, pr: PullRequest, implementation_code: str, reviewer: str) -> Dict[str, Any]:
         """
         Review a PR based on who the reviewer is
 
@@ -47,9 +45,7 @@ class PRReviewService:
             # Human review required
             return self._request_human_review(pr)
 
-    async def _gemini_review(
-        self, pr: PullRequest, implementation_code: str
-    ) -> Dict[str, Any]:
+    async def _gemini_review(self, pr: PullRequest, implementation_code: str) -> Dict[str, Any]:
         """Gemini reviews Claude's implementation"""
 
         # Get Gemini client
@@ -83,9 +79,7 @@ Provide your review with:
             review_text = response.text
 
             # Parse review decision
-            approved = (
-                "APPROVED" in review_text and "CHANGES_REQUESTED" not in review_text
-            )
+            approved = "APPROVED" in review_text and "CHANGES_REQUESTED" not in review_text
 
             review_result = {
                 "reviewer": "gemini-bot",
@@ -110,9 +104,7 @@ Provide your review with:
                 "can_merge": False,
             }
 
-    async def _codex_review(
-        self, pr: PullRequest, implementation_code: str
-    ) -> Dict[str, Any]:
+    async def _codex_review(self, pr: PullRequest, implementation_code: str) -> Dict[str, Any]:
         """Codex reviews Gemini's implementation and can merge"""
 
         # For now, Codex uses Claude as the review engine
@@ -240,10 +232,7 @@ Be thorough but practical. If the code is good enough for production, approve an
             }
 
             # Save merge record
-            merge_file = (
-                self.reviews_dir
-                / f"merge_{pr.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-            )
+            merge_file = self.reviews_dir / f"merge_{pr.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
             with open(merge_file, "w") as f:
                 json.dump(merge_result, f, indent=2)
 
@@ -262,10 +251,7 @@ Be thorough but practical. If the code is good enough for production, approve an
     def _save_review(self, pr_id: str, review: Dict[str, Any]):
         """Save review to file"""
 
-        review_file = (
-            self.reviews_dir
-            / f"review_{pr_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        )
+        review_file = self.reviews_dir / f"review_{pr_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
         with open(review_file, "w") as f:
             json.dump(review, f, indent=2)
 

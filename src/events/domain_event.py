@@ -43,11 +43,7 @@ class DomainEvent(ABC):
     All domain events must inherit from this class and implement the required methods.
     """
 
-    metadata: EventMetadata = field(
-        default_factory=lambda: EventMetadata(
-            event_id=uuid4(), occurred_at=datetime.now()
-        )
-    )
+    metadata: EventMetadata = field(default_factory=lambda: EventMetadata(event_id=uuid4(), occurred_at=datetime.now()))
 
     @property
     @abstractmethod

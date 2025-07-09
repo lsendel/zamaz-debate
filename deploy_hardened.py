@@ -32,60 +32,56 @@ def run_command(cmd, description):
 def main():
     print("🔒 Deploying Hardened Zamaz Debate System")
     print("=" * 50)
-    
+
     # Check if we're in the right directory
     if not Path("src/core/nucleus.py").exists():
         print("✗ Error: Must run from project root directory")
         sys.exit(1)
-    
+
     # Step 1: Create deployment tracking
     deploy_dir = Path("deployment")
     deploy_dir.mkdir(exist_ok=True)
-    
-    deployment_info = {
-        "timestamp": datetime.now().isoformat(),
-        "version": "hardened-1.0.0",
-        "status": "in_progress"
-    }
-    
+
+    deployment_info = {"timestamp": datetime.now().isoformat(), "version": "hardened-1.0.0", "status": "in_progress"}
+
     with open(deploy_dir / "deployment.json", "w") as f:
         json.dump(deployment_info, f, indent=2)
-    
+
     # Step 2: Ensure dependencies are installed
     print("\n📦 Checking dependencies...")
     if not run_command("pip install -r requirements.txt", "Installing dependencies"):
         print("✗ Failed to install dependencies")
         return False
-    
+
     # Step 3: Create startup scripts
     print("\n📝 Creating startup scripts...")
-    
+
     # Original app startup
     original_startup = """#!/bin/bash
 echo "Starting original Zamaz Debate System on port 8000..."
 cd "$(dirname "$0")/.."
 python -m uvicorn src.web.app:app --host 0.0.0.0 --port 8000 --reload
 """
-    
+
     # Hardened app startup
     hardened_startup = """#!/bin/bash
 echo "Starting hardened Zamaz Debate System on port 8001..."
 cd "$(dirname "$0")/.."
 python -m uvicorn src.web.app_hardened:app --host 0.0.0.0 --port 8001 --reload
 """
-    
+
     scripts_dir = Path("scripts")
     scripts_dir.mkdir(exist_ok=True)
-    
+
     with open(scripts_dir / "start_original.sh", "w") as f:
         f.write(original_startup)
-    
+
     with open(scripts_dir / "start_hardened.sh", "w") as f:
         f.write(hardened_startup)
-    
+
     # Make scripts executable
     run_command("chmod +x scripts/*.sh", "Making scripts executable")
-    
+
     # Step 4: Create comparison script
     comparison_script = """#!/usr/bin/env python3
 '''Compare original and hardened systems'''
@@ -162,12 +158,12 @@ def main():
 if __name__ == "__main__":
     main()
 """
-    
+
     with open(scripts_dir / "compare_systems.py", "w") as f:
         f.write(comparison_script)
-    
+
     run_command("chmod +x scripts/compare_systems.py", "Making comparison script executable")
-    
+
     # Step 5: Create integration plan
     integration_plan = """# Hardened System Integration Plan
 
@@ -254,27 +250,24 @@ If issues arise:
 3. Create performance benchmarks
 4. Document API changes
 """
-    
+
     with open(deploy_dir / "INTEGRATION_PLAN.md", "w") as f:
         f.write(integration_plan)
-    
+
     # Step 6: Update deployment status
     deployment_info["status"] = "completed"
-    deployment_info["endpoints"] = {
-        "original": "http://localhost:8000",
-        "hardened": "http://localhost:8001"
-    }
-    
+    deployment_info["endpoints"] = {"original": "http://localhost:8000", "hardened": "http://localhost:8001"}
+
     with open(deploy_dir / "deployment.json", "w") as f:
         json.dump(deployment_info, f, indent=2)
-    
+
     print("\n✅ Deployment Complete!")
     print("\n📋 Next Steps:")
     print("1. Start original system: ./scripts/start_original.sh")
     print("2. Start hardened system: ./scripts/start_hardened.sh")
     print("3. Run comparison: ./scripts/compare_systems.py")
     print("4. Read integration plan: deployment/INTEGRATION_PLAN.md")
-    
+
     return True
 
 

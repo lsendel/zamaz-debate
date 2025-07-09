@@ -99,10 +99,7 @@ class Argument:
     @property
     def has_evidence(self) -> bool:
         """Check if the argument has supporting evidence"""
-        return (
-            self.supporting_evidence is not None
-            and self.supporting_evidence.strip() != ""
-        )
+        return self.supporting_evidence is not None and self.supporting_evidence.strip() != ""
 
     @property
     def strength_score(self) -> float:
@@ -189,9 +186,7 @@ class DecisionCriteria:
             raise ValueError(f"Reversibility must be one of {valid_reversibility}")
 
         if self.time_sensitivity not in valid_time_sensitivity:
-            raise ValueError(
-                f"Time sensitivity must be one of {valid_time_sensitivity}"
-            )
+            raise ValueError(f"Time sensitivity must be one of {valid_time_sensitivity}")
 
         if self.stakeholder_count < 0:
             raise ValueError("Stakeholder count cannot be negative")
@@ -262,18 +257,14 @@ class DebateMetrics:
         # Validate engagement scores
         for participant, score in self.participant_engagement.items():
             if not (0.0 <= score <= 1.0):
-                raise ValueError(
-                    f"Engagement score for {participant} must be between 0.0 and 1.0"
-                )
+                raise ValueError(f"Engagement score for {participant} must be between 0.0 and 1.0")
 
     @property
     def average_engagement(self) -> float:
         """Calculate average engagement across all participants"""
         if not self.participant_engagement:
             return 0.0
-        return sum(self.participant_engagement.values()) / len(
-            self.participant_engagement
-        )
+        return sum(self.participant_engagement.values()) / len(self.participant_engagement)
 
     @property
     def efficiency_score(self) -> float:
@@ -286,6 +277,4 @@ class DebateMetrics:
         length_factor = min(1.0, self.average_argument_length / 100)  # Normalize to 0-1
         engagement_factor = self.average_engagement
 
-        return (
-            arguments_per_minute * 0.4 + length_factor * 0.3 + engagement_factor * 0.3
-        ) / 3
+        return (arguments_per_minute * 0.4 + length_factor * 0.3 + engagement_factor * 0.3) / 3

@@ -64,11 +64,7 @@ class Decision:
             "rounds": self.rounds,
             "timestamp": self.timestamp.isoformat(),
             "debate_id": self.debate_id,
-            "implementation_assignee": (
-                self.implementation_assignee.value
-                if self.implementation_assignee
-                else None
-            ),
+            "implementation_assignee": (self.implementation_assignee.value if self.implementation_assignee else None),
             "implementation_complexity": self.implementation_complexity,
         }
 
@@ -129,9 +125,7 @@ class PRTemplate:
     title_template: str
     body_template: str
 
-    def render(
-        self, decision: Decision, debate: Optional[Debate] = None
-    ) -> Dict[str, str]:
+    def render(self, decision: Decision, debate: Optional[Debate] = None) -> Dict[str, str]:
         """Render the template with decision data"""
         title = self.title_template.format(
             question=decision.question[:60],

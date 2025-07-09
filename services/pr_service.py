@@ -31,14 +31,10 @@ class PRService:
         self.auto_push = os.getenv("AUTO_PUSH_PR", "false").lower() == "true"
         self.assignee = os.getenv("PR_ASSIGNEE", "claude")
         self.base_branch = os.getenv("PR_BASE_BRANCH", "main")
-        self.use_current_branch = (
-            os.getenv("PR_USE_CURRENT_BRANCH", "true").lower() == "true"
-        )
+        self.use_current_branch = os.getenv("PR_USE_CURRENT_BRANCH", "true").lower() == "true"
         self.delegation_service = DelegationService()
         self.implementation_planner = ImplementationPlanner()
-        self.documentation_only = (
-            os.getenv("PR_DOCUMENTATION_ONLY", "true").lower() == "true"
-        )
+        self.documentation_only = os.getenv("PR_DOCUMENTATION_ONLY", "true").lower() == "true"
 
         # Log initialization
         print(
@@ -101,14 +97,10 @@ class PRService:
 
         return pr
 
-    def _generate_documentation_pr(
-        self, decision: Decision, debate: Optional[Debate]
-    ) -> PullRequest:
+    def _generate_documentation_pr(self, decision: Decision, debate: Optional[Debate]) -> PullRequest:
         """Generate an enhanced documentation-only PR with multiple implementation approaches"""
         # Get implementation plans
-        impl_plans = self.implementation_planner.generate_implementation_plans(
-            decision, debate
-        )
+        impl_plans = self.implementation_planner.generate_implementation_plans(decision, debate)
 
         # Build enhanced PR body
         pr_body = f"""# 📚 Implementation Documentation
@@ -192,9 +184,7 @@ This PR provides **{len(impl_plans['approaches'])} different implementation appr
                     pr_body += f"\n**Aggregate Roots:** {', '.join(approach['aggregate_roots'])}\n"
 
                 if approach.get("domain_events"):
-                    pr_body += (
-                        f"\n**Domain Events:** {', '.join(approach['domain_events'])}\n"
-                    )
+                    pr_body += f"\n**Domain Events:** {', '.join(approach['domain_events'])}\n"
 
                 pr_body += "\n</details>\n"
 
@@ -300,31 +290,23 @@ The PR serves as a detailed specification and guide for whoever implements this 
             (
                 assignee_enum,
                 impl_complexity,
-            ) = self.delegation_service.determine_implementation_assignment(
-                decision, debate
-            )
+            ) = self.delegation_service.determine_implementation_assignment(decision, debate)
             decision.implementation_assignee = assignee_enum
             decision.implementation_complexity = impl_complexity
 
         # Get assignee username
         assignee = self._get_assignee_username(assignee_enum)
 
-        template = DEFAULT_TEMPLATES.get(
-            decision.decision_type, DEFAULT_TEMPLATES[DecisionType.SIMPLE]
-        )
+        template = DEFAULT_TEMPLATES.get(decision.decision_type, DEFAULT_TEMPLATES[DecisionType.SIMPLE])
 
         pr_content = template.render(decision, debate)
 
         # Improve PR title based on decision content
-        pr_content["title"] = self._generate_descriptive_title(
-            decision, pr_content["title"]
-        )
+        pr_content["title"] = self._generate_descriptive_title(decision, pr_content["title"])
 
         # Add implementation instructions to PR body
         if assignee_enum != ImplementationAssignee.NONE:
-            impl_instructions = self.delegation_service.get_implementation_instructions(
-                decision, assignee_enum
-            )
+            impl_instructions = self.delegation_service.get_implementation_instructions(decision, assignee_enum)
             pr_content["body"] += f"\n\n---\n{impl_instructions}"
 
         # Determine reviewer based on implementer
@@ -333,35 +315,19 @@ The PR serves as a detailed specification and guide for whoever implements this 
         # Add workflow instructions
         pr_content["body"] += f"\n\n---\n## 👥 Workflow\n"
         if assignee_enum == ImplementationAssignee.CLAUDE:
-            pr_content[
-                "body"
-            ] += f"1. **Implementation**: Assigned to @{assignee} (Claude)\n"
-            pr_content[
-                "body"
-            ] += f"2. **Code Review**: @{reviewer} (Gemini) will review before merge\n"
-            pr_content[
-                "body"
-            ] += f"3. **Merge**: After Gemini approves the implementation\n\n"
-            pr_content[
-                "body"
-            ] += f"---\n\n@{assignee} Please implement this feature as specified above."
+            pr_content["body"] += f"1. **Implementation**: Assigned to @{assignee} (Claude)\n"
+            pr_content["body"] += f"2. **Code Review**: @{reviewer} (Gemini) will review before merge\n"
+            pr_content["body"] += f"3. **Merge**: After Gemini approves the implementation\n\n"
+            pr_content["body"] += f"---\n\n@{assignee} Please implement this feature as specified above."
         elif assignee_enum == ImplementationAssignee.GEMINI:
-            pr_content[
-                "body"
-            ] += f"1. **Implementation**: Assigned to @{assignee} (Gemini)\n"
-            pr_content[
-                "body"
-            ] += f"2. **Code Review**: @{reviewer} (Codex) will review and commit\n"
+            pr_content["body"] += f"1. **Implementation**: Assigned to @{assignee} (Gemini)\n"
+            pr_content["body"] += f"2. **Code Review**: @{reviewer} (Codex) will review and commit\n"
             pr_content["body"] += f"3. **Merge**: Codex will handle the final merge\n\n"
-            pr_content[
-                "body"
-            ] += f"---\n\n@{assignee} Please implement this feature as specified above."
+            pr_content["body"] += f"---\n\n@{assignee} Please implement this feature as specified above."
         else:
             pr_content["body"] += f"1. **Implementation**: Assigned to @{assignee}\n"
             pr_content["body"] += f"2. **Review**: Manual review required\n\n"
-            pr_content[
-                "body"
-            ] += f"---\n\n@{assignee} Please review and implement this request."
+            pr_content["body"] += f"---\n\n@{assignee} Please review and implement this request."
 
         # Branch name will be set later if using current branch
         if self.use_current_branch:
@@ -391,9 +357,7 @@ The PR serves as a detailed specification and guide for whoever implements this 
         else:
             return "unassigned"
 
-    def _generate_descriptive_title(
-        self, decision: Decision, default_title: str
-    ) -> str:
+    def _generate_descriptive_title(self, decision: Decision, default_title: str) -> str:
         """Generate a more descriptive PR title based on decision content"""
         max_title_length = 100
 
@@ -445,9 +409,7 @@ The PR serves as a detailed specification and guide for whoever implements this 
             # For complex decisions, extract the core question
             question = decision.question
             # Remove common prefixes
-            question = question.replace(
-                "What is the ONE most important improvement to make to", "Improve"
-            )
+            question = question.replace("What is the ONE most important improvement to make to", "Improve")
             question = question.replace("Should we", "")
             question = question.replace("How should we", "")
             question = question.strip()
@@ -491,9 +453,7 @@ The PR serves as a detailed specification and guide for whoever implements this 
         """Create a new git branch"""
         try:
             # First, ensure we're on the base branch
-            subprocess.run(
-                ["git", "checkout", self.base_branch], check=True, capture_output=True
-            )
+            subprocess.run(["git", "checkout", self.base_branch], check=True, capture_output=True)
 
             # Pull latest changes
             subprocess.run(
@@ -503,9 +463,7 @@ The PR serves as a detailed specification and guide for whoever implements this 
             )
 
             # Create and checkout new branch
-            subprocess.run(
-                ["git", "checkout", "-b", branch_name], check=True, capture_output=True
-            )
+            subprocess.run(["git", "checkout", "-b", branch_name], check=True, capture_output=True)
 
             print(f"✓ Created branch: {branch_name}")
             return True
@@ -525,9 +483,7 @@ The PR serves as a detailed specification and guide for whoever implements this 
 
         # Stage the file
         try:
-            subprocess.run(
-                ["git", "add", str(filename)], check=True, capture_output=True
-            )
+            subprocess.run(["git", "add", str(filename)], check=True, capture_output=True)
             print(f"✓ Staged file: {filename}")
         except subprocess.CalledProcessError as e:
             print(f"Error staging file: {e}")
@@ -544,16 +500,12 @@ This commit was automatically generated by the Zamaz Debate System.
 """
 
         try:
-            subprocess.run(
-                ["git", "commit", "-m", commit_message], check=True, capture_output=True
-            )
+            subprocess.run(["git", "commit", "-m", commit_message], check=True, capture_output=True)
             print(f"✓ Committed changes")
         except subprocess.CalledProcessError as e:
             print(f"Error committing: {e}")
 
-    async def _push_and_create_pr(
-        self, pr: PullRequest, decision: Decision, debate: Optional[Debate] = None
-    ):
+    async def _push_and_create_pr(self, pr: PullRequest, decision: Decision, debate: Optional[Debate] = None):
         """Push branch and create PR using gh CLI"""
         try:
             # Push the current branch (without -u since it might already be tracked)
@@ -636,18 +588,14 @@ This commit was automatically generated by the Zamaz Debate System.
                         )
                         print(f"Added {gemini_reviewer} as reviewer")
                     except subprocess.CalledProcessError:
-                        print(
-                            f"Note: Could not add {gemini_reviewer} as reviewer (user may not exist)"
-                        )
+                        print(f"Note: Could not add {gemini_reviewer} as reviewer (user may not exist)")
 
         except subprocess.CalledProcessError as e:
             print(f"Failed to create PR: {e}")
             if e.stderr:
                 print(f"Error: {e.stderr}")
 
-    async def _create_implementation_issue(
-        self, pr: PullRequest, decision: Decision, debate: Optional[Debate] = None
-    ):
+    async def _create_implementation_issue(self, pr: PullRequest, decision: Decision, debate: Optional[Debate] = None):
         """Create GitHub issue for implementation after documentation PR is closed"""
         try:
             # Determine assignee based on complexity
@@ -759,9 +707,7 @@ This task is assigned to @{assignee} for implementation.
         print(f"PR draft saved to: {draft_file}")
         print(f"To create PR manually, run:")
         print(f"git push -u origin {pr.branch_name}")
-        print(
-            f'gh pr create --title "{pr.title}" --body-file {body_file} --assignee {pr.assignee}'
-        )
+        print(f'gh pr create --title "{pr.title}" --body-file {body_file} --assignee {pr.assignee}')
 
 
 class PRRepository:

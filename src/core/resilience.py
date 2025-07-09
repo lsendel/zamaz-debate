@@ -97,9 +97,7 @@ def retry_async(policy: RetryPolicy = None):
 
                 except policy.exceptions as e:
                     last_exception = e
-                    counter(
-                        "resilience.retry.attempt", tags={"function": func.__name__}
-                    )
+                    counter("resilience.retry.attempt", tags={"function": func.__name__})
 
                     if attempt < policy.max_attempts:
                         delay = policy.get_delay(attempt)
@@ -135,17 +133,13 @@ def retry_sync(policy: RetryPolicy = None):
                     result = func(*args, **kwargs)
 
                     if attempt > 1:
-                        counter(
-                            "resilience.retry.success", tags={"function": func.__name__}
-                        )
+                        counter("resilience.retry.success", tags={"function": func.__name__})
 
                     return result
 
                 except policy.exceptions as e:
                     last_exception = e
-                    counter(
-                        "resilience.retry.attempt", tags={"function": func.__name__}
-                    )
+                    counter("resilience.retry.attempt", tags={"function": func.__name__})
 
                     if attempt < policy.max_attempts:
                         delay = policy.get_delay(attempt)
@@ -176,9 +170,7 @@ def timeout_async(seconds: float, fallback: Any = None):
                 with traced(f"timeout.{func.__name__}") as span:
                     span.tags["timeout_seconds"] = seconds
 
-                    result = await asyncio.wait_for(
-                        func(*args, **kwargs), timeout=seconds
-                    )
+                    result = await asyncio.wait_for(func(*args, **kwargs), timeout=seconds)
 
                     return result
 
@@ -331,9 +323,7 @@ class FallbackChain:
         self.name = name
         self.fallbacks = []
 
-    def add_fallback(
-        self, func: Callable, condition: Callable[[Exception], bool] = None
-    ):
+    def add_fallback(self, func: Callable, condition: Callable[[Exception], bool] = None):
         """Add a fallback function"""
         self.fallbacks.append((func, condition or (lambda e: True)))
 
@@ -349,9 +339,7 @@ class FallbackChain:
                     result = await func(*args, **kwargs)
 
                     if i > 0:
-                        counter(
-                            f"resilience.fallback.{self.name}.used", tags={"index": i}
-                        )
+                        counter(f"resilience.fallback.{self.name}.used", tags={"index": i})
 
                     return result
 
@@ -536,9 +524,7 @@ class ResilienceManager:
                 name: {
                     "is_healthy": hc.is_healthy,
                     "consecutive_failures": hc._consecutive_failures,
-                    "last_check": hc._last_check.isoformat()
-                    if hc._last_check
-                    else None,
+                    "last_check": hc._last_check.isoformat() if hc._last_check else None,
                 }
                 for name, hc in self.health_checks.items()
             },

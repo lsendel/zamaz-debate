@@ -81,26 +81,20 @@ class PRService:
             (
                 assignee_enum,
                 impl_complexity,
-            ) = self.delegation_service.determine_implementation_assignment(
-                decision, debate
-            )
+            ) = self.delegation_service.determine_implementation_assignment(decision, debate)
             decision.implementation_assignee = assignee_enum
             decision.implementation_complexity = impl_complexity
 
         # Get assignee username
         assignee = self._get_assignee_username(assignee_enum)
 
-        template = DEFAULT_TEMPLATES.get(
-            decision.decision_type, DEFAULT_TEMPLATES[DecisionType.SIMPLE]
-        )
+        template = DEFAULT_TEMPLATES.get(decision.decision_type, DEFAULT_TEMPLATES[DecisionType.SIMPLE])
 
         pr_content = template.render(decision, debate)
 
         # Add implementation instructions to PR body
         if assignee_enum != ImplementationAssignee.NONE:
-            impl_instructions = self.delegation_service.get_implementation_instructions(
-                decision, assignee_enum
-            )
+            impl_instructions = self.delegation_service.get_implementation_instructions(decision, assignee_enum)
             pr_content["body"] += f"\n\n---\n{impl_instructions}"
 
         # Determine reviewer based on implementer
@@ -109,35 +103,19 @@ class PRService:
         # Add workflow instructions
         pr_content["body"] += f"\n\n---\n## 👥 Workflow\n"
         if assignee_enum == ImplementationAssignee.CLAUDE:
-            pr_content[
-                "body"
-            ] += f"1. **Implementation**: Assigned to @{assignee} (Claude)\n"
-            pr_content[
-                "body"
-            ] += f"2. **Code Review**: @{reviewer} (Gemini) will review before merge\n"
-            pr_content[
-                "body"
-            ] += f"3. **Merge**: After Gemini approves the implementation\n\n"
-            pr_content[
-                "body"
-            ] += f"---\n\n@{assignee} Please implement this feature as specified above."
+            pr_content["body"] += f"1. **Implementation**: Assigned to @{assignee} (Claude)\n"
+            pr_content["body"] += f"2. **Code Review**: @{reviewer} (Gemini) will review before merge\n"
+            pr_content["body"] += f"3. **Merge**: After Gemini approves the implementation\n\n"
+            pr_content["body"] += f"---\n\n@{assignee} Please implement this feature as specified above."
         elif assignee_enum == ImplementationAssignee.GEMINI:
-            pr_content[
-                "body"
-            ] += f"1. **Implementation**: Assigned to @{assignee} (Gemini)\n"
-            pr_content[
-                "body"
-            ] += f"2. **Code Review**: @{reviewer} (Codex) will review and commit\n"
+            pr_content["body"] += f"1. **Implementation**: Assigned to @{assignee} (Gemini)\n"
+            pr_content["body"] += f"2. **Code Review**: @{reviewer} (Codex) will review and commit\n"
             pr_content["body"] += f"3. **Merge**: Codex will handle the final merge\n\n"
-            pr_content[
-                "body"
-            ] += f"---\n\n@{assignee} Please implement this feature as specified above."
+            pr_content["body"] += f"---\n\n@{assignee} Please implement this feature as specified above."
         else:
             pr_content["body"] += f"1. **Implementation**: Assigned to @{assignee}\n"
             pr_content["body"] += f"2. **Review**: Manual review required\n\n"
-            pr_content[
-                "body"
-            ] += f"---\n\n@{assignee} Please review and implement this request."
+            pr_content["body"] += f"---\n\n@{assignee} Please review and implement this request."
 
         branch_name = f"decision/{decision.decision_type.value}/{decision.id}"
 
@@ -190,9 +168,7 @@ class PRService:
         """Create a new git branch"""
         try:
             # First, ensure we're on the base branch
-            subprocess.run(
-                ["git", "checkout", self.base_branch], check=True, capture_output=True
-            )
+            subprocess.run(["git", "checkout", self.base_branch], check=True, capture_output=True)
 
             # Pull latest changes
             subprocess.run(
@@ -202,9 +178,7 @@ class PRService:
             )
 
             # Create and checkout new branch
-            subprocess.run(
-                ["git", "checkout", "-b", branch_name], check=True, capture_output=True
-            )
+            subprocess.run(["git", "checkout", "-b", branch_name], check=True, capture_output=True)
 
             print(f"✓ Created branch: {branch_name}")
             return True
@@ -224,9 +198,7 @@ class PRService:
 
         # Stage the file
         try:
-            subprocess.run(
-                ["git", "add", str(filename)], check=True, capture_output=True
-            )
+            subprocess.run(["git", "add", str(filename)], check=True, capture_output=True)
             print(f"✓ Staged file: {filename}")
         except subprocess.CalledProcessError as e:
             print(f"Error staging file: {e}")
@@ -243,9 +215,7 @@ This commit was automatically generated by the Zamaz Debate System.
 """
 
         try:
-            subprocess.run(
-                ["git", "commit", "-m", commit_message], check=True, capture_output=True
-            )
+            subprocess.run(["git", "commit", "-m", commit_message], check=True, capture_output=True)
             print(f"✓ Committed changes")
         except subprocess.CalledProcessError as e:
             print(f"Error committing: {e}")
@@ -306,9 +276,7 @@ This commit was automatically generated by the Zamaz Debate System.
                     )
                     print(f"Added {gemini_reviewer} as reviewer")
                 except subprocess.CalledProcessError:
-                    print(
-                        f"Note: Could not add {gemini_reviewer} as reviewer (user may not exist)"
-                    )
+                    print(f"Note: Could not add {gemini_reviewer} as reviewer (user may not exist)")
 
         except subprocess.CalledProcessError as e:
             print(f"Failed to create PR: {e}")
@@ -347,9 +315,7 @@ This commit was automatically generated by the Zamaz Debate System.
         print(f"PR draft saved to: {draft_file}")
         print(f"To create PR manually, run:")
         print(f"git push -u origin {pr.branch_name}")
-        print(
-            f'gh pr create --title "{pr.title}" --body-file {body_file} --assignee {pr.assignee}'
-        )
+        print(f'gh pr create --title "{pr.title}" --body-file {body_file} --assignee {pr.assignee}')
 
 
 class PRRepository:

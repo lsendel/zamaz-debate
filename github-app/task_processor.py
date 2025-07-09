@@ -19,20 +19,17 @@ logger = logging.getLogger(__name__)
 
 class AITaskProcessor:
     """Processes tasks using AI and GitHub APIs"""
-    
+
     def __init__(self):
         self.github_app_id = os.getenv("GITHUB_APP_ID")
         self.github_app_private_key = os.getenv("GITHUB_APP_PRIVATE_KEY", "").replace("\\n", "\n")
         self.claude_api_key = os.getenv("ANTHROPIC_API_KEY")
         self.webhook_server_url = os.getenv("WEBHOOK_SERVER_URL", "http://localhost:8080")
-        
+
         # Initialize GitHub integration
         if self.github_app_id and self.github_app_private_key:
-            self.github_integration = GithubIntegration(
-                self.github_app_id,
-                self.github_app_private_key
-            )
-    
+            self.github_integration = GithubIntegration(self.github_app_id, self.github_app_private_key)
+
     async def process_pending_tasks(self):
         """Main loop to process pending tasks"""
         while True:
@@ -41,21 +38,21 @@ class AITaskProcessor:
                 async with httpx.AsyncClient() as client:
                     response = await client.get(f"{self.webhook_server_url}/tasks/pending")
                     tasks = response.json().get("tasks", [])
-                
+
                 for task in tasks:
                     await self.process_task(task)
-                
+
                 # Wait before next check
                 await asyncio.sleep(30)  # Check every 30 seconds
-                
+
             except Exception as e:
                 logger.error(f"Error in task processing loop: {e}")
                 await asyncio.sleep(60)  # Wait longer on error
-    
+
     async def process_task(self, task: Dict[str, Any]):
         """Process a single task"""
         logger.info(f"Processing task: {task['type']} - {task.get('issue_number', 'N/A')}")
-        
+
         try:
             if task["type"] == "implement_issue":
                 await self.implement_issue(task)
@@ -63,65 +60,57 @@ class AITaskProcessor:
                 await self.respond_to_comment(task)
             elif task["type"] == "review_pr":
                 await self.review_pull_request(task)
-            
+
             # Mark task as completed
             async with httpx.AsyncClient() as client:
-                await client.post(
-                    f"{self.webhook_server_url}/tasks/{task['id']}/complete"
-                )
-            
+                await client.post(f"{self.webhook_server_url}/tasks/{task['id']}/complete")
+
         except Exception as e:
             logger.error(f"Error processing task {task['id']}: {e}")
-    
+
     async def implement_issue(self, task: Dict[str, Any]):
         """Implement an issue using AI"""
         repo_name = task["repository"]
         issue_number = task["issue_number"]
-        
+
         # Get GitHub access token for the installation
         installation = self.get_installation_for_repo(repo_name)
         if not installation:
             logger.error(f"No installation found for {repo_name}")
             return
-        
-        access_token = self.github_integration.get_access_token(
-            installation.id
-        ).token
-        
+
+        access_token = self.github_integration.get_access_token(installation.id).token
+
         # Clone repository
         repo_path = f"/tmp/zamaz-work/{repo_name.replace('/', '-')}"
         if not os.path.exists(repo_path):
-            subprocess.run([
-                "git", "clone",
-                f"https://x-access-token:{access_token}@github.com/{repo_name}.git",
-                repo_path
-            ])
-        
+            subprocess.run(
+                ["git", "clone", f"https://x-access-token:{access_token}@github.com/{repo_name}.git", repo_path]
+            )
+
         # Create implementation plan
-        implementation_plan = await self.create_implementation_plan(
-            task["issue_title"],
-            task["issue_body"]
-        )
-        
+        implementation_plan = await self.create_implementation_plan(task["issue_title"], task["issue_body"])
+
         # Create a new branch
         branch_name = f"ai-implementation/issue-{issue_number}"
         subprocess.run(["git", "checkout", "-b", branch_name], cwd=repo_path)
-        
+
         # Generate implementation files
-        await self.generate_implementation(
-            repo_path,
-            implementation_plan,
-            task
-        )
-        
+        await self.generate_implementation(repo_path, implementation_plan, task)
+
         # Commit and push changes
         subprocess.run(["git", "add", "."], cwd=repo_path)
-        subprocess.run([
-            "git", "commit", "-m",
-            f"AI Implementation: Issue #{issue_number}\\n\\nImplemented by Zamaz AI Assistant\\n\\nResolves #{issue_number}"
-        ], cwd=repo_path)
+        subprocess.run(
+            [
+                "git",
+                "commit",
+                "-m",
+                f"AI Implementation: Issue #{issue_number}\\n\\nImplemented by Zamaz AI Assistant\\n\\nResolves #{issue_number}",
+            ],
+            cwd=repo_path,
+        )
         subprocess.run(["git", "push", "origin", branch_name], cwd=repo_path)
-        
+
         # Create pull request
         g = Github(access_token)
         repo = g.get_repo(repo_name)
@@ -145,15 +134,13 @@ Closes #{issue_number}
 ---
 *Generated by Zamaz AI Assistant*""",
             head=branch_name,
-            base="main"
+            base="main",
         )
-        
+
         # Comment on the original issue
         issue = repo.get_issue(issue_number)
-        issue.create_comment(
-            f"✅ Implementation completed! See PR #{pr.number} for the implementation."
-        )
-    
+        issue.create_comment(f"✅ Implementation completed! See PR #{pr.number} for the implementation.")
+
     async def create_implementation_plan(self, title: str, body: str) -> Dict[str, Any]:
         """Create an implementation plan using Claude"""
         # This is a placeholder - in production, you would call Claude API
@@ -161,23 +148,24 @@ Closes #{issue_number}
         return {
             "summary": "Implemented the requested feature following DDD principles",
             "changes": "- Created bounded contexts\n- Implemented domain events\n- Added repository interfaces",
-            "testing": "- Added unit tests for domain logic\n- Integration tests for bounded contexts"
+            "testing": "- Added unit tests for domain logic\n- Integration tests for bounded contexts",
         }
-    
+
     async def generate_implementation(self, repo_path: str, plan: Dict[str, Any], task: Dict[str, Any]):
         """Generate actual implementation files"""
         # This is where you would use Claude to generate the actual code
         # For now, we'll create a simple example structure
-        
+
         # Example: Create DDD structure for issue #178
         if "DDD" in task.get("issue_body", "") or "domain-driven" in task.get("issue_body", "").lower():
             # Create directories
             os.makedirs(f"{repo_path}/src/contexts/debate", exist_ok=True)
             os.makedirs(f"{repo_path}/src/domain/events", exist_ok=True)
-            
+
             # Create example files
             with open(f"{repo_path}/src/contexts/debate/aggregate.py", "w") as f:
-                f.write('''"""
+                f.write(
+                    '''"""
 Debate Aggregate - Domain-Driven Design Implementation
 Generated by Zamaz AI Assistant
 """
@@ -221,18 +209,19 @@ class DebateAggregate:
             raise ValueError("Can only add rounds to active debates")
         self.rounds.append(round)
         # Emit RoundAdded event
-''')
-    
+'''
+                )
+
     def respond_to_comment(self, task: Dict[str, Any]):
         """Respond to a GitHub comment"""
         # Placeholder for comment response logic
         pass
-    
+
     def review_pull_request(self, task: Dict[str, Any]):
         """Review a pull request"""
         # Placeholder for PR review logic
         pass
-    
+
     def get_installation_for_repo(self, repo_name: str):
         """Get GitHub App installation for a repository"""
         try:

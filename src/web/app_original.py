@@ -109,9 +109,7 @@ async def review_pr(request: PRReviewRequest):
     )
 
     # Perform review
-    review_result = await pr_review_service.review_pr(
-        pr, request.implementation_code, request.reviewer
-    )
+    review_result = await pr_review_service.review_pr(pr, request.implementation_code, request.reviewer)
 
     return review_result
 

@@ -325,11 +325,13 @@ This will execute:
 MIT License - See LICENSE file for details.
 """
 
+
 def create_file(filename: str, content: str):
     """Create a file with the given content"""
-    with open(filename, 'w') as f:
+    with open(filename, "w") as f:
         f.write(content)
     print(f"✅ Created {filename}")
+
 
 def main():
     """Bootstrap the Zamaz Debate System"""
@@ -339,7 +341,7 @@ def main():
     # Check if nucleus.py already exists
     if Path("nucleus.py").exists():
         response = input("⚠️  nucleus.py already exists. Overwrite? (y/N): ")
-        if response.lower() != 'y':
+        if response.lower() != "y":
             print("Aborted.")
             return
 
@@ -379,6 +381,7 @@ aiofiles>=23.0.0
     print("2. Run: pip install -r requirements.txt")
     print("3. Run: python nucleus.py")
     print("\nThe system will start evolving from there!")
+
 
 if __name__ == "__main__":
     main()

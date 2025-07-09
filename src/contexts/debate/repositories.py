@@ -84,9 +84,7 @@ class DebateRepository(ABC):
         pass
 
     @abstractmethod
-    async def find_by_date_range(
-        self, start_date: datetime, end_date: datetime
-    ) -> List[DebateSession]:
+    async def find_by_date_range(self, start_date: datetime, end_date: datetime) -> List[DebateSession]:
         """
         Find debate sessions within a date range
 
@@ -239,9 +237,7 @@ class DecisionRepository(ABC):
         pass
 
     @abstractmethod
-    async def find_by_confidence_range(
-        self, min_confidence: float, max_confidence: float
-    ) -> List[Decision]:
+    async def find_by_confidence_range(self, min_confidence: float, max_confidence: float) -> List[Decision]:
         """
         Find decisions within a confidence range
 
@@ -265,9 +261,7 @@ class DecisionRepository(ABC):
         pass
 
     @abstractmethod
-    async def find_by_date_range(
-        self, start_date: datetime, end_date: datetime
-    ) -> List[Decision]:
+    async def find_by_date_range(self, start_date: datetime, end_date: datetime) -> List[Decision]:
         """
         Find decisions within a date range
 
@@ -495,9 +489,7 @@ class DecisionSpecification(ABC):
         pass
 
     @abstractmethod
-    def and_specification(
-        self, other: "DecisionSpecification"
-    ) -> "DecisionSpecification":
+    def and_specification(self, other: "DecisionSpecification") -> "DecisionSpecification":
         """
         Create an AND specification
 
@@ -510,9 +502,7 @@ class DecisionSpecification(ABC):
         pass
 
     @abstractmethod
-    def or_specification(
-        self, other: "DecisionSpecification"
-    ) -> "DecisionSpecification":
+    def or_specification(self, other: "DecisionSpecification") -> "DecisionSpecification":
         """
         Create an OR specification
 

@@ -194,9 +194,7 @@ class DebateNucleus:
         if "format" in q_lower:
             return "Follow PEP 8 style guide"
         if "comment" in q_lower:
-            return (
-                "Add docstrings for public methods, inline comments for complex logic"
-            )
+            return "Add docstrings for public methods, inline comments for complex logic"
 
         return "Proceed with standard best practices"
 
@@ -214,9 +212,7 @@ class DebateNucleus:
         self._ensure_debates_dir()
 
         # Use UUID for unique debate IDs to prevent conflicts
-        debate_id = (
-            f"debate_{uuid.uuid4().hex[:8]}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        )
+        debate_id = f"debate_{uuid.uuid4().hex[:8]}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         debate_state = {
             "id": debate_id,
             "question": question,
@@ -230,27 +226,13 @@ class DebateNucleus:
         claude_response = await self._get_claude_response(question, context)
         gemini_response = await self._get_gemini_response(question, context, complexity)
 
-        debate_state["rounds"].append(
-            {"round": 1, "claude": claude_response, "gemini": gemini_response}
-        )
+        debate_state["rounds"].append({"round": 1, "claude": claude_response, "gemini": gemini_response})
 
         # Analyze if they reached consensus
-        claude_yes = any(
-            word in claude_response.lower()
-            for word in ["yes", "should", "recommend", "beneficial"]
-        )
-        claude_no = any(
-            word in claude_response.lower()
-            for word in ["no", "should not", "avoid", "unnecessary"]
-        )
-        gemini_yes = any(
-            word in gemini_response.lower()
-            for word in ["yes", "should", "recommend", "beneficial"]
-        )
-        gemini_no = any(
-            word in gemini_response.lower()
-            for word in ["no", "should not", "avoid", "unnecessary"]
-        )
+        claude_yes = any(word in claude_response.lower() for word in ["yes", "should", "recommend", "beneficial"])
+        claude_no = any(word in claude_response.lower() for word in ["no", "should not", "avoid", "unnecessary"])
+        gemini_yes = any(word in gemini_response.lower() for word in ["yes", "should", "recommend", "beneficial"])
+        gemini_no = any(word in gemini_response.lower() for word in ["no", "should not", "avoid", "unnecessary"])
 
         consensus = (claude_yes and gemini_yes) or (claude_no and gemini_no)
 
@@ -271,9 +253,7 @@ class DebateNucleus:
             "time": debate_state["end_time"],
         }
 
-    @with_error_handling(
-        component="nucleus", operation="claude_response", reraise=False
-    )
+    @with_error_handling(component="nucleus", operation="claude_response", reraise=False)
     @retry_async(RetryPolicy(max_attempts=3, initial_delay=2.0))
     @timeout_async(30.0)
     async def _get_claude_response(self, question: str, context: str) -> str:
@@ -308,14 +288,10 @@ Be analytical and critical. Don't just agree - really think about what could go 
             )
             return f"Claude error: {str(e)}"
 
-    @with_error_handling(
-        component="nucleus", operation="gemini_response", reraise=False
-    )
+    @with_error_handling(component="nucleus", operation="gemini_response", reraise=False)
     @retry_async(RetryPolicy(max_attempts=3, initial_delay=2.0))
     @timeout_async(30.0)
-    async def _get_gemini_response(
-        self, question: str, context: str, complexity: str = "simple"
-    ) -> str:
+    async def _get_gemini_response(self, question: str, context: str, complexity: str = "simple") -> str:
         """Get Gemini 2.5 Pro's perspective"""
         prompt = f"""You are participating in a technical debate about system architecture decisions.
 
@@ -331,9 +307,7 @@ Provide a critical analysis:
 Be skeptical and thorough. Challenge assumptions. Consider if this is really necessary."""
 
         try:
-            response = await self.gemini_client.generate_content_async(
-                prompt, complexity
-            )
+            response = await self.gemini_client.generate_content_async(prompt, complexity)
             return response.text
         except Exception as e:
             # Log error for monitoring
@@ -368,12 +342,8 @@ Be skeptical and thorough. Challenge assumptions. Consider if this is really nec
         debates_dir = Path("data/debates")
         decisions_dir = Path("data/decisions")
 
-        debate_count = (
-            len(list(debates_dir.glob("*.json"))) if debates_dir.exists() else 0
-        )
-        decision_count = (
-            len(list(decisions_dir.glob("*.json"))) if decisions_dir.exists() else 0
-        )
+        debate_count = len(list(debates_dir.glob("*.json"))) if debates_dir.exists() else 0
+        decision_count = len(list(decisions_dir.glob("*.json"))) if decisions_dir.exists() else 0
 
         context = f"""
         Current version: {self.VERSION}
@@ -442,17 +412,13 @@ Be skeptical and thorough. Challenge assumptions. Consider if this is really nec
                             rounds=debate_data["rounds"],
                             final_decision=decision_text,
                             complexity=debate_data.get("complexity", "complex"),
-                            start_time=datetime.fromisoformat(
-                                debate_data["start_time"]
-                            ),
+                            start_time=datetime.fromisoformat(debate_data["start_time"]),
                             end_time=datetime.fromisoformat(debate_data["end_time"]),
                         )
 
                         # Create PR if enabled
                         if self.pr_service.should_create_pr(decision):
-                            pr = await self.pr_service.create_pr_for_decision(
-                                decision, debate_obj
-                            )
+                            pr = await self.pr_service.create_pr_for_decision(decision, debate_obj)
                             if pr:
                                 improvement["pr_created"] = True
                                 improvement["pr_id"] = pr.id
@@ -529,19 +495,13 @@ Be skeptical and thorough. Challenge assumptions. Consider if this is really nec
         """Extract evolution type from decision text"""
         text_lower = decision_text.lower()
 
-        if any(
-            word in text_lower for word in ["add", "implement", "create", "introduce"]
-        ):
+        if any(word in text_lower for word in ["add", "implement", "create", "introduce"]):
             return "feature"
-        elif any(
-            word in text_lower for word in ["improve", "enhance", "optimize", "better"]
-        ):
+        elif any(word in text_lower for word in ["improve", "enhance", "optimize", "better"]):
             return "enhancement"
         elif any(word in text_lower for word in ["fix", "resolve", "correct", "bug"]):
             return "fix"
-        elif any(
-            word in text_lower for word in ["refactor", "reorganize", "restructure"]
-        ):
+        elif any(word in text_lower for word in ["refactor", "reorganize", "restructure"]):
             return "refactor"
         elif any(word in text_lower for word in ["document", "docs", "readme"]):
             return "documentation"
@@ -564,9 +524,7 @@ async def main():
 
     # Test 2: Complex decision
     print("\n🤔 Test 2: Complex Decision")
-    result = await nucleus.decide(
-        "What architecture pattern should we use for the self-improving system?"
-    )
+    result = await nucleus.decide("What architecture pattern should we use for the self-improving system?")
     print(f"Decision: {result['decision'][:100]}...")
     print(f"Method: {result['method']} (rounds: {result['rounds']})")
 

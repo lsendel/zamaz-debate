@@ -44,9 +44,7 @@ traced = MockTraced
 _monitoring_enabled = False
 
 
-def set_monitoring_functions(
-    counter_func, gauge_func, histogram_func, traced_func, health_check_func
-):
+def set_monitoring_functions(counter_func, gauge_func, histogram_func, traced_func, health_check_func):
     """Set monitoring functions to avoid circular imports"""
     global counter, gauge, histogram, traced, health_check, _monitoring_enabled
     counter = counter_func
@@ -137,9 +135,7 @@ class ErrorClassifier:
             Exception: (ErrorCategory.UNKNOWN, ErrorSeverity.MEDIUM),
         }
 
-    def classify(
-        self, error: Exception, context: Dict[str, Any] = None
-    ) -> tuple[ErrorCategory, ErrorSeverity]:
+    def classify(self, error: Exception, context: Dict[str, Any] = None) -> tuple[ErrorCategory, ErrorSeverity]:
         """Classify an error into category and severity"""
         error_type = type(error)
 
@@ -401,9 +397,7 @@ class ErrorHandler:
                     counter("error_recovery.failures")
                     counter(f"error_recovery.{strategy.name}.failures")
 
-                    self.logger.error(
-                        f"Recovery strategy {strategy.name} failed: {recovery_error}"
-                    )
+                    self.logger.error(f"Recovery strategy {strategy.name} failed: {recovery_error}")
 
                     # Update retry count
                     context.retry_count += 1
@@ -413,8 +407,7 @@ class ErrorHandler:
     def _log_error(self, context: ErrorContext):
         """Log error with appropriate level"""
         log_message = (
-            f"Error in {context.component}.{context.operation}: "
-            f"{context.category.value} - {str(context.error)}"
+            f"Error in {context.component}.{context.operation}: " f"{context.category.value} - {str(context.error)}"
         )
 
         if context.correlation_id:
@@ -517,9 +510,7 @@ def get_error_handler() -> ErrorHandler:
 
 
 # Decorator for automatic error handling
-def with_error_handling(
-    component: str, operation: str = None, reraise: bool = True, fallback: Any = None
-):
+def with_error_handling(component: str, operation: str = None, reraise: bool = True, fallback: Any = None):
     """Decorator for automatic error handling"""
 
     def decorator(func):
@@ -639,10 +630,7 @@ class CircuitBreaker:
 
     def _should_attempt_reset(self) -> bool:
         """Check if circuit breaker should attempt reset"""
-        return (
-            self._last_failure_time
-            and time.time() - self._last_failure_time >= self.recovery_timeout
-        )
+        return self._last_failure_time and time.time() - self._last_failure_time >= self.recovery_timeout
 
     def _on_success(self):
         """Handle successful call"""

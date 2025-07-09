@@ -93,13 +93,13 @@ class MockClaudeClient:
         if "implement" in question.lower():
             response = "Yes, implementing this feature would be beneficial. Here's a structured approach..."
         elif "architecture" in question.lower():
-            response = "For architectural decisions, consider these factors: scalability, maintainability, and performance..."
+            response = (
+                "For architectural decisions, consider these factors: scalability, maintainability, and performance..."
+            )
         else:
             response = "Based on the analysis, I recommend proceeding with careful consideration of the trade-offs..."
 
-        return type(
-            "MockResponse", (), {"content": [type("Content", (), {"text": response})]}
-        )
+        return type("MockResponse", (), {"content": [type("Content", (), {"text": response})]})
 
 
 class MockGeminiClient:
@@ -157,9 +157,7 @@ class CachedClaudeClient:
             self.real_client = Anthropic(api_key=api_key)
 
         # Call real API
-        response = self.real_client.messages.create(
-            model=model, messages=messages, max_tokens=max_tokens
-        )
+        response = self.real_client.messages.create(model=model, messages=messages, max_tokens=max_tokens)
 
         # Cache the response
         with open(cache_file, "w") as f:
@@ -190,9 +188,7 @@ class CachedGeminiClient:
         self.cache_dir = cache_dir
         self.real_client = None
 
-    async def generate_content_async(
-        self, prompt: str, complexity: str = "simple"
-    ) -> Any:
+    async def generate_content_async(self, prompt: str, complexity: str = "simple") -> Any:
         """Check cache first, then call API if needed"""
         # Create cache key from prompt
         import hashlib
@@ -279,9 +275,7 @@ class GeminiClientWithFallback:
                 return type(
                     "ErrorResponse",
                     (),
-                    {
-                        "text": f"Gemini error: Rate limited. OpenAI API key not configured."
-                    },
+                    {"text": f"Gemini error: Rate limited. OpenAI API key not configured."},
                 )
 
             from openai import OpenAI
@@ -300,9 +294,7 @@ class GeminiClientWithFallback:
                 max_tokens=1000,
             )
             # Convert to Gemini-like response format
-            return type(
-                "OpenAIResponse", (), {"text": response.choices[0].message.content}
-            )
+            return type("OpenAIResponse", (), {"text": response.choices[0].message.content})
         except Exception as e:
             return type(
                 "ErrorResponse",
@@ -310,9 +302,7 @@ class GeminiClientWithFallback:
                 {"text": f"Both Gemini and OpenAI failed: {str(e)}"},
             )
 
-    async def generate_content_async(
-        self, prompt: str, complexity: str = "simple"
-    ) -> Any:
+    async def generate_content_async(self, prompt: str, complexity: str = "simple") -> Any:
         """Async version of generate_content with fallback to OpenAI
 
         Args:
@@ -349,9 +339,7 @@ class GeminiClientWithFallback:
                 return type(
                     "ErrorResponse",
                     (),
-                    {
-                        "text": f"Gemini error: Rate limited. OpenAI API key not configured."
-                    },
+                    {"text": f"Gemini error: Rate limited. OpenAI API key not configured."},
                 )
 
             from openai import OpenAI
@@ -370,9 +358,7 @@ class GeminiClientWithFallback:
                 max_tokens=1000,
             )
             # Convert to Gemini-like response format
-            return type(
-                "OpenAIResponse", (), {"text": response.choices[0].message.content}
-            )
+            return type("OpenAIResponse", (), {"text": response.choices[0].message.content})
         except Exception as e:
             return type(
                 "ErrorResponse",
@@ -394,9 +380,7 @@ class MockOpenAIClient:
         if "complex" in question.lower():
             text = "For complex systems, I recommend using GPT-3.5 for detailed analysis..."
         else:
-            text = (
-                "For simpler tasks, GPT-4o provides efficient and accurate responses..."
-            )
+            text = "For simpler tasks, GPT-4o provides efficient and accurate responses..."
 
         return type(
             "MockResponse",
@@ -443,11 +427,7 @@ class CachedOpenAIClient:
                             type(
                                 "Choice",
                                 (),
-                                {
-                                    "message": type(
-                                        "Message", (), {"content": cached["response"]}
-                                    )
-                                },
+                                {"message": type("Message", (), {"content": cached["response"]})},
                             )
                         ]
                     },
@@ -462,9 +442,7 @@ class CachedOpenAIClient:
                 return MockOpenAIClient().create(model, messages, max_tokens)
             self.real_client = OpenAI(api_key=api_key)
 
-        response = self.real_client.chat.completions.create(
-            model=model, messages=messages, max_tokens=max_tokens
-        )
+        response = self.real_client.chat.completions.create(model=model, messages=messages, max_tokens=max_tokens)
 
         # Cache response
         with open(cache_file, "w") as f:
