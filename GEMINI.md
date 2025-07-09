@@ -1,6 +1,6 @@
-# CLAUDE.md
+# GEMINI.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Gemini when working with code in this repository.
 
 ## Project Overview
 
@@ -129,10 +129,6 @@ The project uses pytest with asyncio support. Key test areas:
 ## AI Implementation Tasks
 
 When you see a GitHub issue with the `ai-assigned` label, it's intended for AI implementation. Look for issues at: https://github.com/lsendel/zamaz-debate/issues?q=is%3Aissue+is%3Aopen+label%3Aai-assigned
-
-Current AI-assigned issues:
-- Issue #193: Implement webhook notifications for system events
-- Issue #181: Evolve the debate system into a dev team
 
 ## Troubleshooting
 

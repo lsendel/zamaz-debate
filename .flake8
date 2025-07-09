@@ -1,0 +1,24 @@
+[flake8]
+max-line-length = 120
+exclude = .git,__pycache__,venv,build,dist,.tox,.eggs
+ignore = 
+    # Allow imported but unused in __init__.py files
+    F401,
+    # Allow module level imports not at top of file
+    E402,
+    # Allow line breaks before binary operators
+    W503,
+    # Allow whitespace issues
+    W291,
+    E231,
+    E221,
+    # Allow f-strings without placeholders
+    F541
+per-file-ignores = 
+    # Allow long lines in models
+    domain/models.py:E501
+    # Allow various issues in services
+    services/*:E501
+    # Allow issues in web apps
+    src/web/app.py:E402,F401
+    src/web/app_original.py:E402,F401
