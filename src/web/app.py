@@ -22,8 +22,21 @@ from src.core.error_handler import get_error_handler
 from src.core.nucleus import DebateNucleus
 from src.webhooks import WebhookService, WebhookEventHandler, webhook_router, init_webhook_api
 from src.events.event_bus import EventBus
+from src.core.api_rate_limiting import create_rate_limit_middleware, rate_limit_manager
+from src.core.rate_limit_config import get_rate_limit_config
 
 app = FastAPI(title="Debate Nucleus API")
+
+# Initialize rate limiting
+config_manager = get_rate_limit_config()
+if config_manager.global_settings.enabled:
+    from src.core.api_rate_limiting import APIRateLimitMiddleware
+    app.add_middleware(
+        APIRateLimitMiddleware,
+        default_config=None,
+        endpoint_configs=config_manager.get_all_configs(),
+        store=None,
+    )
 
 # Initialize webhook system
 webhook_service = WebhookService()
@@ -224,6 +237,44 @@ async def get_pr_drafts():
             )
 
     return {"pr_drafts": drafts}
+
+
+@app.get("/rate-limits/stats")
+async def get_rate_limit_stats():
+    """Get rate limiting statistics"""
+    stats = await rate_limit_manager.get_rate_limit_stats()
+    return stats
+
+
+@app.get("/rate-limits/config")
+async def get_rate_limit_config():
+    """Get current rate limiting configuration"""
+    config_summary = config_manager.get_config_summary()
+    return config_summary
+
+
+@app.post("/rate-limits/reset/{client_id}")
+async def reset_rate_limit(client_id: str, endpoint: Optional[str] = None):
+    """Reset rate limits for a specific client"""
+    success = await rate_limit_manager.reset_rate_limit(client_id, endpoint)
+    return {
+        "success": success,
+        "message": f"Rate limit reset for {client_id}" + (f" on {endpoint}" if endpoint else "")
+    }
+
+
+@app.get("/rate-limits/health")
+async def rate_limit_health():
+    """Health check for rate limiting system"""
+    validation = config_manager.validate_configuration()
+    stats = await rate_limit_manager.get_rate_limit_stats()
+    
+    return {
+        "status": "healthy" if validation["valid"] else "degraded",
+        "enabled": config_manager.global_settings.enabled,
+        "total_limiters": stats.get("total_limiters", 0),
+        "validation": validation,
+    }
 
 
 if __name__ == "__main__":
