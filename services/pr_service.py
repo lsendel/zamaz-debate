@@ -18,6 +18,7 @@ from domain.models import (
     ImplementationAssignee,
 )
 from services.delegation_service import DelegationService
+from services.implementation_planner import ImplementationPlanner
 
 
 class PRService:
@@ -31,9 +32,11 @@ class PRService:
         self.base_branch = os.getenv("PR_BASE_BRANCH", "main")
         self.use_current_branch = os.getenv("PR_USE_CURRENT_BRANCH", "true").lower() == "true"
         self.delegation_service = DelegationService()
+        self.implementation_planner = ImplementationPlanner()
+        self.documentation_only = os.getenv("PR_DOCUMENTATION_ONLY", "true").lower() == "true"
         
         # Debug logging
-        print(f"PRService initialized: use_current_branch={self.use_current_branch}")
+        print(f"PRService initialized: use_current_branch={self.use_current_branch}, documentation_only={self.documentation_only}")
 
     def should_create_pr(self, decision: Decision) -> bool:
         """Determine if a PR should be created for this decision"""
@@ -91,8 +94,183 @@ class PRService:
 
         return pr
 
+    def _generate_documentation_pr(self, decision: Decision, debate: Optional[Debate]) -> PullRequest:
+        """Generate an enhanced documentation-only PR with multiple implementation approaches"""
+        # Get implementation plans
+        impl_plans = self.implementation_planner.generate_implementation_plans(decision, debate)
+        
+        # Build enhanced PR body
+        pr_body = f"""# 📚 Implementation Documentation
+
+## 📋 Summary
+
+This is a **documentation-only PR** that provides multiple implementation approaches for the following decision.
+
+**Decision Type:** `{decision.decision_type.value}` | **Method:** `{decision.method}` | **Complexity:** `{getattr(decision, 'complexity', 'complex')}`
+
+---
+
+## 🤔 The Question
+
+**{decision.question}**
+
+### Context
+```
+{decision.context}
+```
+
+---
+
+## 💡 Decision
+
+{decision.decision_text}
+
+---
+
+## 🎯 Implementation Approaches
+
+This PR provides **{len(impl_plans['approaches'])} different implementation approaches** for human developers or Anthropic teams to choose from:
+
+"""
+        
+        # Add each implementation approach
+        for i, approach in enumerate(impl_plans['approaches'], 1):
+            pr_body += f"""
+### Approach {i}: {approach['name']}
+
+**Description:** {approach['description']}
+
+**Estimated Effort:** {approach['estimated_effort']}  
+**Risk Level:** {approach['risk_level']}  
+**Best For:** {approach['suitable_for']}
+
+<details>
+<summary>👍 Pros & 👎 Cons (click to expand)</summary>
+
+**Pros:**
+"""
+            for pro in approach['pros']:
+                pr_body += f"- ✅ {pro}\n"
+                
+            pr_body += "\n**Cons:**\n"
+            for con in approach['cons']:
+                pr_body += f"- ⚠️ {con}\n"
+                
+            pr_body += "\n</details>\n\n"
+            
+            # Add implementation steps
+            pr_body += "<details>\n<summary>📝 Implementation Steps (click to expand)</summary>\n\n"
+            
+            for step in approach['steps']:
+                pr_body += f"**{step['phase']}** ({step['duration']})\n"
+                for task in step['tasks']:
+                    pr_body += f"- {task}\n"
+                pr_body += "\n"
+                
+            pr_body += "</details>\n"
+            
+            # Add specific details for DDD approach
+            if 'bounded_contexts' in approach:
+                pr_body += "\n<details>\n<summary>🔷 Domain-Driven Design Details (click to expand)</summary>\n\n"
+                pr_body += "**Bounded Contexts:**\n"
+                for ctx in approach['bounded_contexts']:
+                    pr_body += f"- **{ctx['name']}**: {ctx['responsibility']}\n"
+                    pr_body += f"  - Entities: {', '.join(ctx['entities'])}\n"
+                
+                if approach.get('aggregate_roots'):
+                    pr_body += f"\n**Aggregate Roots:** {', '.join(approach['aggregate_roots'])}\n"
+                
+                if approach.get('domain_events'):
+                    pr_body += f"\n**Domain Events:** {', '.join(approach['domain_events'])}\n"
+                    
+                pr_body += "\n</details>\n"
+            
+            # Add event-driven details
+            if 'events' in approach:
+                pr_body += "\n<details>\n<summary>📡 Event-Driven Architecture Details (click to expand)</summary>\n\n"
+                pr_body += "**Key Events:**\n"
+                for event in approach['events'][:5]:  # Show first 5 events
+                    pr_body += f"- **{event['name']}**\n"
+                    pr_body += f"  - Producers: {', '.join(event['producers'])}\n"
+                    pr_body += f"  - Consumers: {', '.join(event['consumers'])}\n"
+                pr_body += "\n</details>\n"
+        
+        # Add implementation checklist
+        pr_body += "\n---\n\n## ✅ Implementation Checklist\n\n"
+        
+        for category in impl_plans['checklist']:
+            pr_body += f"\n**{category['category']}**\n"
+            for item in category['items']:
+                pr_body += f"- [ ] {item}\n"
+        
+        # Add testing strategy
+        pr_body += "\n---\n\n## 🧪 Testing Strategy\n\n"
+        testing = impl_plans['testing_strategy']
+        
+        for test_type, details in testing.items():
+            pr_body += f"\n**{test_type.replace('_', ' ').title()}**\n"
+            pr_body += f"- Focus: {details['focus']}\n"
+            if 'coverage_target' in details:
+                pr_body += f"- Coverage Target: {details['coverage_target']}\n"
+            if 'tools' in details:
+                pr_body += f"- Tools: {', '.join(details['tools'])}\n"
+        
+        # Add Anthropic best practices
+        pr_body += "\n---\n\n## 🏆 Anthropic Best Practices\n\n"
+        
+        for practice in impl_plans['anthropic_best_practices']:
+            pr_body += f"**{practice['practice']}**\n"
+            pr_body += f"- {practice['description']}\n"
+            pr_body += f"- 💡 *Application:* {practice['application']}\n\n"
+        
+        # Add footer
+        pr_body += f"""
+---
+
+## 🤝 How to Use This Documentation
+
+1. **Choose an Approach**: Review the three implementation approaches above and select the one that best fits your needs
+2. **Follow the Checklist**: Use the implementation checklist to ensure all aspects are covered
+3. **Apply Best Practices**: Incorporate Anthropic's best practices throughout your implementation
+4. **Test Thoroughly**: Follow the testing strategy to ensure quality
+
+## 🚫 Important Note
+
+This is a **documentation-only PR** that will be automatically closed after creation. The actual implementation should be done by:
+- Human developers on the team
+- Anthropic's implementation team
+- Community contributors
+
+The PR serves as a detailed specification and guide for whoever implements this feature.
+
+---
+
+*🤖 This documentation PR was automatically generated by the Zamaz Debate System*
+*📝 Based on AI consensus from debate {debate.id if debate else 'N/A'}*
+"""
+        
+        # Generate descriptive title
+        title = self._generate_descriptive_title(decision, f"[Docs] {decision.decision_type.value.capitalize()} Implementation Guide")
+        
+        # Create the PR object
+        return PullRequest(
+            id=None,
+            title=title,
+            body=pr_body,
+            branch_name=f"docs/{decision.decision_type.value}/{decision.id}",
+            base_branch=self.base_branch,
+            assignee=os.getenv("HUMAN_GITHUB_USERNAME", "lsendel"),  # Assign to human
+            labels=["documentation", "implementation-guide", "ai-generated", f"{decision.decision_type.value}-decision"],
+            decision=decision,
+        )
+    
     def _generate_pr(self, decision: Decision, debate: Optional[Debate]) -> PullRequest:
         """Generate a pull request from a decision"""
+        # If documentation-only mode is enabled, generate enhanced documentation PR
+        if self.documentation_only:
+            return self._generate_documentation_pr(decision, debate)
+        
+        # Otherwise, use the original PR generation logic
         # Determine implementation assignment
         if decision.implementation_assignee:
             assignee_enum = decision.implementation_assignee
@@ -376,14 +554,35 @@ This commit was automatically generated by the Zamaz Debate System.
             pr_number = pr_url.split("/")[-1]
             pr.id = pr_number
             
-            # Add Gemini as reviewer
-            gemini_reviewer = os.getenv("GEMINI_GITHUB_USERNAME", "gemini-bot")
-            if gemini_reviewer and gemini_reviewer != pr.assignee:
+            # If this is a documentation-only PR, auto-close it
+            if self.documentation_only:
                 try:
+                    print(f"Auto-closing documentation PR #{pr_number}")
                     subprocess.run(
                         [
                             "gh",
                             "pr",
+                            "close",
+                            pr_number,
+                            "--comment",
+                            "This documentation-only PR has been automatically closed. The implementation guide is now available for human developers or Anthropic teams to use."
+                        ],
+                        check=True,
+                        capture_output=True,
+                    )
+                    print(f"✓ Documentation PR #{pr_number} closed")
+                except subprocess.CalledProcessError as e:
+                    print(f"Warning: Could not auto-close PR: {e}")
+            
+            # Add Gemini as reviewer (only for non-documentation PRs)
+            if not self.documentation_only:
+                gemini_reviewer = os.getenv("GEMINI_GITHUB_USERNAME", "gemini-bot")
+                if gemini_reviewer and gemini_reviewer != pr.assignee:
+                    try:
+                        subprocess.run(
+                            [
+                                "gh",
+                                "pr",
                             "edit",
                             pr_number,
                             "--add-reviewer",
