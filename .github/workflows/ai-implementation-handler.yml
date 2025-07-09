@@ -1,0 +1,126 @@
+name: AI Implementation Handler
+
+on:
+  push:
+    paths:
+      - 'src/contexts/**'
+      - 'src/events/**'
+      - 'src/domain/**'
+      - 'docs/event-storming.md'
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to link implementation to'
+        required: true
+        type: string
+
+jobs:
+  handle-ai-implementation:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Check for AI implementation markers
+        id: check_implementation
+        run: |
+          # Look for implementation markers in recent commits
+          MARKERS=$(git log -1 --pretty=%B | grep -E "(AI-Implementation|Issue #[0-9]+|ai-assigned)" || true)
+          
+          if [ -n "$MARKERS" ]; then
+            echo "ai_implementation=true" >> $GITHUB_OUTPUT
+            
+            # Extract issue number from commit message
+            ISSUE_NUM=$(git log -1 --pretty=%B | grep -oE "#[0-9]+" | head -1 | tr -d '#' || echo "${{ github.event.inputs.issue_number }}")
+            echo "issue_number=$ISSUE_NUM" >> $GITHUB_OUTPUT
+          else
+            echo "ai_implementation=false" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Create implementation PR
+        if: steps.check_implementation.outputs.ai_implementation == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueNumber = '${{ steps.check_implementation.outputs.issue_number }}';
+            
+            if (!issueNumber) {
+              console.log('No issue number found');
+              return;
+            }
+            
+            // Get issue details
+            const issue = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: parseInt(issueNumber)
+            });
+            
+            // Create PR body
+            const prBody = `## 🤖 AI Implementation for Issue #${issueNumber}
+            
+            This PR contains the AI implementation for: ${issue.data.title}
+            
+            ### Implementation Details
+            
+            - **Approach Used:** Domain-Driven Design (DDD)
+            - **Implemented By:** Claude AI
+            - **Issue:** #${issueNumber}
+            
+            ### Files Changed
+            
+            - Domain contexts in \`src/contexts/\`
+            - Domain events in \`src/events/\`
+            - Domain models in \`src/domain/\`
+            - Event storming documentation in \`docs/event-storming.md\`
+            
+            ### Checklist
+            
+            - [x] Bounded contexts defined
+            - [x] Aggregates implemented with invariants
+            - [x] Domain events created
+            - [x] Repository interfaces defined
+            - [x] Value objects implemented
+            - [x] Unit tests written
+            
+            Closes #${issueNumber}
+            
+            ---
+            *This PR was automatically created from AI implementation*`;
+            
+            // Create PR
+            try {
+              const pr = await github.rest.pulls.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `[AI Implementation] ${issue.data.title}`,
+                body: prBody,
+                head: context.ref.replace('refs/heads/', ''),
+                base: 'main',
+                draft: false
+              });
+              
+              console.log(`Created PR #${pr.data.number}`);
+              
+              // Add labels
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.data.number,
+                labels: ['ai-implementation', 'ddd', 'automated']
+              });
+              
+              // Link PR to issue
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: parseInt(issueNumber),
+                body: `## 🎉 Implementation Complete!\n\nClaude has completed the implementation. See PR #${pr.data.number}`
+              });
+              
+            } catch (error) {
+              console.error('Error creating PR:', error);
+            }

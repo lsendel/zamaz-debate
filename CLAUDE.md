@@ -97,3 +97,10 @@ The project uses pytest with asyncio support. Key test areas:
 - The system starts from a minimal nucleus and evolves through AI guidance
 - All debates and evolutions are stored as JSON files for transparency
 - Use cost-saving modes (mock, cached) during development to minimize API usage
+
+## AI Implementation Tasks
+
+When you see a GitHub issue with the `ai-assigned` label, it's intended for AI implementation. Look for issues at: https://github.com/lsendel/zamaz-debate/issues?q=is%3Aissue+is%3Aopen+label%3Aai-assigned
+
+Current AI-assigned issues:
+- Issue #178: Domain-Driven Design implementation for debate system architecture
