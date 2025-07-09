@@ -10,7 +10,14 @@ from .events import AIResponseReceived, ConversationStarted, ProviderSwitched
 from .repositories import AIProviderRepository, ConversationRepository
 from .value_objects import AIResponse, ProviderConfig
 
+
+class AIIntegrationContext:
+    """Main context class for AI Integration"""
+    pass
+
+
 __all__ = [
+    "AIIntegrationContext",
     "AIProvider",
     "ConversationSession",
     "ProviderSelection",

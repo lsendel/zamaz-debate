@@ -15,18 +15,13 @@ Key Domain Services:
 - QualityAssurance: Ensures code quality standards
 """
 
-from .aggregates import CodeReview, ImplementationTask, PullRequest
-from .domain_services import ProgressTracking, QualityAssurance, TaskAssignment
-from .events import (
-    CodeReviewCompleted,
-    ImplementationCompleted,
-    PullRequestDrafted,
-    TaskCreated,
-)
-from .repositories import ImplementationRepository, PullRequestRepository
-from .value_objects import ReviewComment, Task, TestResult
+class ImplementationContext:
+    """Main context class for Implementation"""
+    pass
+
 
 __all__ = [
+    "ImplementationContext",
     # Aggregates
     "ImplementationTask",
     "PullRequest",

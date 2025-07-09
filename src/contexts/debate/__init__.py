@@ -25,7 +25,14 @@ from .events import ConsensusReached, DebateInitiated, DecisionMade, RoundComple
 from .repositories import DebateRepository, DecisionRepository
 from .value_objects import Argument, Consensus, Topic
 
+
+class DebateContext:
+    """Main context class for Debate"""
+    pass
+
+
 __all__ = [
+    "DebateContext",
     # Aggregates
     "DebateSession",
     "Decision",

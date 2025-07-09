@@ -19,7 +19,7 @@ class DomainEvent:
     occurred_at: datetime
     event_type: str
     aggregate_id: UUID
-    version: int = 1
+    version: int
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert event to dictionary for serialization"""
