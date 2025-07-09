@@ -1,5 +1,9 @@
 # Zamaz Debate System
 
+## ⚡ URGENT: Claude Implementation Required
+**🔴 ATTENTION CLAUDE: See [IMPLEMENT_NOW.md](./IMPLEMENT_NOW.md) for urgent task!**
+**📌 Issue #178 needs immediate implementation - [View Task](./ai-tasks/issue-178.md)**
+
 A self-improving AI debate system that uses Claude Opus 4 and Gemini 2.5 Pro to make architectural decisions through structured debates.
 
 ## 🎯 Core Concept
