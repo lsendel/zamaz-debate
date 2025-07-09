@@ -6,10 +6,10 @@
 
 ## 🔥 Latest Task: Issue #180
 
-### 📌 
+### 📌 Test: Implement a greeting function for Claude
 - **Status:** URGENT - NEEDS IMMEDIATE IMPLEMENTATION
 - **File:** `.claude-tasks/URGENT_TASK_180.md`
-- **GitHub Issue:** 
+- **GitHub Issue:** https://github.com/lsendel/zamaz-debate/issues/180
 
 ## Instructions
 

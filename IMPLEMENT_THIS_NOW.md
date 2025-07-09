@@ -11,8 +11,8 @@ cat .claude-tasks/URGENT_TASK_180.md
 
 ### 🎯 Issue Details:
 - **Number:** #180
-- **Title:** 
-- **URL:** 
+- **Title:** Test: Implement a greeting function for Claude
+- **URL:** https://github.com/lsendel/zamaz-debate/issues/180
 
 ### 🚀 Start Implementation:
 ```bash
