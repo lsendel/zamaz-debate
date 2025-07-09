@@ -100,15 +100,16 @@ python check_localhost.py http://localhost:8000  # Direct validation
 The system follows this workflow for complex decisions:
 
 1. **Complex Decision** → AI Debate between Claude and Gemini
-2. **Documentation PR** → Created with detailed implementation approaches
-3. **Auto-Close PR** → Documentation PRs are automatically closed
-4. **Implementation Issue** → Created and assigned to @claude with `ai-assigned` label
+2. **Pull Request** → Created with detailed implementation approaches
+3. **Implementation Issue** → Created automatically for COMPLEX and EVOLUTION decisions
 
 ### Important Configuration
 - `CREATE_PR_FOR_DECISIONS=true` must be set in `.env`
-- `PR_DOCUMENTATION_ONLY=true` creates documentation-only PRs
+- `PR_USE_CURRENT_BRANCH=false` to create new branches for PRs (required when base branch = current branch)
+- `PR_DOCUMENTATION_ONLY=true` creates documentation-only PRs that auto-close
+- `PR_DOCUMENTATION_ONLY=false` creates regular PRs that stay open
 - PRs are only created for COMPLEX and EVOLUTION decision types
-- Issues are automatically created after PR closure for implementation
+- Issues are automatically created for all COMPLEX and EVOLUTION decisions (regardless of PR_DOCUMENTATION_ONLY setting)
 
 ### GitHub Labels Required
 The following labels must exist in the repository:
@@ -143,19 +144,37 @@ The project uses pytest with asyncio support. Key test areas:
 When you see a GitHub issue with the `ai-assigned` label, it's intended for AI implementation. Look for issues at: https://github.com/lsendel/zamaz-debate/issues?q=is%3Aissue+is%3Aopen+label%3Aai-assigned
 
 Current AI-assigned issues:
-- Issue #193: Implement webhook notifications for system events
+- Issue #197: Implement event-driven architecture using Apache Kafka
+- Issue #193: Implement webhook notifications for system events  
 - Issue #181: Evolve the debate system into a dev team
 
 ## Troubleshooting
 
 ### PR Creation Not Working
 1. Check `CREATE_PR_FOR_DECISIONS=true` is set in `.env`
-2. Restart the server after environment changes with `make stop && make run`
-3. Verify all required GitHub labels exist (use `gh label list`)
-4. Check logs with `make logs` for error messages
+2. Check `PR_USE_CURRENT_BRANCH=false` if your current branch equals base branch (e.g., both are 'main')
+3. Restart the server after environment changes with `make stop && make run`
+4. Verify all required GitHub labels exist (use `gh label list`)
+5. Check logs with `make logs` for error messages
+6. Common error: "Failed to create PR" when trying to create PR from main to main - set `PR_USE_CURRENT_BRANCH=false`
 
 ### Issue Creation Not Working
-1. Ensure PR was successfully created and closed first
-2. Check that the GitHub user in assignee field exists
+1. Issues are now created automatically for all COMPLEX and EVOLUTION decisions
+2. Check that the GitHub user in assignee field exists (default: claude)
 3. Verify `ai-assigned` and `implementation` labels exist
 4. The issue creation happens in `services/pr_service.py:_create_implementation_issue()`
+5. Check web_interface.log for any errors during issue creation
+
+### Testing PR/Issue Creation
+Use the test scripts to validate the workflow:
+```bash
+python3 test_pr_creation.py    # Full Puppeteer test with screenshots
+python3 test_simple_pr.py      # Simple API test for PR creation
+python3 test_pr_and_issue.py   # Test both PR and issue creation
+```
+
+### Common Issues and Fixes
+1. **Dataclass field ordering error**: Remove default values from parent dataclass fields when child classes have non-default fields
+2. **PR creation fails with same branch error**: Set `PR_USE_CURRENT_BRANCH=false` in `.env`
+3. **Missing module errors**: The system uses Domain-Driven Design with contexts - ensure all context modules have proper `__init__.py` files
+4. **Server not picking up env changes**: Always restart with `make stop && make run` after `.env` modifications
