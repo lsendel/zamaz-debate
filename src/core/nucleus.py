@@ -321,10 +321,17 @@ Be skeptical and thorough. Challenge assumptions. Consider if this is really nec
         evolution_summary = self.evolution_tracker.get_evolution_summary()
         recent_evolutions = self.evolution_tracker.get_recent_evolutions(5)
         
+        # Count actual files on disk for accurate stats
+        debates_dir = Path("data/debates")
+        decisions_dir = Path("data/decisions")
+        
+        debate_count = len(list(debates_dir.glob("*.json"))) if debates_dir.exists() else 0
+        decision_count = len(list(decisions_dir.glob("*.json"))) if decisions_dir.exists() else 0
+        
         context = f"""
         Current version: {self.VERSION}
-        Decisions made: {self.decision_count}
-        Debates run: {self.debate_count}
+        Decisions made: {decision_count}
+        Debates run: {debate_count}
         
         Evolution History:
         Total evolutions: {evolution_summary['total_evolutions']}

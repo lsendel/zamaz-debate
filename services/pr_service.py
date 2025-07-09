@@ -31,6 +31,9 @@ class PRService:
         self.base_branch = os.getenv("PR_BASE_BRANCH", "main")
         self.use_current_branch = os.getenv("PR_USE_CURRENT_BRANCH", "true").lower() == "true"
         self.delegation_service = DelegationService()
+        
+        # Debug logging
+        print(f"PRService initialized: use_current_branch={self.use_current_branch}")
 
     def should_create_pr(self, decision: Decision) -> bool:
         """Determine if a PR should be created for this decision"""
