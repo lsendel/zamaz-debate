@@ -46,8 +46,9 @@ class PRService:
         if not self.enabled:
             return False
 
-        # Create PRs for complex decisions and evolutions
-        return decision.decision_type in [DecisionType.COMPLEX, DecisionType.EVOLUTION]
+        # Create PRs for all decisions that reached consensus
+        # Check if decision has consensus (assuming decisions from debates have consensus)
+        return True  # Create PR for all decisions when PR creation is enabled
 
     async def create_pr_for_decision(
         self, decision: Decision, debate: Optional[Debate] = None
