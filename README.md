@@ -87,3 +87,19 @@ This will execute:
 ## 📝 License
 
 MIT License - See LICENSE file for details.
+
+## 🤖 Codex Task Handler Workflow
+
+A GitHub Actions workflow to delegate issues or PR comments to Codex AI, automatically generate implementation tasks,
+and open pull requests when Codex completes the work.
+
+To enable:
+1. Add the workflow file to `.github/workflows/codex-task-handler.yml`.
+2. Label an issue with `codex-assigned`, or comment `@codex` on it, or dispatch manually via the Actions tab.
+
+The workflow will:
+- Create `.codex-tasks/URGENT_CODEX_TASK_<issue>.md` with all details for Codex.
+- Update `CODEX_TASKS.md` to list pending tasks.
+- Comment on the issue to confirm Codex has been notified.
+
+Refer to `.github/workflows/codex-task-handler.yml` for full implementation details.

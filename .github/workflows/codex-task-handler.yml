@@ -1,0 +1,120 @@
+name: Codex Task Handler
+
+on:
+  issues:
+    types: [opened, labeled]
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to process'
+        required: true
+        type: number
+
+jobs:
+  handle-codex-task:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    if: |
+      (github.event_name == 'issues' && contains(github.event.issue.labels.*.name, 'codex-assigned')) ||
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@codex')) ||
+      github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create Codex task file
+        run: |
+          mkdir -p .codex-tasks
+
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            ISSUE="${{ github.event.inputs.issue_number }}"
+          else
+            ISSUE="${{ github.event.issue.number }}"
+          fi
+
+          cat > .codex-tasks/URGENT_CODEX_TASK_${ISSUE}.md << 'EOF'
+          # 🚨 URGENT: Codex Implementation Required!
+
+          **Issue**: #${ISSUE} – ${{ github.event.issue.title }} (${{ github.event.issue.html_url }})
+          **Created**: ${{ github.event.issue.created_at }}
+
+          ## Implementation Instructions
+          1. Read the issue details below.
+          2. Create a branch: `ai-impl/issue-${ISSUE}`.
+          3. Implement the requested changes.
+          4. Commit with message: “Codex Implementation: Issue #${ISSUE}”.
+          5. Open a pull request when done.
+
+          ## Issue Body
+          ${{ github.event.issue.body }}
+
+          ## Quick start
+          ```bash
+          git checkout -b ai-impl/issue-${ISSUE}
+          git add .
+          git commit -m "Codex Implementation: Issue #${ISSUE}
+
+          Implemented by Codex
+
+          Closes #${ISSUE}"
+          git push origin ai-impl/issue-${ISSUE}
+          gh pr create --title "Codex Implementation: ${{ github.event.issue.title }}" \
+                       --body "Automated implementation for issue #${ISSUE}" \
+                       --label ai-generated
+          ```
+
+          **Automated task for Codex AI**
+          EOF
+
+      - name: Update global Codex task list
+        run: |
+          cat > CODEX_TASKS.md << 'EOF'
+          # 🚨 Codex Pending Implementation Tasks
+
+          ## Latest Task: Issue #${{ github.event.issue.number || github.event.inputs.issue_number }}
+          - **Title:** ${{ github.event.issue.title }}
+          - **Task file:** `.codex-tasks/URGENT_CODEX_TASK_${{ github.event.issue.number || github.event.inputs.issue_number }}.md`
+          - **Issue URL:** ${{ github.event.issue.html_url }}
+
+          ## All Pending Tasks
+          EOF
+
+          ls -1 .codex-tasks/URGENT_CODEX_TASK_*.md 2>/dev/null | \
+            while read F; do echo "- ${F##*/}" >> CODEX_TASKS.md; done
+
+      - name: Commit task files
+        run: |
+          git config --global user.name  'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add .codex-tasks CODEX_TASKS.md
+          git commit -m "🚨 New Codex task for issue #${{ github.event.issue.number || github.event.inputs.issue_number }}" || echo "No changes to commit"
+          git push || echo "Nothing to push"
+
+      - name: Comment on issue
+        if: github.event_name != 'workflow_dispatch'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const num = context.issue.number;
+            const msg = `## 🤖 Codex Task Created
+
+Codex has been notified to implement this issue!
+
+- **Task file:** `.codex-tasks/URGENT_CODEX_TASK_${num}.md`
+- **Task list:** `CODEX_TASKS.md`
+
+_Codex will pick this up on next repository access and open a PR when done._`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              issue_number: num,
+              body: msg
+            });
