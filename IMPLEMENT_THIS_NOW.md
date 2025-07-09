@@ -6,21 +6,21 @@
 
 ### 📍 Task Location:
 ```bash
-cat .claude-tasks/URGENT_TASK_181.md
+cat .claude-tasks/URGENT_TASK_193.md
 ```
 
 ### 🎯 Issue Details:
-- **Number:** #181
-- **Title:** evolve the debate system into a dev team
-- **URL:** https://github.com/lsendel/zamaz-debate/issues/181
+- **Number:** #193
+- **Title:** Implement: Should we implement webhook notifications for system events?
+- **URL:** https://github.com/lsendel/zamaz-debate/issues/193
 
 ### 🚀 Start Implementation:
 ```bash
 # View the task
-cat .claude-tasks/URGENT_TASK_181.md
+cat .claude-tasks/URGENT_TASK_193.md
 
 # Create branch and start coding
-git checkout -b ai-impl/issue-181
+git checkout -b ai-impl/issue-193
 ```
 
 **This task was created at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')**

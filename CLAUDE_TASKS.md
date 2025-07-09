@@ -4,12 +4,12 @@
 
 **Claude, you have NEW HIGH PRIORITY implementation tasks!**
 
-## 🔥 Latest Task: Issue #181
+## 🔥 Latest Task: Issue #193
 
-### 📌 evolve the debate system into a dev team
+### 📌 Implement: Should we implement webhook notifications for system events?
 - **Status:** URGENT - NEEDS IMMEDIATE IMPLEMENTATION
-- **File:** `.claude-tasks/URGENT_TASK_181.md`
-- **GitHub Issue:** https://github.com/lsendel/zamaz-debate/issues/181
+- **File:** `.claude-tasks/URGENT_TASK_193.md`
+- **GitHub Issue:** https://github.com/lsendel/zamaz-debate/issues/193
 
 ## Instructions
 
@@ -22,3 +22,4 @@
 
 - URGENT_TASK_180.md
 - URGENT_TASK_181.md
+- URGENT_TASK_193.md
