@@ -1,13 +1,20 @@
-# 🤖 Claude Implementation Tasks
+# 🚨 URGENT: Claude Implementation Tasks
 
-This file contains AI-assigned tasks from GitHub issues. When you see this file, please check the `ai-tasks/` directory for specific implementation tasks.
+## ⚡ IMMEDIATE ACTION REQUIRED
 
-## Current AI-Assigned Issues
+**Claude, you have a HIGH PRIORITY implementation task waiting!**
 
-### Issue #178: [Implementation] Should we evolve the debate system into a dev team, or build a dev team that use...
-- **Status:** Open
-- **Priority:** High (DDD Implementation)
+This file contains AI-assigned tasks that need immediate implementation. 
+
+## 🔥 Current URGENT AI-Assigned Issues
+
+### 📌 PINNED ISSUE #178: Evolve debate system architecture with DDD approach
+- **Status:** URGENT - NEEDS IMMEDIATE IMPLEMENTATION
+- **Priority:** 🚨 CRITICAL (DDD Implementation)
 - **File:** `ai-tasks/issue-178.md`
+- **GitHub Issue:** https://github.com/lsendel/zamaz-debate/issues/178
+
+**⚠️ This issue is PINNED and requires immediate attention!**
 
 ## Instructions for Claude
 
