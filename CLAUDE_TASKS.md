@@ -4,12 +4,12 @@
 
 **Claude, you have NEW HIGH PRIORITY implementation tasks!**
 
-## 🔥 Latest Task: Issue #180
+## 🔥 Latest Task: Issue #181
 
-### 📌 Test: Implement a greeting function for Claude
+### 📌 evolve the debate system into a dev team
 - **Status:** URGENT - NEEDS IMMEDIATE IMPLEMENTATION
-- **File:** `.claude-tasks/URGENT_TASK_180.md`
-- **GitHub Issue:** https://github.com/lsendel/zamaz-debate/issues/180
+- **File:** `.claude-tasks/URGENT_TASK_181.md`
+- **GitHub Issue:** https://github.com/lsendel/zamaz-debate/issues/181
 
 ## Instructions
 
@@ -21,3 +21,4 @@
 ## All Pending Tasks
 
 - URGENT_TASK_180.md
+- URGENT_TASK_181.md
