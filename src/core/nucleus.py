@@ -258,7 +258,7 @@ Be analytical and critical. Don't just agree - really think about what could go 
             response = self.claude_client.messages.create(
                 model="claude-opus-4-20250514",
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=500
+                max_tokens=2000
             )
             return response.content[0].text
         except Exception as e:
@@ -419,9 +419,14 @@ Be skeptical and thorough. Challenge assumptions. Consider if this is really nec
             return "No previous evolutions"
         
         formatted = []
-        for evo in evolutions:
+        for i, evo in enumerate(evolutions, 1):
+            evo_type = evo.get('type', 'unknown').capitalize()
+            feature = evo.get('feature', 'unknown')
+            timestamp = evo.get('timestamp', 'unknown')
+            date = timestamp[:10] if len(timestamp) >= 10 else timestamp
+            
             formatted.append(
-                f"- {evo.get('type', 'unknown')}: {evo.get('feature', 'unknown')} ({evo.get('timestamp', 'unknown')[:10]})"
+                f"{i}. {evo_type}: {feature} (Date: {date})"
             )
         
         return "\n".join(formatted)
