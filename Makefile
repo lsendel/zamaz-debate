@@ -1,7 +1,10 @@
 # Zamaz Debate System Makefile
 # Run various commands for the debate system
 
-.PHONY: help install setup run stop test clean debate evolve auto-evolve check-env web logs status
+.PHONY: help install setup run stop test clean debate evolve auto-evolve check-env web logs status \
+	dev-install format format-check isort isort-check lint lint-deep type-check quality quality-fix \
+	test-coverage quality-debate quality-debate-specific pre-commit-install pre-commit-all \
+	complexity security-scan quality-report
 
 # Default target - show help
 help:
@@ -21,6 +24,18 @@ help:
 	@echo "  make logs       - Show web interface logs"
 	@echo "  make status     - Check system status"
 	@echo "  make dev        - Run in development mode (with logs)"
+	@echo ""
+	@echo "Code Quality Commands:"
+	@echo "====================="
+	@echo "  make quality    - Run all quality checks"
+	@echo "  make quality-fix - Auto-fix formatting and imports"
+	@echo "  make format     - Format code with Black"
+	@echo "  make lint       - Run Flake8 linter"
+	@echo "  make type-check - Run MyPy type checking"
+	@echo "  make test-coverage - Run tests with coverage"
+	@echo "  make quality-report - Generate full quality report"
+	@echo "  make quality-debate - Run AI debates about code quality"
+	@echo "  make pre-commit-install - Install pre-commit hooks"
 
 # Check if virtual environment exists
 VENV_EXISTS := $(shell test -d venv && echo 1 || echo 0)
@@ -195,18 +210,109 @@ pr-drafts:
 # Install development dependencies
 dev-install: install
 	@echo "Installing development dependencies..."
-	./venv/bin/pip install black flake8 mypy
+	./venv/bin/pip install -r requirements-dev.txt
 	@echo "✓ Development dependencies installed"
 
 # Format code
 format:
 	@echo "Formatting code..."
-	./venv/bin/black src/
+	./venv/bin/black src/ services/ domain/
+
+# Check code formatting
+format-check:
+	@echo "Checking code formatting..."
+	./venv/bin/black --check src/ services/ domain/
+
+# Sort imports
+isort:
+	@echo "Sorting imports..."
+	./venv/bin/isort src/ services/ domain/
+
+# Check import sorting
+isort-check:
+	@echo "Checking import sorting..."
+	./venv/bin/isort --check-only src/ services/ domain/
 
 # Lint code
 lint:
 	@echo "Linting code..."
-	./venv/bin/flake8 src/ --max-line-length=100
+	./venv/bin/flake8 src/ services/ domain/
+
+# Deep lint with pylint
+lint-deep:
+	@echo "Running deep lint with pylint..."
+	./venv/bin/pylint --disable=R,C src/ services/ domain/ || true
+
+# Type checking
+type-check:
+	@echo "Running type checking..."
+	./venv/bin/mypy src/ services/ domain/ --ignore-missing-imports || true
+
+# Run all quality checks
+quality: format-check isort-check lint type-check
+	@echo "✓ All quality checks passed"
+
+# Run quality fixes
+quality-fix: format isort
+	@echo "✓ Code formatted and imports sorted"
+
+# Run tests with coverage
+test-coverage:
+	@echo "Running tests with coverage..."
+	./venv/bin/pytest --cov=src --cov=services --cov=domain --cov-report=term-missing --cov-report=xml
+
+# Run quality debates
+quality-debate:
+	@echo "Running quality debates..."
+	./venv/bin/python src/quality_debates.py
+
+# Run specific quality debate
+quality-debate-specific:
+	@echo "Available quality debates:"
+	@echo "  - code_quality_tools"
+	@echo "  - quality_metrics"
+	@echo "  - quality_gates"
+	@echo "  - evolution_testing"
+	@echo "  - code_style_enforcement"
+	@echo ""
+	@read -p "Enter debate ID: " debate_id; \
+	./venv/bin/python src/quality_debates.py --question $$debate_id
+
+# Install pre-commit hooks
+pre-commit-install:
+	@echo "Installing pre-commit hooks..."
+	./venv/bin/pre-commit install
+	@echo "✓ Pre-commit hooks installed"
+
+# Run pre-commit on all files
+pre-commit-all:
+	@echo "Running pre-commit on all files..."
+	./venv/bin/pre-commit run --all-files
+
+# Complexity analysis
+complexity:
+	@echo "Analyzing code complexity..."
+	@./venv/bin/radon cc src/ services/ domain/ -a -nc
+
+# Security scan
+security-scan:
+	@echo "Running security scan..."
+	@./venv/bin/bandit -r src/ services/ domain/ -ll
+
+# Generate quality report
+quality-report:
+	@echo "Generating quality report..."
+	@echo "=== Code Quality Report ===" > quality_report.txt
+	@echo "" >> quality_report.txt
+	@echo "## Complexity Analysis" >> quality_report.txt
+	@./venv/bin/radon cc src/ services/ domain/ -a >> quality_report.txt || true
+	@echo "" >> quality_report.txt
+	@echo "## Type Coverage" >> quality_report.txt
+	@./venv/bin/mypy src/ services/ domain/ --ignore-missing-imports 2>&1 | grep -E "Success:|error:" >> quality_report.txt || true
+	@echo "" >> quality_report.txt
+	@echo "## Security Issues" >> quality_report.txt
+	@./venv/bin/bandit -r src/ services/ domain/ -f txt >> quality_report.txt || true
+	@echo "✓ Quality report generated: quality_report.txt"
 
 # Security check
 security:
