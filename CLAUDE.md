@@ -62,8 +62,15 @@ python check_localhost.py http://localhost:8000  # Direct validation
 
 **Web Interface** (`src/web/app.py`):
 - FastAPI-based REST API
-- Endpoints: `/decide`, `/stats`, `/evolve`, `/pr-drafts`
+- Endpoints: `/decide`, `/stats`, `/evolve`, `/pr-drafts`, `/webhooks/*`
 - Serves static HTML interface at root
+
+**Webhook System** (`src/webhooks/`):
+- Real-time event notifications for external systems
+- Secure webhook delivery with HMAC-SHA256 signatures
+- Automatic retry logic with exponential backoff
+- Comprehensive REST API for webhook management
+- Integration with domain event system
 
 ### Design Patterns
 
@@ -82,6 +89,11 @@ python check_localhost.py http://localhost:8000  # Direct validation
   - Complex tasks → Assigned to Claude (with Gemini as reviewer)
   - Regular tasks → Assigned to Gemini (with Codex as reviewer and committer)
 - **Critical Debate Analysis**: Both AIs provide thorough analysis of pros/cons before recommendations
+- **Webhook Notifications**: Real-time event notifications for external integrations
+  - Secure delivery with HMAC-SHA256 signatures
+  - Automatic retry logic for failed deliveries
+  - Comprehensive REST API for webhook management
+  - Support for all major system events (decisions, debates, evolution, etc.)
 
 ## PR and Issue Creation Workflow
 

@@ -20,15 +20,44 @@ from domain.models import PullRequest
 from services.pr_review_service import PRReviewService
 from src.core.error_handler import get_error_handler
 from src.core.nucleus import DebateNucleus
+from src.webhooks import WebhookService, WebhookEventHandler, webhook_router, init_webhook_api
+from src.events.event_bus import EventBus
 
 app = FastAPI(title="Debate Nucleus API")
-nucleus = DebateNucleus()
+
+# Initialize webhook system
+webhook_service = WebhookService()
+event_bus = EventBus()
+webhook_event_handler = WebhookEventHandler(webhook_service, event_bus)
+
+# Initialize main services with event bus
+nucleus = DebateNucleus(event_bus=event_bus)
 pr_review_service = PRReviewService()
+
+# Initialize webhook API
+init_webhook_api(webhook_service)
 
 # Import and include error handling endpoints
 from src.web.error_endpoints import router as error_router
 
 app.include_router(error_router)
+app.include_router(webhook_router)
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services on startup"""
+    await webhook_service.start()
+    await event_bus.start()
+    await webhook_event_handler.start()
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup services on shutdown"""
+    await webhook_event_handler.stop()
+    await event_bus.stop()
+    await webhook_service.stop()
 
 
 @app.exception_handler(Exception)
