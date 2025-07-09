@@ -1,0 +1,197 @@
+name: AI Task Handler
+
+on:
+  issues:
+    types: [opened, labeled]
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to process'
+        required: true
+        type: number
+
+jobs:
+  handle-ai-task:
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'issues' && contains(github.event.issue.labels.*.name, 'ai-assigned')) ||
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+      github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          
+      - name: Create Claude task file
+        run: |
+          mkdir -p .claude-tasks
+          
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            ISSUE_NUMBER="${{ github.event.inputs.issue_number }}"
+          else
+            ISSUE_NUMBER="${{ github.event.issue.number }}"
+          fi
+          
+          # Create a highly visible task file
+          cat > .claude-tasks/URGENT_TASK_${ISSUE_NUMBER}.md << 'EOF'
+          # 🚨 URGENT: Claude Implementation Required!
+          
+          ## Task Details
+          - **Issue #**: ${{ github.event.issue.number || github.event.inputs.issue_number }}
+          - **Title**: ${{ github.event.issue.title }}
+          - **URL**: ${{ github.event.issue.html_url }}
+          - **Created**: ${{ github.event.issue.created_at }}
+          
+          ## Implementation Instructions
+          
+          Claude, when you see this file, please:
+          
+          1. Read the issue details below
+          2. Create a new branch: `ai-impl/issue-${ISSUE_NUMBER}`
+          3. Implement the requested changes
+          4. Commit with message: "AI Implementation: Issue #${ISSUE_NUMBER}"
+          5. Create a pull request
+          
+          ## Issue Content
+          
+          ${{ github.event.issue.body }}
+          
+          ## Quick Start Commands
+          
+          ```bash
+          # Create branch
+          git checkout -b ai-impl/issue-${ISSUE_NUMBER}
+          
+          # After implementation
+          git add .
+          git commit -m "AI Implementation: Issue #${ISSUE_NUMBER}
+          
+          Implemented by Claude
+          
+          Closes #${ISSUE_NUMBER}"
+          git push origin ai-impl/issue-${ISSUE_NUMBER}
+          
+          # Create PR
+          gh pr create --title "AI Implementation: ${{ github.event.issue.title }}" \
+            --body "Automated implementation for issue #${ISSUE_NUMBER}" \
+            --label "ai-generated"
+          ```
+          
+          ---
+          **This is an automated task for Claude AI**
+          EOF
+          
+      - name: Update main task list
+        run: |
+          # Update the main CLAUDE_TASKS.md file
+          cat > CLAUDE_TASKS.md << 'EOF'
+          # 🚨 URGENT: Claude Implementation Tasks
+          
+          ## ⚡ IMMEDIATE ACTION REQUIRED
+          
+          **Claude, you have NEW HIGH PRIORITY implementation tasks!**
+          
+          ## 🔥 Latest Task: Issue #${{ github.event.issue.number || github.event.inputs.issue_number }}
+          
+          ### 📌 ${{ github.event.issue.title }}
+          - **Status:** URGENT - NEEDS IMMEDIATE IMPLEMENTATION
+          - **File:** `.claude-tasks/URGENT_TASK_${{ github.event.issue.number || github.event.inputs.issue_number }}.md`
+          - **GitHub Issue:** ${{ github.event.issue.html_url }}
+          
+          ## Instructions
+          
+          1. Check `.claude-tasks/` directory for all pending tasks
+          2. Start with the URGENT tasks first
+          3. Follow the implementation instructions in each task file
+          4. Create PRs for each implementation
+          
+          ## All Pending Tasks
+          
+          EOF
+          
+          # List all task files
+          ls -la .claude-tasks/URGENT_TASK_*.md 2>/dev/null | while read line; do
+            echo "- ${line##*/}" >> CLAUDE_TASKS.md
+          done || echo "- Check .claude-tasks/ directory" >> CLAUDE_TASKS.md
+          
+      - name: Create implementation trigger
+        run: |
+          # Create a special file that Claude should check first
+          cat > IMPLEMENT_THIS_NOW.md << 'EOF'
+          # ⚡ CLAUDE: NEW TASK ALERT! ⚡
+          
+          ## 🔴 URGENT IMPLEMENTATION REQUIRED
+          
+          **A new task has been assigned to you!**
+          
+          ### 📍 Task Location:
+          ```bash
+          cat .claude-tasks/URGENT_TASK_${{ github.event.issue.number || github.event.inputs.issue_number }}.md
+          ```
+          
+          ### 🎯 Issue Details:
+          - **Number:** #${{ github.event.issue.number || github.event.inputs.issue_number }}
+          - **Title:** ${{ github.event.issue.title }}
+          - **URL:** ${{ github.event.issue.html_url }}
+          
+          ### 🚀 Start Implementation:
+          ```bash
+          # View the task
+          cat .claude-tasks/URGENT_TASK_${{ github.event.issue.number || github.event.inputs.issue_number }}.md
+          
+          # Create branch and start coding
+          git checkout -b ai-impl/issue-${{ github.event.issue.number || github.event.inputs.issue_number }}
+          ```
+          
+          **This task was created at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')**
+          EOF
+          
+      - name: Commit task files
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          
+          git add .claude-tasks/ CLAUDE_TASKS.md IMPLEMENT_THIS_NOW.md
+          git commit -m "🚨 New AI task: Issue #${{ github.event.issue.number || github.event.inputs.issue_number }}" || echo "No changes to commit"
+          git push || echo "No changes to push"
+          
+      - name: Comment on issue
+        if: github.event_name != 'workflow_dispatch'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueNumber = context.issue.number;
+            const comment = `## 🤖 AI Task Created
+            
+            Claude has been notified about this issue!
+            
+            ### 📋 Task Details:
+            - Task file created: \`.claude-tasks/URGENT_TASK_${issueNumber}.md\`
+            - Main task list updated: \`CLAUDE_TASKS.md\`
+            - Trigger file created: \`IMPLEMENT_THIS_NOW.md\`
+            
+            ### 🎯 Next Steps:
+            1. Claude will see these files on next repository access
+            2. Implementation will begin automatically
+            3. A PR will be created when complete
+            
+            ### 💡 To manually trigger Claude:
+            Run the workflow manually or mention @claude in a comment.
+            
+            *Task created at: ${new Date().toISOString()}*`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: comment
+            });

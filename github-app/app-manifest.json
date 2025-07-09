@@ -1,0 +1,29 @@
+{
+  "name": "Zamaz AI Assistant",
+  "description": "AI-powered assistant for implementing tasks and managing development workflow",
+  "url": "https://github.com/lsendel/zamaz-debate",
+  "hook_attributes": {
+    "url": "https://your-domain.com/webhooks/github",
+    "active": true
+  },
+  "redirect_url": "https://your-domain.com/github/callback",
+  "public": false,
+  "default_permissions": {
+    "issues": "write",
+    "pull_requests": "write",
+    "contents": "write",
+    "metadata": "read",
+    "actions": "write",
+    "checks": "write"
+  },
+  "default_events": [
+    "issues",
+    "issue_comment",
+    "pull_request",
+    "pull_request_review",
+    "pull_request_review_comment",
+    "push",
+    "release",
+    "workflow_dispatch"
+  ]
+}
