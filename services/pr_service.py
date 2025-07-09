@@ -260,7 +260,7 @@ The PR serves as a detailed specification and guide for whoever implements this 
             branch_name=f"docs/{decision.decision_type.value}/{decision.id}",
             base_branch=self.base_branch,
             assignee=os.getenv("HUMAN_GITHUB_USERNAME", "lsendel"),  # Assign to human
-            labels=["documentation", "implementation-guide", "ai-generated", f"{decision.decision_type.value}-decision"],
+            labels=["documentation", "automated", "ai-generated"],
             decision=decision,
         )
     
