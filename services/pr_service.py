@@ -252,12 +252,18 @@ The PR serves as a detailed specification and guide for whoever implements this 
         # Generate descriptive title
         title = self._generate_descriptive_title(decision, f"[Docs] {decision.decision_type.value.capitalize()} Implementation Guide")
         
+        # Branch name will be set later if using current branch
+        if self.use_current_branch:
+            branch_name = "current-branch-placeholder"
+        else:
+            branch_name = f"docs/{decision.decision_type.value}/{decision.id}"
+        
         # Create the PR object
         return PullRequest(
             id=None,
             title=title,
             body=pr_body,
-            branch_name=f"docs/{decision.decision_type.value}/{decision.id}",
+            branch_name=branch_name,
             base_branch=self.base_branch,
             assignee=os.getenv("HUMAN_GITHUB_USERNAME", "lsendel"),  # Assign to human
             labels=["documentation", "automated", "ai-generated"],
