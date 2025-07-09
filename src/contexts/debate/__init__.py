@@ -16,34 +16,34 @@ Key Domain Services:
 """
 
 from .aggregates import DebateSession, Decision, Round
-from .domain_services import ComplexityAssessment, ConsensusEvaluation, ArgumentValidation
-from .value_objects import Argument, Topic, Consensus
+from .domain_services import (
+    ArgumentValidation,
+    ComplexityAssessment,
+    ConsensusEvaluation,
+)
+from .events import ConsensusReached, DebateInitiated, DecisionMade, RoundCompleted
 from .repositories import DebateRepository, DecisionRepository
-from .events import DebateInitiated, RoundCompleted, ConsensusReached, DecisionMade
+from .value_objects import Argument, Consensus, Topic
 
 __all__ = [
     # Aggregates
-    'DebateSession',
-    'Decision', 
-    'Round',
-    
+    "DebateSession",
+    "Decision",
+    "Round",
     # Domain Services
-    'ComplexityAssessment',
-    'ConsensusEvaluation',
-    'ArgumentValidation',
-    
+    "ComplexityAssessment",
+    "ConsensusEvaluation",
+    "ArgumentValidation",
     # Value Objects
-    'Argument',
-    'Topic',
-    'Consensus',
-    
+    "Argument",
+    "Topic",
+    "Consensus",
     # Repositories
-    'DebateRepository',
-    'DecisionRepository',
-    
+    "DebateRepository",
+    "DecisionRepository",
     # Events
-    'DebateInitiated',
-    'RoundCompleted',
-    'ConsensusReached',
-    'DecisionMade'
+    "DebateInitiated",
+    "RoundCompleted",
+    "ConsensusReached",
+    "DecisionMade",
 ]

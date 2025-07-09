@@ -3,8 +3,9 @@
 Error handling and recovery endpoints for the web API
 """
 
+from typing import Any, Dict
+
 from fastapi import APIRouter
-from typing import Dict, Any
 
 from src.core.error_handler import get_error_handler
 from src.core.resilience import get_resilience_manager
@@ -33,5 +34,5 @@ async def reset_component(component: str) -> Dict[str, str]:
     return {
         "status": "reset",
         "component": component,
-        "message": f"Component {component} resilience state has been reset"
+        "message": f"Component {component} resilience state has been reset",
     }

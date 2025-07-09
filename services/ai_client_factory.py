@@ -3,11 +3,11 @@ AI Client Factory with multiple provider support
 Allows switching between API and alternative methods
 """
 
-import os
-from typing import Dict, Any
-from enum import Enum
 import json
+import os
 from datetime import datetime
+from enum import Enum
+from typing import Any, Dict
 
 
 class AIProvider(Enum):
@@ -61,7 +61,7 @@ class AIClientFactory:
                 raise ValueError("GOOGLE_API_KEY not found in environment")
             genai.configure(api_key=api_key)
             return GeminiClientWithFallback()
-    
+
     def get_openai_client(self, model="gpt-4o"):
         """Get OpenAI client for fallback"""
         if self.use_mock:
@@ -70,6 +70,7 @@ class AIClientFactory:
             return CachedOpenAIClient(self.cache_dir, model)
         else:
             from openai import OpenAI
+
             api_key = os.getenv("OPENAI_API_KEY")
             if not api_key:
                 raise ValueError("OPENAI_API_KEY not found in environment")
@@ -189,7 +190,9 @@ class CachedGeminiClient:
         self.cache_dir = cache_dir
         self.real_client = None
 
-    async def generate_content_async(self, prompt: str, complexity: str = "simple") -> Any:
+    async def generate_content_async(
+        self, prompt: str, complexity: str = "simple"
+    ) -> Any:
         """Check cache first, then call API if needed"""
         # Create cache key from prompt
         import hashlib
@@ -233,15 +236,15 @@ class CachedGeminiClient:
 
 class GeminiClientWithFallback:
     """Gemini client that falls back to OpenAI when rate limited"""
-    
+
     def __init__(self):
         self.gemini_client = None
         self.openai_fallback = None
         self.use_openai = False
-        
+
     def generate_content(self, prompt: str, complexity: str = "simple") -> Any:
         """Generate content with fallback to OpenAI
-        
+
         Args:
             prompt: The prompt to generate content for
             complexity: "simple" or "complex" - determines which GPT model to use
@@ -252,10 +255,11 @@ class GeminiClientWithFallback:
             try:
                 if not self.gemini_client:
                     import google.generativeai as genai
+
                     api_key = os.getenv("GOOGLE_API_KEY")
                     genai.configure(api_key=api_key)
                     self.gemini_client = genai.GenerativeModel("gemini-2.0-flash-exp")
-                
+
                 response = self.gemini_client.generate_content(prompt)
                 return response
             except Exception as e:
@@ -266,42 +270,51 @@ class GeminiClientWithFallback:
                     self.use_openai = True
                 else:
                     raise
-        
+
         # Use OpenAI fallback
         if not self.openai_fallback:
             openai_key = os.getenv("OPENAI_API_KEY")
             if not openai_key or openai_key == "your-openai-api-key-here":
                 # Return error message as response
-                return type("ErrorResponse", (), {
-                    "text": f"Gemini error: Rate limited. OpenAI API key not configured."
-                })
-            
+                return type(
+                    "ErrorResponse",
+                    (),
+                    {
+                        "text": f"Gemini error: Rate limited. OpenAI API key not configured."
+                    },
+                )
+
             from openai import OpenAI
+
             self.openai_fallback = OpenAI(api_key=openai_key)
-        
+
         # Determine model based on complexity
         # Per user request: "use 03 for complex systems or 4o for more simple issues"
         model = "gpt-3.5-turbo" if complexity == "complex" else "gpt-4o"
-        
+
         # Call OpenAI
         try:
             response = self.openai_fallback.chat.completions.create(
                 model=model,
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=1000
+                max_tokens=1000,
             )
             # Convert to Gemini-like response format
-            return type("OpenAIResponse", (), {
-                "text": response.choices[0].message.content
-            })
+            return type(
+                "OpenAIResponse", (), {"text": response.choices[0].message.content}
+            )
         except Exception as e:
-            return type("ErrorResponse", (), {
-                "text": f"Both Gemini and OpenAI failed: {str(e)}"
-            })
-    
-    async def generate_content_async(self, prompt: str, complexity: str = "simple") -> Any:
+            return type(
+                "ErrorResponse",
+                (),
+                {"text": f"Both Gemini and OpenAI failed: {str(e)}"},
+            )
+
+    async def generate_content_async(
+        self, prompt: str, complexity: str = "simple"
+    ) -> Any:
         """Async version of generate_content with fallback to OpenAI
-        
+
         Args:
             prompt: The prompt to generate content for
             complexity: "simple" or "complex" - determines which GPT model to use
@@ -312,10 +325,11 @@ class GeminiClientWithFallback:
             try:
                 if not self.gemini_client:
                     import google.generativeai as genai
+
                     api_key = os.getenv("GOOGLE_API_KEY")
                     genai.configure(api_key=api_key)
                     self.gemini_client = genai.GenerativeModel("gemini-2.0-flash-exp")
-                
+
                 response = await self.gemini_client.generate_content_async(prompt)
                 return response
             except Exception as e:
@@ -326,111 +340,144 @@ class GeminiClientWithFallback:
                     self.use_openai = True
                 else:
                     raise
-        
+
         # Use OpenAI fallback
         if not self.openai_fallback:
             openai_key = os.getenv("OPENAI_API_KEY")
             if not openai_key or openai_key == "your-openai-api-key-here":
                 # Return error message as response
-                return type("ErrorResponse", (), {
-                    "text": f"Gemini error: Rate limited. OpenAI API key not configured."
-                })
-            
+                return type(
+                    "ErrorResponse",
+                    (),
+                    {
+                        "text": f"Gemini error: Rate limited. OpenAI API key not configured."
+                    },
+                )
+
             from openai import OpenAI
+
             self.openai_fallback = OpenAI(api_key=openai_key)
-        
+
         # Determine model based on complexity
         # Per user request: "use 03 for complex systems or 4o for more simple issues"
         model = "gpt-3.5-turbo" if complexity == "complex" else "gpt-4o"
-        
+
         # Call OpenAI (sync client, no async needed)
         try:
             response = self.openai_fallback.chat.completions.create(
                 model=model,
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=1000
+                max_tokens=1000,
             )
             # Convert to Gemini-like response format
-            return type("OpenAIResponse", (), {
-                "text": response.choices[0].message.content
-            })
+            return type(
+                "OpenAIResponse", (), {"text": response.choices[0].message.content}
+            )
         except Exception as e:
-            return type("ErrorResponse", (), {
-                "text": f"Both Gemini and OpenAI failed: {str(e)}"
-            })
+            return type(
+                "ErrorResponse",
+                (),
+                {"text": f"Both Gemini and OpenAI failed: {str(e)}"},
+            )
 
 
 class MockOpenAIClient:
     """Mock OpenAI client for testing"""
-    
+
     def __init__(self):
         self.chat = type("Chat", (), {"completions": self})()
-    
+
     def create(self, model: str, messages: list, max_tokens: int = 1000) -> Any:
         """Return mock response"""
         question = messages[-1]["content"] if messages else "Unknown"
-        
+
         if "complex" in question.lower():
             text = "For complex systems, I recommend using GPT-3.5 for detailed analysis..."
         else:
-            text = "For simpler tasks, GPT-4o provides efficient and accurate responses..."
-        
-        return type("MockResponse", (), {
-            "choices": [type("Choice", (), {
-                "message": type("Message", (), {"content": text})
-            })]
-        })
+            text = (
+                "For simpler tasks, GPT-4o provides efficient and accurate responses..."
+            )
+
+        return type(
+            "MockResponse",
+            (),
+            {
+                "choices": [
+                    type(
+                        "Choice",
+                        (),
+                        {"message": type("Message", (), {"content": text})},
+                    )
+                ]
+            },
+        )
 
 
 class CachedOpenAIClient:
     """OpenAI client that caches responses"""
-    
+
     def __init__(self, cache_dir: str, model: str = "gpt-4o"):
         self.cache_dir = cache_dir
         self.model = model
         self.real_client = None
         self.chat = type("Chat", (), {"completions": self})()
-    
+
     def create(self, model: str, messages: list, max_tokens: int = 1000) -> Any:
         """Check cache first, then call API if needed"""
         import hashlib
-        
+
         # Create cache key
         content = f"{model}:{json.dumps(messages, sort_keys=True)}"
         cache_key = hashlib.md5(content.encode()).hexdigest()[:16]
         cache_file = os.path.join(self.cache_dir, f"openai_{cache_key}.json")
-        
+
         # Check cache
         if os.path.exists(cache_file):
             with open(cache_file, "r") as f:
                 cached = json.load(f)
-                return type("CachedResponse", (), {
-                    "choices": [type("Choice", (), {
-                        "message": type("Message", (), {"content": cached["response"]})
-                    })]
-                })
-        
+                return type(
+                    "CachedResponse",
+                    (),
+                    {
+                        "choices": [
+                            type(
+                                "Choice",
+                                (),
+                                {
+                                    "message": type(
+                                        "Message", (), {"content": cached["response"]}
+                                    )
+                                },
+                            )
+                        ]
+                    },
+                )
+
         # Call real API
         if not self.real_client:
             from openai import OpenAI
+
             api_key = os.getenv("OPENAI_API_KEY")
             if not api_key:
                 return MockOpenAIClient().create(model, messages, max_tokens)
             self.real_client = OpenAI(api_key=api_key)
-        
+
         response = self.real_client.chat.completions.create(
             model=model, messages=messages, max_tokens=max_tokens
         )
-        
+
         # Cache response
         with open(cache_file, "w") as f:
-            json.dump({
-                "timestamp": datetime.now().isoformat(),
-                "model": model,
-                "messages": messages,
-                "response": response.choices[0].message.content
-            }, f)
-        
+            json.dump(
+                {
+                    "timestamp": datetime.now().isoformat(),
+                    "model": model,
+                    "messages": messages,
+                    "response": response.choices[0].message.content,
+                },
+                f,
+            )
+
         return response
 
 

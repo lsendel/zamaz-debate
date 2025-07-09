@@ -5,8 +5,8 @@ Following Domain-Driven Design principles
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Dict, Any, Optional
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 
 class DecisionType(Enum):

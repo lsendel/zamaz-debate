@@ -3,8 +3,9 @@ Delegation Service for Zamaz Debate System
 Determines who should implement decisions based on complexity
 """
 
-from typing import Any, Tuple, Optional
-from domain.models import Decision, Debate, ImplementationAssignee, DecisionType
+from typing import Any, Optional, Tuple
+
+from domain.models import Debate, Decision, DecisionType, ImplementationAssignee
 
 
 class DelegationService:
@@ -77,7 +78,7 @@ class DelegationService:
     def determine_reviewer(self, implementer: ImplementationAssignee) -> str:
         """
         Determine who should review the PR based on the implementer
-        
+
         Rules:
         - If Claude implements → Gemini reviews
         - If Gemini implements → Codex reviews and commits
@@ -112,7 +113,10 @@ class DelegationService:
 
         # Decision rules
         # Evolution and Complex decision types are always complex
-        if complex_count >= 2 or decision.decision_type in [DecisionType.EVOLUTION, DecisionType.COMPLEX]:
+        if complex_count >= 2 or decision.decision_type in [
+            DecisionType.EVOLUTION,
+            DecisionType.COMPLEX,
+        ]:
             return "complex"
         elif simple_count >= 2:
             return "simple"
@@ -123,7 +127,7 @@ class DelegationService:
         self, decision: Decision, impl_complexity: str, debate: Optional[Debate] = None
     ) -> ImplementationAssignee:
         """Determine who should implement based on complexity and content
-        
+
         New Rules:
         - Complex tasks → Claude (with Gemini as reviewer)
         - Regular tasks → Gemini (with Codex as reviewer and committer)

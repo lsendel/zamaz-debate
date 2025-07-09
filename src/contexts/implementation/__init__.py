@@ -15,35 +15,36 @@ Key Domain Services:
 - QualityAssurance: Ensures code quality standards
 """
 
-from .aggregates import ImplementationTask, PullRequest, CodeReview
-from .domain_services import TaskAssignment, ProgressTracking, QualityAssurance
-from .value_objects import Task, ReviewComment, TestResult
+from .aggregates import CodeReview, ImplementationTask, PullRequest
+from .domain_services import ProgressTracking, QualityAssurance, TaskAssignment
+from .events import (
+    CodeReviewCompleted,
+    ImplementationCompleted,
+    PullRequestDrafted,
+    TaskCreated,
+)
 from .repositories import ImplementationRepository, PullRequestRepository
-from .events import TaskCreated, PullRequestDrafted, CodeReviewCompleted, ImplementationCompleted
+from .value_objects import ReviewComment, Task, TestResult
 
 __all__ = [
     # Aggregates
-    'ImplementationTask',
-    'PullRequest',
-    'CodeReview',
-    
+    "ImplementationTask",
+    "PullRequest",
+    "CodeReview",
     # Domain Services
-    'TaskAssignment',
-    'ProgressTracking',
-    'QualityAssurance',
-    
+    "TaskAssignment",
+    "ProgressTracking",
+    "QualityAssurance",
     # Value Objects
-    'Task',
-    'ReviewComment',
-    'TestResult',
-    
+    "Task",
+    "ReviewComment",
+    "TestResult",
     # Repositories
-    'ImplementationRepository',
-    'PullRequestRepository',
-    
+    "ImplementationRepository",
+    "PullRequestRepository",
     # Events
-    'TaskCreated',
-    'PullRequestDrafted',
-    'CodeReviewCompleted',
-    'ImplementationCompleted'
+    "TaskCreated",
+    "PullRequestDrafted",
+    "CodeReviewCompleted",
+    "ImplementationCompleted",
 ]

@@ -5,18 +5,18 @@ This package contains the bounded contexts as defined by Domain-Driven Design pr
 Each context represents a distinct business domain with its own models, services, and responsibilities.
 """
 
-from .debate import DebateContext
-from .implementation import ImplementationContext
-from .evolution import EvolutionContext
 from .ai_integration import AIIntegrationContext
-from .testing import TestingContext
+from .debate import DebateContext
+from .evolution import EvolutionContext
+from .implementation import ImplementationContext
 from .performance import PerformanceContext
+from .testing import TestingContext
 
 __all__ = [
-    'DebateContext',
-    'ImplementationContext', 
-    'EvolutionContext',
-    'AIIntegrationContext',
-    'TestingContext',
-    'PerformanceContext'
+    "DebateContext",
+    "ImplementationContext",
+    "EvolutionContext",
+    "AIIntegrationContext",
+    "TestingContext",
+    "PerformanceContext",
 ]
