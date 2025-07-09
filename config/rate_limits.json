@@ -1,0 +1,283 @@
+{
+  "global": {
+    "enabled": true,
+    "log_level": "INFO",
+    "metrics_enabled": true,
+    "cleanup_interval_seconds": 300,
+    "store_type": "memory",
+    "max_limiters": 10000,
+    "default_ttl_seconds": 3600
+  },
+  "endpoints": {
+    "POST /decide": {
+      "requests_per_second": 3.0,
+      "burst_capacity": 10,
+      "window_seconds": 60,
+      "scope": "ip",
+      "action": "reject",
+      "risk_level": "high",
+      "enabled": true,
+      "bypass_patterns": [],
+      "custom_headers": {
+        "X-RateLimit-Endpoint": "decision-making"
+      }
+    },
+    "POST /evolve": {
+      "requests_per_second": 1.0,
+      "burst_capacity": 3,
+      "window_seconds": 60,
+      "scope": "ip",
+      "action": "reject",
+      "risk_level": "critical",
+      "enabled": true,
+      "bypass_patterns": [],
+      "custom_headers": {
+        "X-RateLimit-Endpoint": "evolution"
+      }
+    },
+    "POST /review-pr": {
+      "requests_per_second": 2.0,
+      "burst_capacity": 5,
+      "window_seconds": 60,
+      "scope": "ip",
+      "action": "reject",
+      "risk_level": "high",
+      "enabled": true,
+      "bypass_patterns": [],
+      "custom_headers": {
+        "X-RateLimit-Endpoint": "pr-review"
+      }
+    },
+    "POST /webhooks/retry-failed": {
+      "requests_per_second": 1.0,
+      "burst_capacity": 3,
+      "window_seconds": 60,
+      "scope": "ip",
+      "action": "reject",
+      "risk_level": "high",
+      "enabled": true,
+      "bypass_patterns": [],
+      "custom_headers": {}
+    },
+    "POST /webhooks/endpoints/*/test": {
+      "requests_per_second": 2.0,
+      "burst_capacity": 5,
+      "window_seconds": 60,
+      "scope": "ip",
+      "action": "reject",
+      "risk_level": "high",
+      "enabled": true,
+      "bypass_patterns": [],
+      "custom_headers": {}
+    },
+    "POST /webhooks/endpoints": {
+      "requests_per_second": 10.0,
+      "burst_capacity": 20,
+      "window_seconds": 60,
+      "scope": "ip",
+      "action": "reject",
+      "risk_level": "medium",
+      "enabled": true,
+      "bypass_patterns": [],
+      "custom_headers": {}
+    },
+    "PUT /webhooks/endpoints/*": {
+      "requests_per_second": 10.0,
+      "burst_capacity": 20,
+      "window_seconds": 60,
+      "scope": "ip",
+      "action": "reject",
+      "risk_level": "medium",
+      "enabled": true,
+      "bypass_patterns": [],
+      "custom_headers": {}
+    },
+    "DELETE /webhooks/endpoints/*": {
+      "requests_per_second": 5.0,
+      "burst_capacity": 10,
+      "window_seconds": 60,
+      "scope": "ip",
+      "action": "reject",
+      "risk_level": "medium",
+      "enabled": true,
+      "bypass_patterns": [],
+      "custom_headers": {}
+    },
+    "POST /errors/resilience/reset/*": {
+      "requests_per_second": 5.0,
+      "burst_capacity": 10,
+      "window_seconds": 60,
+      "scope": "ip",
+      "action": "reject",
+      "risk_level": "medium",
+      "enabled": true,
+      "bypass_patterns": [],
+      "custom_headers": {}
+    },
+    "GET /": {
+      "requests_per_second": 100.0,
+      "burst_capacity": 200,
+      "window_seconds": 60,
+      "scope": "ip",
+      "action": "throttle",
+      "risk_level": "low",
+      "enabled": true,
+      "bypass_patterns": [],
+      "custom_headers": {}
+    },
+    "GET /stats": {
+      "requests_per_second": 50.0,
+      "burst_capacity": 100,
+      "window_seconds": 60,
+      "scope": "ip",
+      "action": "throttle",
+      "risk_level": "low",
+      "enabled": true,
+      "bypass_patterns": [],
+      "custom_headers": {}
+    },
+    "GET /pending-reviews": {
+      "requests_per_second": 20.0,
+      "burst_capacity": 40,
+      "window_seconds": 60,
+      "scope": "ip",
+      "action": "throttle",
+      "risk_level": "low",
+      "enabled": true,
+      "bypass_patterns": [],
+      "custom_headers": {}
+    },
+    "GET /pr-drafts": {
+      "requests_per_second": 20.0,
+      "burst_capacity": 40,
+      "window_seconds": 60,
+      "scope": "ip",
+      "action": "throttle",
+      "risk_level": "low",
+      "enabled": true,
+      "bypass_patterns": [],
+      "custom_headers": {}
+    },
+    "GET /webhooks/endpoints": {
+      "requests_per_second": 30.0,
+      "burst_capacity": 60,
+      "window_seconds": 60,
+      "scope": "ip",
+      "action": "throttle",
+      "risk_level": "low",
+      "enabled": true,
+      "bypass_patterns": [],
+      "custom_headers": {}
+    },
+    "GET /webhooks/endpoints/*": {
+      "requests_per_second": 30.0,
+      "burst_capacity": 60,
+      "window_seconds": 60,
+      "scope": "ip",
+      "action": "throttle",
+      "risk_level": "low",
+      "enabled": true,
+      "bypass_patterns": [],
+      "custom_headers": {}
+    },
+    "GET /webhooks/stats": {
+      "requests_per_second": 20.0,
+      "burst_capacity": 40,
+      "window_seconds": 60,
+      "scope": "ip",
+      "action": "throttle",
+      "risk_level": "low",
+      "enabled": true,
+      "bypass_patterns": [],
+      "custom_headers": {}
+    },
+    "GET /webhooks/delivery-history": {
+      "requests_per_second": 10.0,
+      "burst_capacity": 20,
+      "window_seconds": 60,
+      "scope": "ip",
+      "action": "throttle",
+      "risk_level": "low",
+      "enabled": true,
+      "bypass_patterns": [],
+      "custom_headers": {}
+    },
+    "GET /webhooks/event-types": {
+      "requests_per_second": 50.0,
+      "burst_capacity": 100,
+      "window_seconds": 60,
+      "scope": "ip",
+      "action": "throttle",
+      "risk_level": "low",
+      "enabled": true,
+      "bypass_patterns": [],
+      "custom_headers": {}
+    },
+    "GET /errors/summary": {
+      "requests_per_second": 30.0,
+      "burst_capacity": 60,
+      "window_seconds": 60,
+      "scope": "ip",
+      "action": "throttle",
+      "risk_level": "low",
+      "enabled": true,
+      "bypass_patterns": [],
+      "custom_headers": {}
+    },
+    "GET /errors/resilience/status": {
+      "requests_per_second": 30.0,
+      "burst_capacity": 60,
+      "window_seconds": 60,
+      "scope": "ip",
+      "action": "throttle",
+      "risk_level": "low",
+      "enabled": true,
+      "bypass_patterns": [],
+      "custom_headers": {}
+    },
+    "GET /rate-limits/stats": {
+      "requests_per_second": 10.0,
+      "burst_capacity": 20,
+      "window_seconds": 60,
+      "scope": "ip",
+      "action": "throttle",
+      "risk_level": "low",
+      "enabled": true,
+      "bypass_patterns": [],
+      "custom_headers": {}
+    },
+    "GET /rate-limits/config": {
+      "requests_per_second": 10.0,
+      "burst_capacity": 20,
+      "window_seconds": 60,
+      "scope": "ip",
+      "action": "throttle",
+      "risk_level": "low",
+      "enabled": true,
+      "bypass_patterns": [],
+      "custom_headers": {}
+    },
+    "GET /rate-limits/health": {
+      "requests_per_second": 20.0,
+      "burst_capacity": 40,
+      "window_seconds": 60,
+      "scope": "ip",
+      "action": "throttle",
+      "risk_level": "low",
+      "enabled": true,
+      "bypass_patterns": [],
+      "custom_headers": {}
+    },
+    "POST /rate-limits/reset/*": {
+      "requests_per_second": 5.0,
+      "burst_capacity": 10,
+      "window_seconds": 60,
+      "scope": "ip",
+      "action": "reject",
+      "risk_level": "medium",
+      "enabled": true,
+      "bypass_patterns": [],
+      "custom_headers": {}
+    }
+  }
+}
