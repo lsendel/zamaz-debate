@@ -70,12 +70,13 @@ class DebateNucleus:
 
     VERSION = "0.1.0"
 
-    def __init__(self):
+    def __init__(self, event_bus=None):
         self.claude_client = None
         self.gemini_client = None
         self.debates_dir = None
         self.decision_count = 0
         self.debate_count = 0
+        self.event_bus = event_bus
 
         # Evolution tracker
         self.evolution_tracker = EvolutionTracker()
@@ -115,13 +116,24 @@ class DebateNucleus:
 
         if complexity == "simple":
             decision_text = await self._simple_decision(question)
-            return {
+            result = {
                 "decision": decision_text,
                 "method": "direct",
                 "rounds": 0,
                 "complexity": complexity,
                 "time": timestamp.isoformat(),
             }
+            
+            # Emit decision event
+            await self._emit_decision_event(
+                decision_id=f"simple_{self.decision_count}",
+                question=question,
+                decision_text=decision_text,
+                complexity=complexity,
+                timestamp=timestamp
+            )
+            
+            return result
 
         # Complex decisions need debate
         self.debate_count += 1
@@ -171,6 +183,16 @@ class DebateNucleus:
                     result["pr_branch"] = pr.branch_name
                     result["pr_assignee"] = pr.assignee
 
+        # Emit decision event for complex decisions
+        await self._emit_decision_event(
+            decision_id=result.get("debate_id", f"decision_{self.decision_count}"),
+            question=question,
+            decision_text=result["decision"],
+            complexity=complexity,
+            timestamp=datetime.fromisoformat(result["time"]),
+            debate_id=result.get("debate_id")
+        )
+        
         return result
 
     def _assess_complexity(self, question: str) -> str:
@@ -547,6 +569,59 @@ Be skeptical and thorough. Challenge assumptions. Consider if this is really nec
             return "documentation"
 
         return "enhancement"
+
+    async def _emit_decision_event(self, decision_id: str, question: str, decision_text: str, 
+                                 complexity: str, timestamp: datetime, debate_id: str = None):
+        """Emit a decision made event"""
+        if not self.event_bus:
+            return
+            
+        try:
+            from src.contexts.debate.events import DecisionMade
+            from uuid import uuid4
+            
+            event = DecisionMade(
+                event_id=uuid4(),
+                occurred_at=timestamp,
+                event_type="DecisionMade",
+                aggregate_id=uuid4(),
+                decision_id=uuid4(),
+                debate_id=uuid4() if debate_id else None,
+                decision_type=complexity,
+                question=question,
+                recommendation=decision_text,
+                confidence=0.8,  # Default confidence
+                implementation_required=complexity in ["complex", "moderate"]
+            )
+            
+            await self.event_bus.publish(event)
+        except Exception as e:
+            print(f"Error emitting decision event: {e}")
+    
+    async def _emit_debate_completed_event(self, debate_id: str, rounds: int, 
+                                         final_decision: str, timestamp: datetime):
+        """Emit a debate completed event"""
+        if not self.event_bus:
+            return
+            
+        try:
+            from src.contexts.debate.events import DebateCompleted
+            from uuid import uuid4
+            
+            event = DebateCompleted(
+                event_id=uuid4(),
+                occurred_at=timestamp,
+                event_type="DebateCompleted",
+                aggregate_id=uuid4(),
+                debate_id=uuid4(),
+                total_rounds=rounds,
+                total_arguments=rounds * 2,  # Approximation
+                final_consensus=final_decision
+            )
+            
+            await self.event_bus.publish(event)
+        except Exception as e:
+            print(f"Error emitting debate completed event: {e}")
 
 
 async def main():
