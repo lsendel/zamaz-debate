@@ -105,13 +105,13 @@ jobs:
           script: |
             const num = context.issue.number;
             const msg = `## 🤖 Codex Task Created
-
-Codex has been notified to implement this issue!
-
-- **Task file:** `.codex-tasks/URGENT_CODEX_TASK_${num}.md`
-- **Task list:** `CODEX_TASKS.md`
-
-_Codex will pick this up on next repository access and open a PR when done._`;
+            
+            Codex has been notified to implement this issue!
+            
+            - **Task file:** \`.codex-tasks/URGENT_CODEX_TASK_${num}.md\`
+            - **Task list:** \`CODEX_TASKS.md\`
+            
+            _Codex will pick this up on next repository access and open a PR when done._`;
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo:  context.repo.repo,
