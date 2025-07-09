@@ -67,8 +67,15 @@ zamaz-debate/
 Create a `.env` file with:
 
 ```
+# AI API Keys
 ANTHROPIC_API_KEY=your-anthropic-api-key
 GOOGLE_API_KEY=your-google-api-key
+
+# Kafka Configuration (optional)
+KAFKA_ENABLED=true
+KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+KAFKA_GROUP_ID=zamaz-debate-group
+KAFKA_TOPIC_PREFIX=zamaz-debate
 ```
 
 ## 🧪 Testing
@@ -83,6 +90,58 @@ This will execute:
 - Simple decision test (bypasses debate)
 - Complex decision test (triggers debate)
 - Self-improvement suggestion
+
+## ⚡ Kafka Event-Driven Architecture
+
+The system now includes Apache Kafka integration for high-throughput, real-time event processing. This enables the system to process millions of events per day with low latency.
+
+### Key Features
+
+- **High-Throughput Processing**: Handle millions of events per day
+- **Event Persistence**: Persistent event storage with configurable retention
+- **Horizontal Scaling**: Partitioned topics and consumer groups
+- **Dead Letter Queues**: Automatic handling of failed messages
+- **Real-time Analytics**: Stream processing for immediate insights
+- **Fault Tolerance**: Automatic retries and error recovery
+
+### Quick Start with Kafka
+
+1. **Start Kafka** (using Docker):
+   ```bash
+   docker run -d --name kafka -p 9092:9092 apache/kafka:latest
+   ```
+
+2. **Enable Kafka** in your `.env`:
+   ```
+   KAFKA_ENABLED=true
+   KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+   ```
+
+3. **Start the system**:
+   ```bash
+   make run
+   ```
+
+### Event Types
+
+The system automatically creates and manages these event topics:
+
+- `zamaz-debate.debate-events` - Debate lifecycle events
+- `zamaz-debate.decision-events` - Decision-making events  
+- `zamaz-debate.evolution-events` - System evolution events
+- `zamaz-debate.webhook-events` - Webhook notifications
+- `zamaz-debate.metrics-events` - Performance metrics
+
+### API Endpoints
+
+- `GET /kafka/health` - Kafka service health check
+- `GET /kafka/topics` - List all topics
+- `POST /kafka/events` - Publish custom events
+- `GET /stats` - System stats (now includes Kafka metrics)
+
+### Documentation
+
+For detailed Kafka integration documentation, see [docs/kafka_integration.md](docs/kafka_integration.md).
 
 ## 📝 License
 

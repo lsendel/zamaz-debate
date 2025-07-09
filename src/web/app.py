@@ -22,6 +22,7 @@ from src.core.error_handler import get_error_handler
 from src.core.nucleus import DebateNucleus
 from src.webhooks import WebhookService, WebhookEventHandler, webhook_router, init_webhook_api
 from src.events.event_bus import EventBus
+from src.events.kafka.service import initialize_kafka_service, shutdown_kafka_service, get_kafka_service
 
 app = FastAPI(title="Debate Nucleus API")
 
@@ -50,6 +51,15 @@ async def startup_event():
     await webhook_service.start()
     await event_bus.start()
     await webhook_event_handler.start()
+    
+    # Initialize Kafka service if enabled
+    kafka_enabled = os.getenv("KAFKA_ENABLED", "true").lower() == "true"
+    if kafka_enabled:
+        try:
+            await initialize_kafka_service(event_bus)
+        except Exception as e:
+            print(f"Warning: Failed to initialize Kafka service: {e}")
+            print("Continuing without Kafka integration")
 
 
 @app.on_event("shutdown")
@@ -58,6 +68,12 @@ async def shutdown_event():
     await webhook_event_handler.stop()
     await event_bus.stop()
     await webhook_service.stop()
+    
+    # Shutdown Kafka service if running
+    try:
+        await shutdown_kafka_service()
+    except Exception as e:
+        print(f"Warning: Error shutting down Kafka service: {e}")
 
 
 @app.exception_handler(Exception)
@@ -144,11 +160,18 @@ async def get_stats():
     debate_count = len(list(debates_dir.glob("*.json"))) if debates_dir.exists() else 0
     decision_count = len(list(decisions_dir.glob("*.json"))) if decisions_dir.exists() else 0
 
-    return {
+    stats = {
         "version": nucleus.VERSION,
         "decisions_made": decision_count,
         "debates_run": debate_count,
     }
+    
+    # Add Kafka stats if available
+    kafka_service = await get_kafka_service()
+    if kafka_service:
+        stats["kafka"] = kafka_service.get_stats()
+
+    return stats
 
 
 @app.post("/evolve")
@@ -224,6 +247,93 @@ async def get_pr_drafts():
             )
 
     return {"pr_drafts": drafts}
+
+
+# Kafka-specific endpoints
+@app.get("/kafka/health")
+async def kafka_health_check():
+    """Get Kafka service health status"""
+    kafka_service = await get_kafka_service()
+    if not kafka_service:
+        return {"status": "not_running", "message": "Kafka service not initialized"}
+    
+    health = await kafka_service.health_check()
+    return {"status": "running", "health": health}
+
+
+@app.get("/kafka/topics")
+async def list_kafka_topics():
+    """List all Kafka topics"""
+    kafka_service = await get_kafka_service()
+    if not kafka_service:
+        raise HTTPException(status_code=503, detail="Kafka service not available")
+    
+    topics = await kafka_service.list_topics()
+    return {"topics": topics}
+
+
+@app.get("/kafka/topics/{topic_name}")
+async def get_kafka_topic_metadata(topic_name: str):
+    """Get metadata for a specific Kafka topic"""
+    kafka_service = await get_kafka_service()
+    if not kafka_service:
+        raise HTTPException(status_code=503, detail="Kafka service not available")
+    
+    metadata = await kafka_service.get_topic_metadata(topic_name)
+    if not metadata:
+        raise HTTPException(status_code=404, detail="Topic not found")
+    
+    return metadata
+
+
+class KafkaEventRequest(BaseModel):
+    event_type: str
+    event_data: Dict[str, Any]
+    partition_key: Optional[str] = None
+
+
+@app.post("/kafka/events")
+async def publish_kafka_event(request: KafkaEventRequest):
+    """Publish an event to Kafka"""
+    kafka_service = await get_kafka_service()
+    if not kafka_service:
+        raise HTTPException(status_code=503, detail="Kafka service not available")
+    
+    success = await kafka_service.publish_event(
+        event_type=request.event_type,
+        event_data=request.event_data,
+        partition_key=request.partition_key
+    )
+    
+    if success:
+        return {"status": "published", "event_type": request.event_type}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to publish event")
+
+
+class CreateTopicRequest(BaseModel):
+    event_type: str
+    num_partitions: Optional[int] = None
+    replication_factor: Optional[int] = None
+
+
+@app.post("/kafka/topics")
+async def create_kafka_topic(request: CreateTopicRequest):
+    """Create a new Kafka topic"""
+    kafka_service = await get_kafka_service()
+    if not kafka_service:
+        raise HTTPException(status_code=503, detail="Kafka service not available")
+    
+    success = await kafka_service.create_topic(
+        event_type=request.event_type,
+        num_partitions=request.num_partitions,
+        replication_factor=request.replication_factor
+    )
+    
+    if success:
+        return {"status": "created", "topic": kafka_service.get_config().get_topic_name(request.event_type)}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to create topic")
 
 
 if __name__ == "__main__":
