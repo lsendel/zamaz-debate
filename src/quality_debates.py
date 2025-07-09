@@ -5,6 +5,7 @@ These debates help the self-improving system maintain code quality
 
 import asyncio
 import json
+import os
 from datetime import datetime
 from pathlib import Path
 import sys
@@ -81,72 +82,86 @@ def save_quality_debate_summary(results):
 
 async def run_quality_debate(question_id: str = None):
     """Run a specific quality debate or all debates"""
-    nucleus = DebateNucleus()
-    results = []
+    # Get quality debate specific branch setting
+    quality_use_current_branch = os.getenv("QUALITY_DEBATE_USE_CURRENT_BRANCH", "false").lower() == "true"
+    
+    # Store original PR_USE_CURRENT_BRANCH value
+    original_pr_use_current_branch = os.getenv("PR_USE_CURRENT_BRANCH", "true")
+    
+    # Temporarily set PR_USE_CURRENT_BRANCH for quality debates
+    os.environ["PR_USE_CURRENT_BRANCH"] = str(quality_use_current_branch).lower()
+    
+    try:
+        nucleus = DebateNucleus()
+        results = []
 
-    if question_id:
-        # Run specific debate
-        question_data = next(
-            (q for q in QUALITY_QUESTIONS if q["id"] == question_id), None
-        )
-        if not question_data:
-            print(f"Question ID '{question_id}' not found")
-            return
+        if question_id:
+            # Run specific debate
+            question_data = next(
+                (q for q in QUALITY_QUESTIONS if q["id"] == question_id), None
+            )
+            if not question_data:
+                print(f"Question ID '{question_id}' not found")
+                return
 
-        print(f"\n🤔 Running quality debate: {question_data['id']}")
-        result = await nucleus.decide(
-            question_data["question"], question_data["context"]
-        )
-        
-        # Display results
-        print(f"\n✅ Decision: {result['decision'][:200]}...")
-        print(f"Method: {result['method']}")
-        print(f"Rounds: {result['rounds']}")
-        
-        # Check if PR was created
-        if result.get('pr_created'):
-            print(f"\n📄 Pull Request Created!")
-            print(f"   PR ID: {result.get('pr_id')}")
-            print(f"   Branch: {result.get('pr_branch')}")
-            print(f"   Assignee: {result.get('pr_assignee')}")
-        
-        # Store result with question data
-        results.append({
-            "question_id": question_data["id"],
-            "question": question_data["question"],
-            "context": question_data["context"],
-            "result": result
-        })
-    else:
-        # Run all debates
-        for question_data in QUALITY_QUESTIONS:
             print(f"\n🤔 Running quality debate: {question_data['id']}")
             result = await nucleus.decide(
                 question_data["question"], question_data["context"]
             )
-            print(
-                f"\n✅ Decision made via {result['method']} ({result['rounds']} rounds)"
-            )
+            
+            # Display results
+            print(f"\n✅ Decision: {result['decision'][:200]}...")
+            print(f"Method: {result['method']}")
+            print(f"Rounds: {result['rounds']}")
             
             # Check if PR was created
             if result.get('pr_created'):
-                print(f"   📄 PR created: {result.get('pr_id')} on branch {result.get('pr_branch')}")
+                print(f"\n📄 Pull Request Created!")
+                print(f"   PR ID: {result.get('pr_id')}")
+                print(f"   Branch: {result.get('pr_branch')}")
+                print(f"   Assignee: {result.get('pr_assignee')}")
             
-            # Store result
+            # Store result with question data
             results.append({
                 "question_id": question_data["id"],
                 "question": question_data["question"],
                 "context": question_data["context"],
                 "result": result
             })
-            
-            print("-" * 80)
+        else:
+            # Run all debates
+            for question_data in QUALITY_QUESTIONS:
+                print(f"\n🤔 Running quality debate: {question_data['id']}")
+                result = await nucleus.decide(
+                    question_data["question"], question_data["context"]
+                )
+                print(
+                    f"\n✅ Decision made via {result['method']} ({result['rounds']} rounds)"
+                )
+                
+                # Check if PR was created
+                if result.get('pr_created'):
+                    print(f"   📄 PR created: {result.get('pr_id')} on branch {result.get('pr_branch')}")
+                
+                # Store result
+                results.append({
+                    "question_id": question_data["id"],
+                    "question": question_data["question"],
+                    "context": question_data["context"],
+                    "result": result
+                })
+                
+                print("-" * 80)
+        
+        # Save results summary if any debates were run
+        if results:
+            save_quality_debate_summary(results)
+        
+        return results
     
-    # Save results summary if any debates were run
-    if results:
-        save_quality_debate_summary(results)
-    
-    return results
+    finally:
+        # Restore original PR_USE_CURRENT_BRANCH value
+        os.environ["PR_USE_CURRENT_BRANCH"] = original_pr_use_current_branch
 
 
 def list_quality_questions():

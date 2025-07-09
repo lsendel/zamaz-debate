@@ -3,7 +3,7 @@
 
 .PHONY: help install setup run stop test clean debate evolve auto-evolve check-env web logs status \
 	dev-install format format-check isort isort-check lint lint-deep type-check quality quality-fix \
-	test-coverage quality-debate quality-debate-specific pre-commit-install pre-commit-all \
+	test-coverage quality-debate quality-debate-list quality-debate-specific pre-commit-install pre-commit-all \
 	complexity security-scan quality-report
 
 # Default target - show help
@@ -35,6 +35,8 @@ help:
 	@echo "  make test-coverage - Run tests with coverage"
 	@echo "  make quality-report - Generate full quality report"
 	@echo "  make quality-debate - Run AI debates about code quality"
+	@echo "  make quality-debate-list - List available quality debates"
+	@echo "  make quality-debate-specific - Run a specific quality debate"
 	@echo "  make pre-commit-install - Install pre-commit hooks"
 
 # Check if virtual environment exists
@@ -263,17 +265,17 @@ test-coverage:
 
 # Run quality debates
 quality-debate:
-	@echo "Running quality debates..."
+	@echo "Running all quality debates..."
 	./venv/bin/python src/quality_debates.py
+
+# List available quality debates
+quality-debate-list:
+	@echo "Listing available quality debates..."
+	./venv/bin/python src/quality_debates.py --list
 
 # Run specific quality debate
 quality-debate-specific:
-	@echo "Available quality debates:"
-	@echo "  - code_quality_tools"
-	@echo "  - quality_metrics"
-	@echo "  - quality_gates"
-	@echo "  - evolution_testing"
-	@echo "  - code_style_enforcement"
+	@./venv/bin/python src/quality_debates.py --list
 	@echo ""
 	@read -p "Enter debate ID: " debate_id; \
 	./venv/bin/python src/quality_debates.py --question $$debate_id
