@@ -4,12 +4,12 @@
 
 **Claude, you have NEW HIGH PRIORITY implementation tasks!**
 
-## 🔥 Latest Task: Issue #217
+## 🔥 Latest Task: Issue #218
 
-### 📌 Implement: create an implementation plan to create an orchestration workfrlow for debates, evaluate if we just ...
+### 📌 Implement orchestration workflow system for debates
 - **Status:** URGENT - NEEDS IMMEDIATE IMPLEMENTATION
-- **File:** `.claude-tasks/URGENT_TASK_217.md`
-- **GitHub Issue:** https://github.com/lsendel/zamaz-debate/issues/217
+- **File:** `.claude-tasks/URGENT_TASK_218.md`
+- **GitHub Issue:** https://github.com/lsendel/zamaz-debate/pull/218
 
 ## Instructions
 
@@ -31,3 +31,4 @@
 - URGENT_TASK_213.md
 - URGENT_TASK_215.md
 - URGENT_TASK_217.md
+- URGENT_TASK_218.md
