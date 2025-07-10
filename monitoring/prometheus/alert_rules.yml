@@ -1,0 +1,159 @@
+groups:
+- name: zamaz_system_alerts
+  rules:
+  # System health alerts
+  - alert: SystemDown
+    expr: up{job="zamaz-debate-system"} == 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Zamaz Debate System is down"
+      description: "The Zamaz Debate System has been down for more than 1 minute."
+
+  - alert: HighCPUUsage
+    expr: zamaz_performance_cpu_usage_percent > 80
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High CPU usage detected"
+      description: "CPU usage is above 80% for more than 5 minutes. Current value: {{ $value }}%"
+
+  - alert: HighMemoryUsage
+    expr: zamaz_performance_memory_usage_percent > 85
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High memory usage detected"
+      description: "Memory usage is above 85% for more than 5 minutes. Current value: {{ $value }}%"
+
+  - alert: HighErrorRate
+    expr: zamaz_performance_error_rate_percent > 5
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "High error rate detected"
+      description: "Error rate is above 5% for more than 2 minutes. Current value: {{ $value }}%"
+
+- name: kafka_alerts
+  rules:
+  # Kafka connectivity alerts
+  - alert: KafkaDisconnected
+    expr: zamaz_kafka_connection_status == 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Kafka connection lost"
+      description: "The system has lost connection to Kafka for more than 1 minute."
+
+  - alert: KafkaConsumerLag
+    expr: zamaz_kafka_consumer_lag > 1000
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High Kafka consumer lag"
+      description: "Consumer lag is above 1000 messages for context {{ $labels.context }}, partition {{ $labels.partition }}"
+
+  - alert: NoActiveConsumers
+    expr: zamaz_kafka_bridged_event_types > 0 and zamaz_kafka_active_consumers == 0
+    for: 2m
+    labels:
+      severity: warning
+    annotations:
+      summary: "No active Kafka consumers"
+      description: "Event types are bridged to Kafka but no consumers are active."
+
+  - alert: LowEventProductionRate
+    expr: rate(zamaz_kafka_events_produced_total[5m]) < 0.1
+    for: 10m
+    labels:
+      severity: info
+    annotations:
+      summary: "Low event production rate"
+      description: "Event production rate is very low for context {{ $labels.context }}"
+
+- name: performance_alerts
+  rules:
+  # Performance alerts
+  - alert: SlowResponseTime
+    expr: zamaz_performance_response_time_seconds > 2
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Slow response time detected"
+      description: "Response time for {{ $labels.endpoint }} {{ $labels.method }} is above 2 seconds"
+
+  - alert: LowThroughput
+    expr: zamaz_performance_throughput_requests_per_second < 1
+    for: 5m
+    labels:
+      severity: info
+    annotations:
+      summary: "Low throughput detected"
+      description: "Request throughput is below 1 request per second"
+
+  - alert: LongRunningBenchmark
+    expr: zamaz_performance_benchmark_duration_seconds > 300
+    for: 0m
+    labels:
+      severity: info
+    annotations:
+      summary: "Long running benchmark"
+      description: "Benchmark {{ $labels.benchmark_name }} has been running for more than 5 minutes"
+
+- name: debate_alerts
+  rules:
+  # Debate system alerts
+  - alert: DebateFailureRate
+    expr: rate(zamaz_debate_debates_completed_total{outcome="failed"}[10m]) / rate(zamaz_debate_debates_completed_total[10m]) > 0.1
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High debate failure rate"
+      description: "More than 10% of debates are failing"
+
+  - alert: LongRunningDebate
+    expr: zamaz_debate_debate_duration_seconds > 600
+    for: 0m
+    labels:
+      severity: info
+    annotations:
+      summary: "Long running debate"
+      description: "A {{ $labels.complexity }} debate has been running for more than 10 minutes"
+
+  - alert: NoDebatesStarted
+    expr: increase(zamaz_debate_debates_started_total[1h]) == 0
+    for: 2h
+    labels:
+      severity: info
+    annotations:
+      summary: "No debates started recently"
+      description: "No debates have been started in the last 2 hours"
+
+- name: health_alerts
+  rules:
+  # Component health alerts
+  - alert: ComponentUnhealthy
+    expr: zamaz_system_health_check_status == 0
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Component health check failed"
+      description: "Health check for component {{ $labels.component }} is failing"
+
+  - alert: EventBusGrowth
+    expr: increase(zamaz_system_event_bus_size[1h]) > 10000
+    for: 0m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Large event bus growth"
+      description: "Event bus has grown by more than 10,000 events in the last hour"
