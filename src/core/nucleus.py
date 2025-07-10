@@ -23,6 +23,7 @@ from domain.models import Debate, Decision, DecisionType, ImplementationAssignee
 from services.ai_client_factory import AIClientFactory
 from services.pr_service import PRService
 from src.core.evolution_tracker import EvolutionTracker
+from src.core.evolution_implementation_bridge import EvolutionImplementationBridge
 
 # Error handling imports - these will be initialized later to avoid circular imports
 try:
@@ -80,6 +81,9 @@ class DebateNucleus:
 
         # Evolution tracker
         self.evolution_tracker = EvolutionTracker()
+        
+        # Evolution implementation bridge
+        self.evolution_bridge = EvolutionImplementationBridge()
 
         # AI client factory
         self.ai_factory = AIClientFactory()
@@ -382,38 +386,46 @@ Be skeptical and thorough. Challenge assumptions. Consider if this is really nec
 
         improvement = await self.decide(evolution_question, context)
 
-        # Track evolution if it's a debate result
+        # Process evolution through implementation bridge if it's a debate result
         if improvement.get("method") == "debate":
-            debate_id = improvement.get("debate_id")
-            if debate_id:
-                # Load the debate to extract suggestions
-                debate_file = self.debates_dir / f"{debate_id}.json"
-                if debate_file.exists():
-                    with open(debate_file, "r") as f:
-                        debate_data = json.load(f)
+            try:
+                # Process the evolution decision through the implementation bridge
+                implementation_result = await self.evolution_bridge.process_evolution_decision(improvement)
+                
+                # Add implementation results to the improvement response
+                improvement["implementation_result"] = implementation_result
+                improvement["evolution_implemented"] = implementation_result.get("status") in ["implemented", "queued"]
+                
+                # Handle different implementation statuses
+                if implementation_result.get("status") == "implemented":
+                    improvement["evolution_tracked"] = True
+                    improvement["implementation_status"] = "completed"
+                    improvement["implementation_message"] = implementation_result.get("message", "")
+                elif implementation_result.get("status") == "queued":
+                    improvement["evolution_tracked"] = True  
+                    improvement["implementation_status"] = "queued"
+                    improvement["queue_position"] = implementation_result.get("queue_position", 0)
+                elif implementation_result.get("status") == "duplicate":
+                    improvement["evolution_tracked"] = False
+                    improvement["duplicate_detected"] = True
+                    improvement["implementation_status"] = "duplicate"
+                else:
+                    improvement["evolution_tracked"] = False
+                    improvement["implementation_status"] = "failed"
+                    improvement["implementation_error"] = implementation_result.get("message", "Unknown error")
 
-                    # Extract the actual improvement from the decision
-                    decision_text = improvement.get("decision", "")
+                # Still create PR if enabled (for documentation/tracking purposes)
+                debate_id = improvement.get("debate_id")
+                if debate_id and self.pr_service.enabled:
+                    # Load the debate to create PR
+                    debate_file = self.debates_dir / f"{debate_id}.json"
+                    if debate_file.exists():
+                        with open(debate_file, "r") as f:
+                            debate_data = json.load(f)
 
-                    # Parse out the specific feature being suggested
-                    feature = self._extract_evolution_feature(decision_text)
-                    evolution_type = self._extract_evolution_type(decision_text)
-
-                    # Create evolution from debate
-                    evolution = {
-                        "type": evolution_type,
-                        "feature": feature,
-                        "description": decision_text,
-                        "debate_id": debate_id,
-                        "claude_suggestion": debate_data["rounds"][0]["claude"],
-                        "gemini_suggestion": debate_data["rounds"][0]["gemini"],
-                    }
-
-                    if self.evolution_tracker.add_evolution(evolution):
-                        improvement["evolution_tracked"] = True
+                        decision_text = improvement.get("decision", "")
 
                         # Create Decision object for PR creation
-                        # Evolution improvements are always assigned to Claude for implementation
                         decision = Decision(
                             id=f"evolution_{debate_id}",
                             question=evolution_question,
@@ -446,9 +458,15 @@ Be skeptical and thorough. Challenge assumptions. Consider if this is really nec
                                 improvement["pr_id"] = pr.id
                                 improvement["pr_branch"] = pr.branch_name
                                 improvement["pr_assignee"] = pr.assignee
-                    else:
-                        improvement["evolution_tracked"] = False
-                        improvement["duplicate_detected"] = True
+                
+            except Exception as e:
+                # Fallback to old tracking method if implementation bridge fails
+                improvement["evolution_tracked"] = False
+                improvement["implementation_status"] = "bridge_error"
+                improvement["implementation_error"] = f"Implementation bridge failed: {str(e)}"
+                
+                # Log the error for debugging
+                print(f"Evolution implementation bridge error: {str(e)}")
 
         return improvement
 

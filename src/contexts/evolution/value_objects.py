@@ -23,6 +23,7 @@ class ImprovementArea(Enum):
     SCALABILITY = "scalability"
     MAINTAINABILITY = "maintainability"
     USER_EXPERIENCE = "user_experience"
+    USABILITY = "usability"
     INFRASTRUCTURE = "infrastructure"
     MONITORING = "monitoring"
     DEPLOYMENT = "deployment"
