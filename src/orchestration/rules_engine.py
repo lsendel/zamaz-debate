@@ -153,12 +153,15 @@ class RuleConditionEvaluator:
         value = context
         
         for part in parts:
-            if hasattr(value, part):
-                value = getattr(value, part)
-            elif isinstance(value, dict) and part in value:
-                value = value[part]
-            else:
-                raise ValueError(f"Field not found: {field_path}")
+            try:
+                if hasattr(value, part):
+                    value = getattr(value, part)
+                elif isinstance(value, dict) and part in value:
+                    value = value[part]
+                else:
+                    raise ValueError(f"Field not found: {field_path}")
+            except (AttributeError, TypeError) as e:
+                raise ValueError(f"Error accessing field '{part}' in path '{field_path}': {e}")
         
         return value
 

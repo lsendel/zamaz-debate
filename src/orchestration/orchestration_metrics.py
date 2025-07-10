@@ -339,9 +339,10 @@ class MetricsCollector:
             durations = [m.duration.total_seconds() for m in completed_metrics if m.duration]
             avg_duration = sum(durations) / len(durations) if durations else 0.0
             
-            avg_rounds = sum(m.total_rounds for m in completed_metrics) / len(completed_metrics)
-            avg_arguments = sum(m.total_arguments for m in completed_metrics) / len(completed_metrics)
-            consensus_rate = sum(1 for m in completed_metrics if m.consensus_reached) / len(completed_metrics)
+            total_completed = len(completed_metrics)
+            avg_rounds = sum(m.total_rounds for m in completed_metrics) / total_completed if total_completed > 0 else 0.0
+            avg_arguments = sum(m.total_arguments for m in completed_metrics) / total_completed if total_completed > 0 else 0.0
+            consensus_rate = sum(1 for m in completed_metrics if m.consensus_reached) / total_completed if total_completed > 0 else 0.0
         
         return {
             'debates': {
@@ -401,30 +402,37 @@ class MetricsCollector:
         if not self.enable_file_export:
             return
         
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        
-        # Export summary stats
-        summary_file = self.export_path / f"summary_{timestamp}.json"
-        with open(summary_file, 'w') as f:
-            json.dump(self.get_summary_stats(), f, indent=2, default=str)
-        
-        # Export recent events
-        recent_events = [asdict(event) for event in self.events[-100:]]
-        events_file = self.export_path / f"events_{timestamp}.json"
-        with open(events_file, 'w') as f:
-            json.dump(recent_events, f, indent=2, default=str)
-        
-        # Export debate metrics
-        debate_data = {}
-        for debate_id, metrics in self.debate_metrics.items():
-            debate_data[str(debate_id)] = asdict(metrics)
-        
-        debates_file = self.export_path / f"debates_{timestamp}.json"
-        with open(debates_file, 'w') as f:
-            json.dump(debate_data, f, indent=2, default=str)
-        
-        self.last_export = datetime.now()
-        logger.info(f"Exported metrics to {self.export_path}")
+        try:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            
+            # Export summary stats
+            summary_file = self.export_path / f"summary_{timestamp}.json"
+            with open(summary_file, 'w') as f:
+                json.dump(self.get_summary_stats(), f, indent=2, default=str)
+            
+            # Export recent events
+            recent_events = [asdict(event) for event in self.events[-100:]]
+            events_file = self.export_path / f"events_{timestamp}.json"
+            with open(events_file, 'w') as f:
+                json.dump(recent_events, f, indent=2, default=str)
+            
+            # Export debate metrics
+            debate_data = {}
+            for debate_id, metrics in self.debate_metrics.items():
+                try:
+                    debate_data[str(debate_id)] = asdict(metrics)
+                except Exception as e:
+                    logger.warning(f"Failed to serialize metrics for debate {debate_id}: {e}")
+            
+            debates_file = self.export_path / f"debates_{timestamp}.json"
+            with open(debates_file, 'w') as f:
+                json.dump(debate_data, f, indent=2, default=str)
+            
+            self.last_export = datetime.now()
+            logger.info(f"Exported metrics to {self.export_path}")
+            
+        except Exception as e:
+            logger.error(f"Failed to export metrics: {e}")
     
     def clear_old_data(self, days_to_keep: int = 7):
         """Clear old metrics data."""

@@ -195,8 +195,8 @@ class EventDrivenOrchestrator:
         
         session.update_activity()
         session.context.consensus_indicators = {
-            "confidence": event.confidence,
-            "level": event.consensus_level
+            "confidence": getattr(event, 'confidence', 0.0),
+            "level": getattr(event, 'consensus_level', 'none')
         }
         
         self.metrics['consensus_reached'] += 1
@@ -241,28 +241,30 @@ class EventDrivenOrchestrator:
             pass
             
         elif action.type == RuleActionType.PAUSE_DEBATE:
-            await self._pause_debate(session, action.parameters.get("reason", "rule_triggered"))
+            await self._pause_debate(session, action.parameters.get("reason", "rule_triggered") if action.parameters else "rule_triggered")
             
         elif action.type == RuleActionType.COMPLETE_DEBATE:
-            await self._complete_debate(session, action.parameters.get("reason", "rule_triggered"))
+            await self._complete_debate(session, action.parameters.get("reason", "rule_triggered") if action.parameters else "rule_triggered")
             
         elif action.type == RuleActionType.START_NEW_ROUND:
             await self._start_new_round(session)
             
         elif action.type == RuleActionType.REQUEST_CLARIFICATION:
-            await self._request_clarification(session, action.parameters)
+            await self._request_clarification(session, action.parameters or {})
             
         elif action.type == RuleActionType.ESCALATE_TO_HUMAN:
-            await self._escalate_to_human(session, action.parameters.get("reason", "rule_triggered"))
+            await self._escalate_to_human(session, action.parameters.get("reason", "rule_triggered") if action.parameters else "rule_triggered")
             
         elif action.type == RuleActionType.APPLY_TEMPLATE:
-            await self._apply_template(session, action.parameters.get("template"))
+            template_name = action.parameters.get("template") if action.parameters else None
+            if template_name:
+                await self._apply_template(session, template_name)
             
         elif action.type == RuleActionType.EMIT_EVENT:
-            await self._emit_custom_event(session, action.parameters)
+            await self._emit_custom_event(session, action.parameters or {})
             
         elif action.type == RuleActionType.SET_VARIABLE:
-            self._set_context_variable(session, action.parameters)
+            self._set_context_variable(session, action.parameters or {})
             
         else:
             logger.warning(f"Unknown action type: {action.type}")
@@ -295,7 +297,7 @@ class EventDrivenOrchestrator:
                 debate_id=session.debate_id,
                 total_rounds=session.context.round_count,
                 total_arguments=session.context.argument_count,
-                final_consensus=session.context.consensus_indicators.get("level", "none")
+                final_consensus=session.context.consensus_indicators.get("level", "none") if session.context.consensus_indicators else "none"
             )
         )
         
@@ -349,12 +351,15 @@ class EventDrivenOrchestrator:
         # Load template and update session parameters
         if template_name in self.template_registry:
             template = self.template_registry[template_name]
-            # Apply template configuration to context
-            session.context.custom_variables.update({
-                'template': template_name,
-                'max_rounds': template.config.max_rounds,
-                'consensus_threshold': template.config.consensus_threshold
-            })
+            # Apply template configuration to context with null checks
+            if template and hasattr(template, 'config') and template.config:
+                session.context.custom_variables.update({
+                    'template': template_name,
+                    'max_rounds': getattr(template.config, 'max_rounds', 5),
+                    'consensus_threshold': getattr(template.config, 'consensus_threshold', 0.8)
+                })
+            else:
+                logger.warning(f"Template '{template_name}' has invalid configuration")
     
     async def _emit_custom_event(self, session: OrchestrationSession, parameters: Dict[str, Any]):
         """Emit a custom event."""
@@ -365,12 +370,20 @@ class EventDrivenOrchestrator:
     
     def _set_context_variable(self, session: OrchestrationSession, parameters: Dict[str, Any]):
         """Set a context variable."""
+        if not parameters:
+            logger.warning("No parameters provided for set variable action")
+            return
+            
         variable_name = parameters.get("variable")
         variable_value = parameters.get("value")
         
         if variable_name:
+            if not hasattr(session.context, 'custom_variables'):
+                session.context.custom_variables = {}
             session.context.custom_variables[variable_name] = variable_value
             logger.debug(f"Set context variable {variable_name} = {variable_value}")
+        else:
+            logger.warning("No variable name provided for set variable action")
     
     async def _update_consensus_indicators(self, session: OrchestrationSession, event: ArgumentPresented):
         """Update consensus indicators based on new argument."""
@@ -387,6 +400,8 @@ class EventDrivenOrchestrator:
         total_score = positive_score + negative_score
         if total_score > 0:
             confidence = max(positive_score, negative_score) / total_score
+            if not session.context.consensus_indicators:
+                session.context.consensus_indicators = {}
             session.context.consensus_indicators["confidence"] = confidence
             
             if confidence >= 0.8:
