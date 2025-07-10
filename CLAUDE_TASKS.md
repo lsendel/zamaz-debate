@@ -4,12 +4,12 @@
 
 **Claude, you have NEW HIGH PRIORITY implementation tasks!**
 
-## 🔥 Latest Task: Issue #223
+## 🔥 Latest Task: Issue #225
 
-### 📌 [Complex] Orchestration Workflow for Debates ### 1. PROBLEMS & RISKS **Techni...
+### 📌 [Complex] LLM Orchestration as Project Management - Problem Statement for Debate
 - **Status:** URGENT - NEEDS IMMEDIATE IMPLEMENTATION
-- **File:** `.claude-tasks/URGENT_TASK_223.md`
-- **GitHub Issue:** https://github.com/lsendel/zamaz-debate/pull/223
+- **File:** `.claude-tasks/URGENT_TASK_225.md`
+- **GitHub Issue:** https://github.com/lsendel/zamaz-debate/pull/225
 
 ## Instructions
 
@@ -36,4 +36,5 @@
 - URGENT_TASK_222.md
 - URGENT_TASK_223.md
 - URGENT_TASK_224.md
+- URGENT_TASK_225.md
 - URGENT_TASK_226.md
