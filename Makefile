@@ -349,6 +349,36 @@ run-cached:
 	@sleep 2
 	@echo "✓ Started with caching - responses will be reused!"
 
+# Run Kafka integration tests
+test-kafka:
+	@echo "Running Kafka integration tests..."
+	./venv/bin/pytest tests/integration/test_kafka_integration.py -v
+
+# Run end-to-end Kafka demo
+test-e2e:
+	@echo "Running end-to-end Kafka-DDD integration demo..."
+	./venv/bin/python scripts/test_kafka_e2e.py
+
+# Start Kafka using Docker
+kafka-up:
+	@echo "Starting Kafka..."
+	docker run -d --name kafka-zamaz \
+		-p 9092:9092 \
+		-e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 \
+		-e KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092 \
+		-e KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181 \
+		confluentinc/cp-kafka:latest
+
+# Stop Kafka container
+kafka-down:
+	@echo "Stopping Kafka..."
+	docker stop kafka-zamaz || true
+	docker rm kafka-zamaz || true
+
+# View Kafka container logs
+kafka-logs:
+	docker logs -f kafka-zamaz
+
 # Clear AI cache
 clear-cache:
 	@echo "Clearing AI response cache..."

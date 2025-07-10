@@ -3,43 +3,88 @@ Implementation Context
 
 This bounded context handles the implementation of decisions made through debates.
 It manages tasks, pull requests, code reviews, and deployment processes.
-
-Key Aggregates:
-- ImplementationTask: Manages the implementation process
-- PullRequest: Manages pull request lifecycle
-- CodeReview: Manages code review process
-
-Key Domain Services:
-- TaskAssignment: Assigns tasks to appropriate agents
-- ProgressTracking: Tracks implementation progress
-- QualityAssurance: Ensures code quality standards
 """
 
-class ImplementationContext:
-    """Main context class for Implementation"""
-    pass
-
+from .aggregates import CodeReview, Deployment, PullRequest, Task
+from .domain_services import (
+    DeploymentService,
+    ImplementationPlanningService,
+    PullRequestService,
+    TaskAssignmentService,
+)
+from .events import (
+    BranchCreated,
+    BuildCompleted,
+    CodeReviewCompleted,
+    CodeReviewRequested,
+    CommitMade,
+    DeploymentCompleted,
+    DeploymentTriggered,
+    ImplementationCompleted,
+    ImplementationRequested,
+    PullRequestCreated,
+    PullRequestDrafted,
+    PullRequestMerged,
+    QualityGatesPassed,
+    TaskAssigned,
+    TaskCreated,
+    TestsRun,
+)
+from .repositories import (
+    DeploymentRepository,
+    ImplementationMetricsRepository,
+    PullRequestRepository,
+    TaskRepository,
+)
+from .value_objects import (
+    Assignment,
+    BuildInfo,
+    CodeChange,
+    CommitInfo,
+    DeploymentConfig,
+    ImplementationPlan,
+    ReviewComment,
+)
 
 __all__ = [
-    "ImplementationContext",
     # Aggregates
-    "ImplementationTask",
+    "Task",
     "PullRequest",
     "CodeReview",
-    # Domain Services
-    "TaskAssignment",
-    "ProgressTracking",
-    "QualityAssurance",
+    "Deployment",
     # Value Objects
-    "Task",
+    "Assignment",
+    "ImplementationPlan",
+    "CodeChange",
     "ReviewComment",
-    "TestResult",
-    # Repositories
-    "ImplementationRepository",
-    "PullRequestRepository",
+    "DeploymentConfig",
+    "CommitInfo",
+    "BuildInfo",
     # Events
+    "ImplementationRequested",
     "TaskCreated",
+    "TaskAssigned",
     "PullRequestDrafted",
+    "PullRequestCreated",
+    "CodeReviewRequested",
     "CodeReviewCompleted",
+    "PullRequestMerged",
     "ImplementationCompleted",
+    "DeploymentTriggered",
+    "DeploymentCompleted",
+    "BranchCreated",
+    "CommitMade",
+    "TestsRun",
+    "BuildCompleted",
+    "QualityGatesPassed",
+    # Repositories
+    "TaskRepository",
+    "PullRequestRepository",
+    "DeploymentRepository",
+    "ImplementationMetricsRepository",
+    # Domain Services
+    "TaskAssignmentService",
+    "PullRequestService",
+    "DeploymentService",
+    "ImplementationPlanningService",
 ]

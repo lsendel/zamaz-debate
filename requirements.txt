@@ -4,3 +4,12 @@ python-dotenv>=1.0.0
 pytest>=7.4.0
 pytest-asyncio>=0.21.0
 aiofiles>=23.0.0
+
+# Kafka dependencies
+kafka-python>=2.0.2
+confluent-kafka>=2.3.0
+avro-python3>=1.10.2
+
+# Testing dependencies for Kafka
+testcontainers>=3.7.1
+pytest-docker>=2.0.0

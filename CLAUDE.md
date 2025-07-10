@@ -72,12 +72,54 @@ python check_localhost.py http://localhost:8000  # Direct validation
 - Comprehensive REST API for webhook management
 - Integration with domain event system
 
+### Domain-Driven Design Structure
+
+The system is organized into bounded contexts following DDD principles:
+
+**Debate Context** (`src/contexts/debate/`):
+- Manages debates between AI participants
+- Aggregates: Debate, DebateResult
+- Value Objects: Participant, DebateRound, Argument
+- Events: DebateStarted, ArgumentPresented, DebateCompleted
+
+**Testing Context** (`src/contexts/testing/`):
+- Handles test execution and mock configurations
+- Aggregates: TestSuite, TestCase, MockConfiguration
+- Value Objects: Coverage, TestAssertion, TestResult
+- Domain Services: TestExecutionService, CoverageAnalysisService
+
+**Performance Context** (`src/contexts/performance/`):
+- Monitors and optimizes system performance
+- Aggregates: Metric, Benchmark, OptimizationStrategy
+- Value Objects: MetricValue, PerformanceThreshold, Optimization
+- Domain Services: PerformanceMonitoringService, BenchmarkExecutionService
+
+**Implementation Context** (`src/contexts/implementation/`):
+- Manages task implementation, PRs, and deployments
+- Aggregates: Task, PullRequest, CodeReview, Deployment
+- Value Objects: Assignment, ImplementationPlan, CodeChange
+- Domain Services: TaskAssignmentService, PullRequestService, DeploymentService
+
+**Evolution Context** (`src/contexts/evolution/`):
+- Handles system self-improvement and evolution
+- Aggregates: Evolution, Improvement, EvolutionHistory
+- Value Objects: ImprovementSuggestion, EvolutionPlan, ValidationResult
+- Domain Services: EvolutionAnalysisService, EvolutionPlanningService
+
+**Infrastructure** (`src/infrastructure/`):
+- Repository implementations using JSON file storage
+- Base repository class for common operations
+- Concrete repositories for each bounded context
+
 ### Design Patterns
 
-1. **Lazy Initialization**: AI clients initialized only when needed
-2. **Complexity-Based Routing**: Simple decisions bypass debates, complex ones trigger full debate
-3. **Cost Optimization**: Multiple strategies (caching, mocking, manual debates)
-4. **Self-Evolution**: System can analyze itself and suggest improvements
+1. **Domain-Driven Design (DDD)**: Organized into bounded contexts with clear boundaries
+2. **Lazy Initialization**: AI clients initialized only when needed
+3. **Complexity-Based Routing**: Simple decisions bypass debates, complex ones trigger full debate
+4. **Cost Optimization**: Multiple strategies (caching, mocking, manual debates)
+5. **Self-Evolution**: System can analyze itself and suggest improvements
+6. **Event-Driven Architecture**: Domain events enable loose coupling between contexts
+7. **Repository Pattern**: Abstracts persistence with JSON-based implementations
 
 ## Key Features
 
@@ -147,6 +189,36 @@ Current AI-assigned issues:
 - Issue #197: Implement event-driven architecture using Apache Kafka
 - Issue #193: Implement webhook notifications for system events  
 - Issue #181: Evolve the debate system into a dev team
+- Issue #178: Domain-Driven Design (DDD) implementation (COMPLETED)
+
+## Working with DDD Architecture
+
+### Understanding Bounded Contexts
+
+Each bounded context is self-contained and follows these principles:
+- **Aggregates**: Main entities that enforce business rules (e.g., Debate, TestSuite)
+- **Value Objects**: Immutable objects representing domain concepts (e.g., Coverage, MetricValue)
+- **Domain Events**: Enable communication between contexts without tight coupling
+- **Repositories**: Abstract persistence, with JSON implementations in infrastructure layer
+- **Domain Services**: Handle complex operations spanning multiple aggregates
+
+### Adding New Features
+
+When adding features to a bounded context:
+1. Identify which context owns the feature
+2. Create/modify aggregates and value objects as needed
+3. Define domain events for cross-context communication
+4. Implement repository interfaces if persistence is needed
+5. Add domain services for complex workflows
+6. Write unit tests for domain logic
+
+### Cross-Context Communication
+
+Contexts communicate through domain events:
+- Events are published when significant domain actions occur
+- Other contexts can subscribe to relevant events
+- This maintains loose coupling between contexts
+- Event handlers orchestrate cross-context workflows
 
 ## Troubleshooting
 
