@@ -4,12 +4,12 @@
 
 **Claude, you have NEW HIGH PRIORITY implementation tasks!**
 
-## 🔥 Latest Task: Issue #200
+## 🔥 Latest Task: Issue #202
 
-### 📌 Implement: Should we implement comprehensive monitoring for our Kafka event integration?
+### 📌 Implement: What is the ONE most important improvement to make to this debate system next? Consider: code qualit...
 - **Status:** URGENT - NEEDS IMMEDIATE IMPLEMENTATION
-- **File:** `.claude-tasks/URGENT_TASK_200.md`
-- **GitHub Issue:** https://github.com/lsendel/zamaz-debate/issues/200
+- **File:** `.claude-tasks/URGENT_TASK_202.md`
+- **GitHub Issue:** https://github.com/lsendel/zamaz-debate/issues/202
 
 ## Instructions
 
@@ -26,3 +26,4 @@
 - URGENT_TASK_197.md
 - URGENT_TASK_198.md
 - URGENT_TASK_200.md
+- URGENT_TASK_202.md
