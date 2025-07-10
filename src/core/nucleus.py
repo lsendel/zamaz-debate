@@ -23,6 +23,7 @@ from domain.models import Debate, Decision, DecisionType, ImplementationAssignee
 from services.ai_client_factory import AIClientFactory
 from services.pr_service import PRService
 from src.core.evolution_tracker import EvolutionTracker
+from src.core.enhanced_evolution_tracker import EnhancedEvolutionTracker
 
 # Error handling imports - these will be initialized later to avoid circular imports
 try:
@@ -78,8 +79,14 @@ class DebateNucleus:
         self.debate_count = 0
         self.event_bus = event_bus
 
-        # Evolution tracker
-        self.evolution_tracker = EvolutionTracker()
+        # Evolution tracker - use enhanced version if available
+        try:
+            self.evolution_tracker = EnhancedEvolutionTracker(enable_effectiveness_framework=True)
+            self.effectiveness_framework_enabled = True
+        except Exception as e:
+            print(f"Enhanced Evolution Tracker not available, using basic version: {e}")
+            self.evolution_tracker = EvolutionTracker()
+            self.effectiveness_framework_enabled = False
 
         # AI client factory
         self.ai_factory = AIClientFactory()
@@ -409,9 +416,28 @@ Be skeptical and thorough. Challenge assumptions. Consider if this is really nec
                         "gemini_suggestion": debate_data["rounds"][0]["gemini"],
                     }
 
-                    if self.evolution_tracker.add_evolution(evolution):
-                        improvement["evolution_tracked"] = True
+                    # Use enhanced evolution tracking if available
+                    evolution_tracked = False
+                    should_create_pr = True
+                    
+                    if self.effectiveness_framework_enabled:
+                        # Use enhanced tracker with validation
+                        evolution_result = await self.evolution_tracker.add_evolution_with_validation(evolution)
+                        improvement["evolution_tracked"] = evolution_result["success"]
+                        improvement["evolution_validation"] = evolution_result
+                        evolution_tracked = evolution_result["success"]
+                        
+                        if not evolution_result["success"]:
+                            improvement["evolution_blocked"] = True
+                            improvement["block_reason"] = evolution_result["reason"]
+                            should_create_pr = False
+                    else:
+                        # Use basic tracker
+                        evolution_tracked = self.evolution_tracker.add_evolution(evolution)
+                        improvement["evolution_tracked"] = evolution_tracked
 
+                    # Only create PR if evolution was successfully tracked
+                    if evolution_tracked and should_create_pr:
                         # Create Decision object for PR creation
                         # Evolution improvements are always assigned to Claude for implementation
                         decision = Decision(

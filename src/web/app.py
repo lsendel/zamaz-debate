@@ -53,8 +53,20 @@ init_webhook_api(webhook_service)
 # Import and include error handling endpoints
 from src.web.error_endpoints import router as error_router
 
+# Import evolution effectiveness routes
+try:
+    from src.web.evolution_effectiveness_routes import effectiveness_router
+    EFFECTIVENESS_FRAMEWORK_ENABLED = True
+except ImportError as e:
+    print(f"Evolution Effectiveness Framework not available: {e}")
+    EFFECTIVENESS_FRAMEWORK_ENABLED = False
+
 app.include_router(error_router)
 app.include_router(webhook_router)
+
+# Include effectiveness routes if available
+if EFFECTIVENESS_FRAMEWORK_ENABLED:
+    app.include_router(effectiveness_router)
 
 
 @app.on_event("startup")
