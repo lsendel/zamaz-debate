@@ -23,6 +23,7 @@ from domain.models import Debate, Decision, DecisionType, ImplementationAssignee
 from services.ai_client_factory import AIClientFactory
 from services.pr_service import PRService
 from src.core.evolution_tracker import EvolutionTracker
+from src.core.evolution_guidance import EvolutionGuidanceSystem, EvolutionMetrics
 
 # Error handling imports - these will be initialized later to avoid circular imports
 try:
@@ -80,6 +81,9 @@ class DebateNucleus:
 
         # Evolution tracker
         self.evolution_tracker = EvolutionTracker()
+        
+        # Evolution guidance system - the missing piece that prevents repetitive loops
+        self.evolution_guidance = EvolutionGuidanceSystem(self.evolution_tracker)
 
         # AI client factory
         self.ai_factory = AIClientFactory()
@@ -355,7 +359,7 @@ Be skeptical and thorough. Challenge assumptions. Consider if this is really nec
 
     async def evolve_self(self) -> Dict:
         """Use debate to improve the debate system itself"""
-        evolution_question = "What is the ONE most important improvement to make to this debate system next? Consider: code quality, functionality, performance, and usability. Ensure this is different from previous evolutions."
+        base_evolution_question = "What is the ONE most important improvement to make to this debate system next? Consider: code quality, functionality, performance, and usability. Ensure this is different from previous evolutions."
 
         evolution_summary = self.evolution_tracker.get_evolution_summary()
         recent_evolutions = self.evolution_tracker.get_recent_evolutions(5)
@@ -380,7 +384,43 @@ Be skeptical and thorough. Challenge assumptions. Consider if this is really nec
         {self._format_recent_evolutions(recent_evolutions)}
         """
 
+        # 🔥 NEW: Evolution Guidance Check - prevents repetitive loops
+        guidance_result = self.evolution_guidance.analyze_evolution_request(base_evolution_question, context)
+        
+        if not guidance_result.should_evolve:
+            # Evolution blocked - return guidance information
+            return {
+                "decision": f"Evolution blocked: {guidance_result.reason}",
+                "method": "guidance_block",
+                "rounds": 0,
+                "complexity": "blocked",
+                "blocked_reason": guidance_result.blocked_reason,
+                "alternative_suggestions": guidance_result.alternative_suggestions,
+                "time": datetime.now().isoformat(),
+                "guidance_applied": True
+            }
+        
+        # Use guided question if available
+        evolution_question = guidance_result.suggested_question or base_evolution_question
+        
+        # Record current metrics for effectiveness tracking
+        current_metrics = EvolutionMetrics(
+            debate_count=debate_count,
+            decision_count=decision_count,
+            error_rate=0.0,  # Would be calculated from actual system metrics
+            performance_score=1.0,  # Would be measured from actual performance
+            user_satisfaction=1.0,  # Would be measured from user feedback
+            system_stability=1.0,  # Would be measured from uptime/errors
+            timestamp=datetime.now()
+        )
+        self.evolution_guidance.record_evolution_metrics(current_metrics)
+
         improvement = await self.decide(evolution_question, context)
+        
+        # Add guidance information to the result
+        improvement["guidance_applied"] = True
+        improvement["guidance_reason"] = guidance_result.reason
+        improvement["recommended_area"] = guidance_result.recommended_area
 
         # Track evolution if it's a debate result
         if improvement.get("method") == "debate":

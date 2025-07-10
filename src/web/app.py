@@ -171,6 +171,52 @@ async def trigger_evolution():
     return result
 
 
+@app.get("/evolution-health")
+async def get_evolution_health():
+    """Get evolution system health and guidance status"""
+    try:
+        health_report = nucleus.evolution_guidance.get_system_health_report()
+        evolution_summary = nucleus.evolution_tracker.get_evolution_summary()
+        recommendations = nucleus.evolution_tracker.get_evolution_recommendations()
+        
+        return {
+            "health_report": health_report,
+            "evolution_summary": evolution_summary,
+            "recommendations": recommendations,
+            "guidance_active": True
+        }
+    except Exception as e:
+        return {
+            "error": f"Failed to get evolution health: {str(e)}",
+            "guidance_active": False
+        }
+
+
+@app.post("/test-evolution-guidance")
+async def test_evolution_guidance(request: DecisionRequest):
+    """Test evolution guidance system with a specific question"""
+    try:
+        guidance_result = nucleus.evolution_guidance.analyze_evolution_request(
+            request.question, 
+            request.context
+        )
+        
+        return {
+            "guidance_result": {
+                "should_evolve": guidance_result.should_evolve,
+                "recommended_area": guidance_result.recommended_area,
+                "reason": guidance_result.reason,
+                "suggested_question": guidance_result.suggested_question,
+                "blocked_reason": guidance_result.blocked_reason,
+                "alternative_suggestions": guidance_result.alternative_suggestions
+            }
+        }
+    except Exception as e:
+        return {
+            "error": f"Failed to test evolution guidance: {str(e)}"
+        }
+
+
 class PRReviewRequest(BaseModel):
     pr_id: str
     implementation_code: str
