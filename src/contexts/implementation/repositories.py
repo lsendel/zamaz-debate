@@ -7,7 +7,7 @@ These abstractions hide persistence details from the domain layer.
 
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from .aggregates import Deployment, PullRequest, Task

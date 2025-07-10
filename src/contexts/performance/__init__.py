@@ -39,7 +39,14 @@ from .value_objects import (
     ResourceUsage,
 )
 
+
+class PerformanceContext:
+    """Main context class for Performance"""
+    pass
+
+
 __all__ = [
+    "PerformanceContext",
     # Aggregates
     "Metric",
     "Benchmark",

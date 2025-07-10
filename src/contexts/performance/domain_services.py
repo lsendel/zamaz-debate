@@ -6,7 +6,7 @@ operations across multiple aggregates.
 """
 
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
 from .aggregates import Benchmark, Metric, MetricType, OptimizationStrategy

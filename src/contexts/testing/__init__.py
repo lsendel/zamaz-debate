@@ -35,7 +35,14 @@ from .value_objects import (
     TestTag,
 )
 
+
+class TestingContext:
+    """Main context class for Testing"""
+    pass
+
+
 __all__ = [
+    "TestingContext",
     # Aggregates
     "TestSuite",
     "TestCase",

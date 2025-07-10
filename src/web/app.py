@@ -61,7 +61,7 @@ app.include_router(webhook_router)
 async def startup_event():
     """Initialize services on startup"""
     await webhook_service.start()
-    await event_bus.start()
+    # EventBus doesn't need start
     await webhook_event_handler.start()
 
 
@@ -69,7 +69,7 @@ async def startup_event():
 async def shutdown_event():
     """Cleanup services on shutdown"""
     await webhook_event_handler.stop()
-    await event_bus.stop()
+    # EventBus doesn't need stop
     await webhook_service.stop()
 
 
