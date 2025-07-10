@@ -1,9 +1,10 @@
 # 🚨 Codex Pending Implementation Tasks
 
-## Latest Task: Issue #198
-- **Title:** Implement Event-Driven Architecture with Apache Kafka
-- **Task file:** `.codex-tasks/URGENT_CODEX_TASK_198.md`
-- **Issue URL:** https://github.com/lsendel/zamaz-debate/pull/198
+## Latest Task: Issue #215
+- **Title:** Implement: What is the ONE most important improvement to make to this debate system next? Consider: code qualit...
+- **Task file:** `.codex-tasks/URGENT_CODEX_TASK_215.md`
+- **Issue URL:** https://github.com/lsendel/zamaz-debate/issues/215
 
 ## All Pending Tasks
 - URGENT_CODEX_TASK_198.md
+- URGENT_CODEX_TASK_215.md
