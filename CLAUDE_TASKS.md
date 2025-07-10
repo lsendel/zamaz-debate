@@ -4,12 +4,12 @@
 
 **Claude, you have NEW HIGH PRIORITY implementation tasks!**
 
-## 🔥 Latest Task: Issue #220
+## 🔥 Latest Task: Issue #222
 
 ### 📌 Implement: What is the ONE most important improvement to make to this debate system next? Consider: code qualit...
 - **Status:** URGENT - NEEDS IMMEDIATE IMPLEMENTATION
-- **File:** `.claude-tasks/URGENT_TASK_220.md`
-- **GitHub Issue:** https://github.com/lsendel/zamaz-debate/issues/220
+- **File:** `.claude-tasks/URGENT_TASK_222.md`
+- **GitHub Issue:** https://github.com/lsendel/zamaz-debate/issues/222
 
 ## Instructions
 
@@ -33,3 +33,4 @@
 - URGENT_TASK_217.md
 - URGENT_TASK_218.md
 - URGENT_TASK_220.md
+- URGENT_TASK_222.md
