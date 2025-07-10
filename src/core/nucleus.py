@@ -23,6 +23,7 @@ from domain.models import Debate, Decision, DecisionType, ImplementationAssignee
 from services.ai_client_factory import AIClientFactory
 from services.pr_service import PRService
 from src.core.evolution_tracker import EvolutionTracker
+from src.core.evolution_effectiveness import EvolutionEffectivenessTracker
 
 # Error handling imports - these will be initialized later to avoid circular imports
 try:
@@ -80,6 +81,9 @@ class DebateNucleus:
 
         # Evolution tracker
         self.evolution_tracker = EvolutionTracker()
+
+        # Evolution effectiveness tracker
+        self.effectiveness_tracker = EvolutionEffectivenessTracker()
 
         # AI client factory
         self.ai_factory = AIClientFactory()
@@ -412,6 +416,16 @@ Be skeptical and thorough. Challenge assumptions. Consider if this is really nec
                     if self.evolution_tracker.add_evolution(evolution):
                         improvement["evolution_tracked"] = True
 
+                        # Begin effectiveness measurement for this evolution
+                        success_criteria = self._determine_success_criteria(feature, evolution_type)
+                        await self.effectiveness_tracker.begin_evolution_measurement(
+                            evolution_id=debate_id,
+                            evolution_feature=feature,
+                            evolution_type=evolution_type,
+                            success_criteria=success_criteria
+                        )
+                        improvement["effectiveness_measurement_started"] = True
+
                         # Create Decision object for PR creation
                         # Evolution improvements are always assigned to Claude for implementation
                         decision = Decision(
@@ -582,6 +596,92 @@ Be skeptical and thorough. Challenge assumptions. Consider if this is really nec
             await self.event_bus.publish(event)
         except Exception as e:
             print(f"Error emitting debate completed event: {e}")
+
+    def _determine_success_criteria(self, feature: str, evolution_type: str) -> Dict[str, float]:
+        """Determine success criteria for an evolution based on its feature and type"""
+        
+        # Base criteria for all evolutions
+        base_criteria = {
+            "error_rate": -10.0,  # 10% reduction in error rate
+            "system_load": -5.0,  # 5% reduction in system load
+        }
+        
+        # Feature-specific criteria
+        feature_criteria = {
+            "performance_optimization": {
+                "response_time_avg": -15.0,  # 15% faster response time
+                "cpu_usage": -10.0,  # 10% less CPU usage
+                "memory_usage": -5.0,  # 5% less memory usage
+            },
+            "automated_testing": {
+                "error_rate": -20.0,  # 20% reduction in errors
+                "decision_accuracy": 5.0,  # 5% improvement in accuracy
+            },
+            "monitoring_system": {
+                "error_rate": -15.0,  # Better error detection
+                "system_load": -5.0,  # Lower monitoring overhead
+            },
+            "user_interface": {
+                "response_time_avg": -10.0,  # Faster UI responses
+                "error_rate": -5.0,  # Fewer UI errors
+            },
+            "caching_system": {
+                "response_time_avg": -25.0,  # 25% faster with caching
+                "cpu_usage": -15.0,  # Less CPU with caching
+            },
+            "error_handling": {
+                "error_rate": -30.0,  # 30% reduction in errors
+                "debate_completion_rate": 5.0,  # Better error recovery
+            },
+            "code_quality": {
+                "error_rate": -15.0,  # Better code = fewer bugs
+                "decision_accuracy": 3.0,  # More accurate decisions
+            },
+            "usability_testing": {
+                "error_rate": -10.0,  # Better UX = fewer user errors
+                "decision_accuracy": 5.0,  # Better decisions from usability
+            },
+            "evolution_effectiveness": {
+                "decision_accuracy": 10.0,  # 10% improvement in decision quality
+                "error_rate": -5.0,  # Fewer evolution failures
+            }
+        }
+        
+        # Type-specific multipliers
+        type_multipliers = {
+            "feature": 1.0,
+            "enhancement": 1.2,  # Enhancements should show bigger improvements
+            "fix": 1.5,  # Fixes should have significant impact
+            "refactor": 0.8,  # Refactors might have smaller immediate impact
+        }
+        
+        # Combine criteria
+        criteria = base_criteria.copy()
+        if feature in feature_criteria:
+            criteria.update(feature_criteria[feature])
+        
+        # Apply type multiplier
+        multiplier = type_multipliers.get(evolution_type, 1.0)
+        for key, value in criteria.items():
+            criteria[key] = value * multiplier
+        
+        return criteria
+
+    async def get_evolution_effectiveness_report(self) -> Dict:
+        """Get evolution effectiveness report"""
+        return await self.effectiveness_tracker.get_effectiveness_report()
+
+    async def get_evolution_trends(self) -> Dict:
+        """Get evolution effectiveness trends"""
+        return await self.effectiveness_tracker.get_evolution_trends()
+
+    async def complete_evolution_measurement(self, evolution_id: str) -> Dict:
+        """Complete effectiveness measurement for an evolution"""
+        return await self.effectiveness_tracker.complete_evolution_measurement(evolution_id)
+
+    async def rollback_evolution(self, evolution_id: str) -> Dict:
+        """Rollback a failed evolution"""
+        return await self.effectiveness_tracker.rollback_evolution(evolution_id)
 
 
 async def main():

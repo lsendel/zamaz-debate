@@ -9,6 +9,7 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 import asyncio
 import json
 import os
+from datetime import datetime
 from typing import Any, Dict, Optional
 
 from fastapi import FastAPI, HTTPException
@@ -138,6 +139,15 @@ async def root():
     if index_file.exists():
         return FileResponse(str(index_file))
     return {"message": "Welcome to Debate Nucleus API"}
+
+
+@app.get("/dashboard")
+async def evolution_dashboard_page():
+    """Serve the evolution dashboard HTML interface"""
+    dashboard_file = Path(__file__).parent / "static" / "evolution_dashboard.html"
+    if dashboard_file.exists():
+        return FileResponse(str(dashboard_file))
+    return {"message": "Evolution Dashboard not found"}
 
 
 @app.post("/decide", response_model=DecisionResponse)
@@ -275,6 +285,58 @@ async def rate_limit_health():
         "total_limiters": stats.get("total_limiters", 0),
         "validation": validation,
     }
+
+
+@app.get("/evolution/effectiveness")
+async def get_evolution_effectiveness():
+    """Get evolution effectiveness report"""
+    return await nucleus.get_evolution_effectiveness_report()
+
+
+@app.get("/evolution/trends")
+async def get_evolution_trends():
+    """Get evolution effectiveness trends"""
+    return await nucleus.get_evolution_trends()
+
+
+@app.post("/evolution/complete/{evolution_id}")
+async def complete_evolution_measurement(evolution_id: str):
+    """Complete effectiveness measurement for an evolution"""
+    return await nucleus.complete_evolution_measurement(evolution_id)
+
+
+@app.post("/evolution/rollback/{evolution_id}")
+async def rollback_evolution(evolution_id: str):
+    """Rollback a failed evolution"""
+    return await nucleus.rollback_evolution(evolution_id)
+
+
+@app.get("/evolution/dashboard")
+async def evolution_dashboard():
+    """Get comprehensive evolution dashboard data"""
+    try:
+        effectiveness_report = await nucleus.get_evolution_effectiveness_report()
+        trends = await nucleus.get_evolution_trends()
+        
+        # Get recent evolutions from evolution tracker
+        evolution_summary = nucleus.evolution_tracker.get_evolution_summary()
+        recent_evolutions = nucleus.evolution_tracker.get_recent_evolutions(10)
+        
+        return {
+            "effectiveness": effectiveness_report,
+            "trends": trends,
+            "evolution_summary": evolution_summary,
+            "recent_evolutions": recent_evolutions,
+            "dashboard_generated_at": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {
+            "error": f"Failed to generate dashboard: {str(e)}",
+            "effectiveness": {"error": "No data available"},
+            "trends": {"error": "No data available"},
+            "evolution_summary": {"total_evolutions": 0},
+            "recent_evolutions": []
+        }
 
 
 if __name__ == "__main__":
