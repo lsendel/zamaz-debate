@@ -4,12 +4,12 @@
 
 **Claude, you have NEW HIGH PRIORITY implementation tasks!**
 
-## 🔥 Latest Task: Issue #224
+## 🔥 Latest Task: Issue #223
 
-### 📌 Implement: Orchestration Workflow for Debates ### 1. PROBLEMS & RISKS **Technical Risks:** - **LLM Reliability*...
+### 📌 [Complex] Orchestration Workflow for Debates ### 1. PROBLEMS & RISKS **Techni...
 - **Status:** URGENT - NEEDS IMMEDIATE IMPLEMENTATION
-- **File:** `.claude-tasks/URGENT_TASK_224.md`
-- **GitHub Issue:** https://github.com/lsendel/zamaz-debate/issues/224
+- **File:** `.claude-tasks/URGENT_TASK_223.md`
+- **GitHub Issue:** https://github.com/lsendel/zamaz-debate/pull/223
 
 ## Instructions
 
@@ -34,4 +34,5 @@
 - URGENT_TASK_218.md
 - URGENT_TASK_220.md
 - URGENT_TASK_222.md
+- URGENT_TASK_223.md
 - URGENT_TASK_224.md
