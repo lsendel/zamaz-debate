@@ -21,7 +21,15 @@ from .domain_services import (
     ComplexityAssessment,
     ConsensusEvaluation,
 )
-from .events import ConsensusReached, DebateInitiated, DecisionMade, RoundCompleted
+from .events import (
+    ConsensusReached, 
+    DebateInitiated, 
+    DecisionMade, 
+    RoundCompleted,
+    DebateRequested,
+    DebateStarted,
+    DebateCompleted,
+)
 from .repositories import DebateRepository, DecisionRepository
 from .value_objects import Argument, Consensus, Topic
 
@@ -53,4 +61,7 @@ __all__ = [
     "RoundCompleted",
     "ConsensusReached",
     "DecisionMade",
+    "DebateRequested",
+    "DebateStarted",
+    "DebateCompleted",
 ]

@@ -57,42 +57,42 @@ class WebhookEventHandler:
         """Subscribe to relevant domain events"""
         # Map domain event types to their handlers
         event_handlers = {
-            "DecisionMade": self._handle_decision_made,
-            "DebateCompleted": self._handle_debate_completed,
-            "ConsensusReached": self._handle_consensus_reached,
-            "DebateInitiated": self._handle_debate_initiated,
-            "RoundStarted": self._handle_round_started,
-            "RoundCompleted": self._handle_round_completed,
-            "ComplexityAssessed": self._handle_complexity_assessed,
-            "DebateCancelled": self._handle_debate_cancelled,
-            "DebateTimeoutOccurred": self._handle_debate_timeout,
-            "DebateMetricsCalculated": self._handle_debate_metrics_calculated,
-            "ArgumentPresented": self._handle_argument_presented,
+            DecisionMade: self._handle_decision_made,
+            DebateCompleted: self._handle_debate_completed,
+            ConsensusReached: self._handle_consensus_reached,
+            DebateInitiated: self._handle_debate_initiated,
+            RoundStarted: self._handle_round_started,
+            RoundCompleted: self._handle_round_completed,
+            ComplexityAssessed: self._handle_complexity_assessed,
+            DebateCancelled: self._handle_debate_cancelled,
+            DebateTimeoutOccurred: self._handle_debate_timeout,
+            DebateMetricsCalculated: self._handle_debate_metrics_calculated,
+            ArgumentPresented: self._handle_argument_presented,
         }
 
         # Subscribe to each event type
         for event_type, handler in event_handlers.items():
-            await self.event_bus.subscribe(event_type, handler)
-            logger.debug(f"Subscribed to {event_type} events")
+            self.event_bus.subscribe(event_type, handler)
+            logger.debug(f"Subscribed to {event_type.__name__} events")
 
     async def _unsubscribe_from_events(self):
         """Unsubscribe from domain events"""
         event_handlers = {
-            "DecisionMade": self._handle_decision_made,
-            "DebateCompleted": self._handle_debate_completed,
-            "ConsensusReached": self._handle_consensus_reached,
-            "DebateInitiated": self._handle_debate_initiated,
-            "RoundStarted": self._handle_round_started,
-            "RoundCompleted": self._handle_round_completed,
-            "ComplexityAssessed": self._handle_complexity_assessed,
-            "DebateCancelled": self._handle_debate_cancelled,
-            "DebateTimeoutOccurred": self._handle_debate_timeout,
-            "DebateMetricsCalculated": self._handle_debate_metrics_calculated,
-            "ArgumentPresented": self._handle_argument_presented,
+            DecisionMade: self._handle_decision_made,
+            DebateCompleted: self._handle_debate_completed,
+            ConsensusReached: self._handle_consensus_reached,
+            DebateInitiated: self._handle_debate_initiated,
+            RoundStarted: self._handle_round_started,
+            RoundCompleted: self._handle_round_completed,
+            ComplexityAssessed: self._handle_complexity_assessed,
+            DebateCancelled: self._handle_debate_cancelled,
+            DebateTimeoutOccurred: self._handle_debate_timeout,
+            DebateMetricsCalculated: self._handle_debate_metrics_calculated,
+            ArgumentPresented: self._handle_argument_presented,
         }
 
         for event_type, handler in event_handlers.items():
-            await self.event_bus.unsubscribe(event_type, handler)
+            self.event_bus.unsubscribe(event_type, handler)
 
     async def _handle_decision_made(self, event: DecisionMade):
         """Handle DecisionMade event"""

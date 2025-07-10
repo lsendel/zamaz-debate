@@ -13,7 +13,7 @@ from enum import Enum
 import inspect
 from functools import wraps
 
-from ..domain.models import DomainEvent
+from src.events.domain_event import DomainEvent
 
 logger = logging.getLogger(__name__)
 
@@ -299,6 +299,7 @@ def get_event_bus() -> EventBus:
 
 def subscribe(
     event_type: Type[DomainEvent],
+    context: Optional[str] = None,
     priority: EventPriority = EventPriority.NORMAL,
     name: Optional[str] = None
 ):
@@ -315,11 +316,12 @@ def subscribe(
             print(f"Decision created: {event.decision.question}")
     """
     def decorator(func: Callable) -> Callable:
+        handler_name = name or f"{context}:{func.__name__}" if context else func.__name__
         get_event_bus().subscribe(
             event_type=event_type,
             handler=func,
             priority=priority,
-            name=name or func.__name__
+            name=handler_name
         )
         return func
         
@@ -333,3 +335,25 @@ async def publish(event: DomainEvent) -> None:
         event: The event to publish
     """
     await get_event_bus().publish(event)
+
+
+def publish_sync(event: DomainEvent) -> None:
+    """Synchronously publish an event to the global event bus.
+    
+    Args:
+        event: The event to publish
+        
+    Note:
+        This creates a new event loop if needed, use with caution.
+    """
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # If we're already in an async context, schedule the coroutine
+            asyncio.create_task(publish(event))
+        else:
+            # If not in async context, run it
+            loop.run_until_complete(publish(event))
+    except RuntimeError:
+        # No event loop, create one
+        asyncio.run(publish(event))

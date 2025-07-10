@@ -50,7 +50,14 @@ from .value_objects import (
     ValidationResult,
 )
 
+
+class EvolutionContext:
+    """Main context class for Evolution"""
+    pass
+
+
 __all__ = [
+    "EvolutionContext",
     # Aggregates
     "Evolution",
     "Improvement",

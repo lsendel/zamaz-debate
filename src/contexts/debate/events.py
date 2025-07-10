@@ -232,6 +232,93 @@ class DecisionMade(DomainEvent):
 
 
 @dataclass(frozen=True)
+class DebateRequested(DomainEvent):
+    """Event published when a debate is requested"""
+
+    debate_id: UUID
+    question: str
+    context: str
+    requester: str
+    metadata: Optional[Dict[str, Any]] = None
+
+    def __post_init__(self):
+        object.__setattr__(self, "event_type", "DebateRequested")
+        object.__setattr__(self, "aggregate_id", self.debate_id)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert event to dictionary for serialization"""
+        data = super().to_dict()
+        data.update(
+            {
+                "debate_id": str(self.debate_id),
+                "question": self.question,
+                "context": self.context,
+                "requester": self.requester,
+                "metadata": self.metadata,
+            }
+        )
+        return data
+
+
+@dataclass(frozen=True)
+class DebateStarted(DomainEvent):
+    """Event published when a debate actually starts processing"""
+
+    debate_id: UUID
+    topic: str
+    context: str
+
+    def __post_init__(self):
+        object.__setattr__(self, "event_type", "DebateStarted")
+        object.__setattr__(self, "aggregate_id", self.debate_id)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert event to dictionary for serialization"""
+        data = super().to_dict()
+        data.update(
+            {
+                "debate_id": str(self.debate_id),
+                "topic": self.topic,
+                "context": self.context,
+            }
+        )
+        return data
+
+
+@dataclass(frozen=True)
+class DebateCompleted(DomainEvent):
+    """Event published when a debate is completed with all needed info for PR creation"""
+
+    debate_id: UUID
+    topic: str
+    winner: str
+    consensus: bool
+    decision_type: str  # SIMPLE, MODERATE, COMPLEX, EVOLUTION
+    decision_id: UUID
+    summary: str
+
+    def __post_init__(self):
+        object.__setattr__(self, "event_type", "DebateCompleted")
+        object.__setattr__(self, "aggregate_id", self.debate_id)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert event to dictionary for serialization"""
+        data = super().to_dict()
+        data.update(
+            {
+                "debate_id": str(self.debate_id),
+                "topic": self.topic,
+                "winner": self.winner,
+                "consensus": self.consensus,
+                "decision_type": self.decision_type,
+                "decision_id": str(self.decision_id),
+                "summary": self.summary,
+            }
+        )
+        return data
+
+
+@dataclass(frozen=True)
 class ComplexityAssessed(DomainEvent):
     """Event published when decision complexity is assessed"""
 

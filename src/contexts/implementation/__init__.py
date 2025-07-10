@@ -46,7 +46,14 @@ from .value_objects import (
     ReviewComment,
 )
 
+
+class ImplementationContext:
+    """Main context class for Implementation"""
+    pass
+
+
 __all__ = [
+    "ImplementationContext",
     # Aggregates
     "Task",
     "PullRequest",
