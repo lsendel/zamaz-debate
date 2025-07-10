@@ -6,21 +6,21 @@
 
 ### 📍 Task Location:
 ```bash
-cat .claude-tasks/URGENT_TASK_193.md
+cat .claude-tasks/URGENT_TASK_198.md
 ```
 
 ### 🎯 Issue Details:
-- **Number:** #193
-- **Title:** Implement: Should we implement webhook notifications for system events?
-- **URL:** https://github.com/lsendel/zamaz-debate/issues/193
+- **Number:** #198
+- **Title:** Implement Event-Driven Architecture with Apache Kafka
+- **URL:** https://github.com/lsendel/zamaz-debate/pull/198
 
 ### 🚀 Start Implementation:
 ```bash
 # View the task
-cat .claude-tasks/URGENT_TASK_193.md
+cat .claude-tasks/URGENT_TASK_198.md
 
 # Create branch and start coding
-git checkout -b ai-impl/issue-193
+git checkout -b ai-impl/issue-198
 ```
 
 **This task was created at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')**
