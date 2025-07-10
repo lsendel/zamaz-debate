@@ -6,21 +6,21 @@
 
 ### 📍 Task Location:
 ```bash
-cat .claude-tasks/URGENT_TASK_198.md
+cat .claude-tasks/URGENT_TASK_200.md
 ```
 
 ### 🎯 Issue Details:
-- **Number:** #198
-- **Title:** Implement Event-Driven Architecture with Apache Kafka
-- **URL:** https://github.com/lsendel/zamaz-debate/pull/198
+- **Number:** #200
+- **Title:** Implement: Should we implement comprehensive monitoring for our Kafka event integration?
+- **URL:** https://github.com/lsendel/zamaz-debate/issues/200
 
 ### 🚀 Start Implementation:
 ```bash
 # View the task
-cat .claude-tasks/URGENT_TASK_198.md
+cat .claude-tasks/URGENT_TASK_200.md
 
 # Create branch and start coding
-git checkout -b ai-impl/issue-198
+git checkout -b ai-impl/issue-200
 ```
 
 **This task was created at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')**

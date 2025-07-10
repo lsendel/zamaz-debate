@@ -4,12 +4,12 @@
 
 **Claude, you have NEW HIGH PRIORITY implementation tasks!**
 
-## 🔥 Latest Task: Issue #198
+## 🔥 Latest Task: Issue #200
 
-### 📌 Implement Event-Driven Architecture with Apache Kafka
+### 📌 Implement: Should we implement comprehensive monitoring for our Kafka event integration?
 - **Status:** URGENT - NEEDS IMMEDIATE IMPLEMENTATION
-- **File:** `.claude-tasks/URGENT_TASK_198.md`
-- **GitHub Issue:** https://github.com/lsendel/zamaz-debate/pull/198
+- **File:** `.claude-tasks/URGENT_TASK_200.md`
+- **GitHub Issue:** https://github.com/lsendel/zamaz-debate/issues/200
 
 ## Instructions
 
@@ -25,3 +25,4 @@
 - URGENT_TASK_193.md
 - URGENT_TASK_197.md
 - URGENT_TASK_198.md
+- URGENT_TASK_200.md
