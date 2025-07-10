@@ -184,7 +184,7 @@ class KafkaProducer:
             self._stats["last_error"] = str(e)
             return False
     
-    async def produce_batch(self, topic: str, events: list[Dict[str, Any]], 
+    async def produce_batch(self, topic: str, events: List[Dict[str, Any]], 
                           partition_key_fn: Optional[Callable[[Dict], str]] = None) -> int:
         """
         Produce a batch of events
