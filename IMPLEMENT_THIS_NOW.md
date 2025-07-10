@@ -6,21 +6,21 @@
 
 ### 📍 Task Location:
 ```bash
-cat .claude-tasks/URGENT_TASK_213.md
+cat .claude-tasks/URGENT_TASK_215.md
 ```
 
 ### 🎯 Issue Details:
-- **Number:** #213
+- **Number:** #215
 - **Title:** Implement: What is the ONE most important improvement to make to this debate system next? Consider: code qualit...
-- **URL:** https://github.com/lsendel/zamaz-debate/issues/213
+- **URL:** https://github.com/lsendel/zamaz-debate/issues/215
 
 ### 🚀 Start Implementation:
 ```bash
 # View the task
-cat .claude-tasks/URGENT_TASK_213.md
+cat .claude-tasks/URGENT_TASK_215.md
 
 # Create branch and start coding
-git checkout -b ai-impl/issue-213
+git checkout -b ai-impl/issue-215
 ```
 
 **This task was created at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')**
