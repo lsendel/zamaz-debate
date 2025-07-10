@@ -1,0 +1,166 @@
+# Complex Debate Workflow
+# Multi-round debate for complex architectural decisions
+
+id: "complex_debate"
+name: "Complex Architectural Debate"
+description: "Multi-round debate for complex architectural and system design decisions"
+version: "1.0"
+
+participants:
+  - "claude-sonnet-4"
+  - "gemini-2.5-pro"
+  - "gpt-4o"  # Fallback participant
+
+config:
+  max_rounds: 5
+  min_rounds: 3
+  consensus_threshold: 0.8
+  max_execution_time: "PT25M"  # 25 minutes
+  auto_consensus_check: true
+  allow_dynamic_participants: true
+  require_all_participants: false
+
+steps:
+  - id: "initial_arguments"
+    type: "initial_arguments"
+    name: "Initial Position Arguments"
+    description: "Each participant presents their initial position with detailed analysis"
+    required_participants: ["claude-sonnet-4", "gemini-2.5-pro"]
+    conditions:
+      min_argument_length: 300
+      max_argument_length: 2000
+      require_structure: true
+      required_sections: ["position", "rationale", "risks", "benefits"]
+    timeout: "PT5M"  # 5 minutes
+    max_retries: 2
+
+  - id: "counter_arguments"
+    type: "counter_arguments"
+    name: "Counter Arguments and Challenges"
+    description: "Participants challenge each other's positions and present counter-arguments"
+    required_participants: ["claude-sonnet-4", "gemini-2.5-pro"]
+    conditions:
+      min_argument_length: 200
+      max_argument_length: 1500
+      must_reference_previous: true
+    timeout: "PT4M"  # 4 minutes
+    max_retries: 2
+
+  - id: "clarification"
+    type: "clarification"
+    name: "Clarification and Refinement"
+    description: "Participants clarify their positions and address raised concerns"
+    required_participants: ["claude-sonnet-4", "gemini-2.5-pro"]
+    conditions:
+      min_argument_length: 150
+      max_argument_length: 1000
+      address_concerns: true
+    timeout: "PT3M"  # 3 minutes
+    max_retries: 2
+
+  - id: "consensus_check"
+    type: "consensus_check"
+    name: "Consensus Analysis"
+    description: "Analyze if consensus has been reached among participants"
+    required_participants: []
+    conditions:
+      threshold: 0.8
+      analyze_convergence: true
+      identify_gaps: true
+    timeout: "PT2M"  # 2 minutes
+    max_retries: 1
+
+  - id: "synthesis"
+    type: "custom"
+    name: "Solution Synthesis"
+    description: "Synthesize arguments into a comprehensive solution"
+    required_participants: ["claude-sonnet-4"]  # Claude leads synthesis
+    conditions:
+      include_implementation_plan: true
+      include_risk_mitigation: true
+      include_success_metrics: true
+    timeout: "PT4M"  # 4 minutes
+    max_retries: 2
+
+  - id: "final_decision"
+    type: "final_decision"
+    name: "Final Decision and Recommendation"
+    description: "Formulate final decision with implementation guidance"
+    required_participants: []
+    conditions:
+      require_consensus: true
+      include_action_items: true
+      include_timeline: true
+    timeout: "PT3M"  # 3 minutes
+    max_retries: 1
+
+# Dynamic workflow rules
+rules:
+  - condition: "consensus_reached_early"
+    action: "skip_to_final_decision"
+    description: "Skip remaining steps if strong consensus is reached"
+
+  - condition: "no_consensus_after_max_rounds"
+    action: "escalate_to_human"
+    description: "Escalate to human decision-maker if no consensus after max rounds"
+
+  - condition: "participant_timeout"
+    action: "continue_with_available"
+    description: "Continue with available participants if one times out"
+
+  - condition: "high_complexity_detected"
+    action: "add_expert_participant"
+    description: "Add specialized AI participant for highly complex topics"
+
+# Workflow metadata
+metadata:
+  use_cases:
+    - "System architecture decisions"
+    - "Technology stack selection"
+    - "Design pattern choices"
+    - "Migration strategies"
+    - "Performance optimization approaches"
+    - "Security implementation decisions"
+  
+  estimated_cost: 0.25  # USD
+  estimated_duration: 20  # minutes
+  
+  complexity_indicators:
+    - "architecture"
+    - "system design"
+    - "microservices"
+    - "scalability"
+    - "performance"
+    - "security"
+    - "migration"
+    - "integration"
+  
+  tags:
+    - "complex"
+    - "architectural"
+    - "multi-round"
+    - "consensus-focused"
+    - "comprehensive"
+
+# Quality gates
+quality_gates:
+  - gate: "argument_quality"
+    criteria:
+      - "minimum_word_count_met"
+      - "structured_format_followed"
+      - "evidence_provided"
+    action_on_failure: "request_clarification"
+
+  - gate: "consensus_quality"
+    criteria:
+      - "all_participants_heard"
+      - "major_concerns_addressed"
+      - "implementation_feasible"
+    action_on_failure: "extend_debate"
+
+  - gate: "decision_quality"
+    criteria:
+      - "clear_recommendation"
+      - "risk_assessment_included"
+      - "success_metrics_defined"
+    action_on_failure: "require_revision"
