@@ -24,6 +24,12 @@ make run-cached    # Run with response caching enabled
 make stop          # Stop the web interface
 ```
 
+### Orchestration System
+```bash
+python examples/orchestration_demo.py  # Demonstrate hybrid orchestration
+python -m pytest tests/test_orchestration.py  # Test orchestration system
+```
+
 ### Testing and Debugging
 ```bash
 make test          # Run pytest test suite
@@ -46,6 +52,7 @@ python check_localhost.py http://localhost:8000  # Direct validation
 **DebateNucleus** (`src/core/nucleus.py`):
 - Main orchestrator that manages AI debates
 - Implements complexity assessment to route decisions (simple vs complex)
+- Integrates with hybrid orchestration system for complex decisions
 - Handles debate persistence and evolution tracking
 
 **Domain Models** (`domain/models.py`):
@@ -71,6 +78,14 @@ python check_localhost.py http://localhost:8000  # Direct validation
 - Automatic retry logic with exponential backoff
 - Comprehensive REST API for webhook management
 - Integration with domain event system
+
+**Hybrid Orchestration System** (`src/orchestration/`):
+- State machine-based debate orchestration with LLM assistance
+- Circuit breaker protection for LLM operations
+- YAML-based workflow definitions for flexible debate patterns
+- Three orchestration strategies: Deterministic, Hybrid, LLM-driven
+- Comprehensive error handling and fallback mechanisms
+- Integration with existing DDD architecture and event system
 
 ### Domain-Driven Design Structure
 
@@ -116,21 +131,27 @@ The system is organized into bounded contexts following DDD principles:
 1. **Domain-Driven Design (DDD)**: Organized into bounded contexts with clear boundaries
 2. **Lazy Initialization**: AI clients initialized only when needed
 3. **Complexity-Based Routing**: Simple decisions bypass debates, complex ones trigger full debate
-4. **Cost Optimization**: Multiple strategies (caching, mocking, manual debates)
-5. **Self-Evolution**: System can analyze itself and suggest improvements
-6. **Event-Driven Architecture**: Domain events enable loose coupling between contexts
-7. **Repository Pattern**: Abstracts persistence with JSON-based implementations
+4. **Hybrid State Machine**: Combines deterministic logic with LLM-powered insights
+5. **Circuit Breaker Pattern**: Prevents cascade failures from LLM services
+6. **LLM as Assistant Pattern**: LLM provides insights, deterministic logic makes decisions
+7. **Cost Optimization**: Multiple strategies (caching, mocking, manual debates)
+8. **Self-Evolution**: System can analyze itself and suggest improvements
+9. **Event-Driven Architecture**: Domain events enable loose coupling between contexts
+10. **Repository Pattern**: Abstracts persistence with JSON-based implementations
 
 ## Key Features
 
+- **Hybrid Orchestration**: State machine with LLM assistance for intelligent debate management
 - **Self-Improvement**: Analyzes its own code and suggests improvements
 - **PR Integration**: Creates GitHub pull requests for complex decisions
 - **Evolution Tracking**: Maintains history to prevent duplicate improvements
-- **Cost Management**: Mock mode, response caching, and manual debate options
+- **Cost Management**: Mock mode, response caching, circuit breakers, and smart LLM usage
 - **Delegation Rules**:
   - Complex tasks → Assigned to Claude (with Gemini as reviewer)
   - Regular tasks → Assigned to Gemini (with Codex as reviewer and committer)
 - **Critical Debate Analysis**: Both AIs provide thorough analysis of pros/cons before recommendations
+- **Resilient Operations**: Circuit breakers, fallback mechanisms, and graceful degradation
+- **Flexible Workflows**: YAML-based workflow definitions for different debate patterns
 - **Webhook Notifications**: Real-time event notifications for external integrations
   - Secure delivery with HMAC-SHA256 signatures
   - Automatic retry logic for failed deliveries

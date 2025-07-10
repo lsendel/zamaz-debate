@@ -87,7 +87,11 @@ class DebateNucleus:
         # PR service for creating pull requests
         self.pr_service = PRService()
 
-        # Complexity detection
+        # Initialize hybrid orchestrator
+        self.hybrid_orchestrator = None
+        self._initialize_orchestrator()
+
+        # Complexity detection (kept for backward compatibility)
         self.complexity_keywords = {
             "simple": ["rename", "format", "typo", "spacing", "comment", "import"],
             "moderate": ["refactor", "optimize", "clean", "organize", "split", "merge"],
@@ -104,8 +108,69 @@ class DebateNucleus:
                 "evolution",
                 "enhance",
                 "feature",
+                "orchestration",
+                "workflow",
             ],
         }
+
+    def _initialize_orchestrator(self):
+        """Initialize the hybrid debate orchestrator."""
+        try:
+            from src.orchestration.debate_orchestrator import create_hybrid_orchestrator, OrchestrationStrategy
+            from src.workflows.debate_workflow import WorkflowEngine
+            from src.workflows.yaml_loader import load_default_workflows
+            
+            # Initialize workflow engine and load workflows from YAML
+            workflow_engine = WorkflowEngine(self.event_bus)
+            
+            # Load workflow definitions from YAML files
+            workflows = load_default_workflows()
+            
+            if workflows:
+                print(f"📋 Loaded {len(workflows)} workflow definitions")
+                for workflow in workflows:
+                    workflow_engine.register_workflow_definition(workflow)
+                    print(f"  ✓ {workflow.name} ({workflow.id})")
+            else:
+                print("⚠️  No workflow definitions found, creating minimal fallback workflows")
+                # Create minimal fallback workflows if YAML loading fails
+                from src.workflows.debate_workflow import WorkflowDefinition, WorkflowConfig, WorkflowStep, StepType
+                
+                simple_workflow = WorkflowDefinition(
+                    id="simple_debate",
+                    name="Simple Debate (Fallback)",
+                    description="Basic fallback debate workflow",
+                    version="1.0",
+                    participants=["claude-sonnet-4", "gemini-2.5-pro"],
+                    steps=[
+                        WorkflowStep(
+                            id="initial_arguments",
+                            type=StepType.INITIAL_ARGUMENTS,
+                            name="Initial Arguments",
+                            description="Each participant presents their initial argument",
+                            required_participants=["claude-sonnet-4", "gemini-2.5-pro"]
+                        )
+                    ],
+                    config=WorkflowConfig(max_rounds=2, consensus_threshold=0.7)
+                )
+                workflow_engine.register_workflow_definition(simple_workflow)
+            
+            # Create hybrid orchestrator with hybrid strategy
+            self.hybrid_orchestrator = create_hybrid_orchestrator(
+                ai_client_factory=self.ai_factory,
+                strategy=OrchestrationStrategy.HYBRID,
+                event_bus=self.event_bus
+            )
+            
+            # Store workflow engine reference
+            self.workflow_engine = workflow_engine
+            
+            print("🔬 Hybrid orchestrator initialized successfully")
+            
+        except Exception as e:
+            print(f"Warning: Failed to initialize hybrid orchestrator: {e}")
+            print("Falling back to simple debate logic...")
+            self.hybrid_orchestrator = None
 
     async def decide(self, question: str, context: str = "") -> Dict:
         """Main entry point for all decisions"""
@@ -114,6 +179,7 @@ class DebateNucleus:
         complexity = self._assess_complexity(question)
         timestamp = datetime.now()
 
+        # Simple decisions can be handled directly
         if complexity == "simple":
             decision_text = await self._simple_decision(question)
             result = {
@@ -135,9 +201,17 @@ class DebateNucleus:
             
             return result
 
-        # Complex decisions need debate
+        # Complex/moderate decisions use orchestrator if available
         self.debate_count += 1
-        result = await self._run_debate(question, context, complexity)
+        
+        if self.hybrid_orchestrator:
+            try:
+                result = await self._run_orchestrated_debate(question, context, complexity)
+            except Exception as e:
+                print(f"Orchestration failed, falling back to simple debate: {e}")
+                result = await self._run_debate(question, context, complexity)
+        else:
+            result = await self._run_debate(question, context, complexity)
 
         # Create PR for complex and moderate decisions if enabled
         if complexity in ["complex", "moderate"] and self.pr_service.enabled:
@@ -219,6 +293,69 @@ class DebateNucleus:
             return "Add docstrings for public methods, inline comments for complex logic"
 
         return "Proceed with standard best practices"
+
+    async def _run_orchestrated_debate(self, question: str, context: str, complexity: str) -> Dict:
+        """Run a debate using the hybrid orchestrator"""
+        print(f"🔬 Using hybrid orchestrator for {complexity} decision")
+        
+        start_time = datetime.now()
+        
+        # Run orchestration
+        orchestration_result = await self.hybrid_orchestrator.orchestrate_debate(
+            question=question,
+            context=context,
+            complexity=complexity
+        )
+        
+        end_time = datetime.now()
+        
+        # Extract decision information
+        decision_text = "No decision reached"
+        rounds = 0
+        debate_id = f"orchestrated_{uuid.uuid4().hex[:8]}_{start_time.strftime('%Y%m%d_%H%M%S')}"
+        
+        if orchestration_result.decision:
+            decision_text = f"Recommendation: {orchestration_result.decision.recommendation}\nRationale: {orchestration_result.decision.rationale}"
+        elif orchestration_result.consensus:
+            decision_text = f"Consensus reached: {orchestration_result.consensus.value}\nRationale: {orchestration_result.consensus.rationale}"
+        
+        if orchestration_result.workflow_result:
+            rounds = orchestration_result.workflow_result.steps_completed
+        
+        # Create result compatible with existing interface
+        result = {
+            "decision": decision_text,
+            "method": "orchestrated_debate",
+            "rounds": rounds,
+            "complexity": complexity,
+            "debate_id": debate_id,
+            "time": end_time.isoformat(),
+            "orchestration_state": orchestration_result.final_state.value,
+            "llm_decisions": orchestration_result.llm_decisions_made,
+            "deterministic_decisions": orchestration_result.deterministic_decisions_made,
+            "execution_time": orchestration_result.execution_time.total_seconds() if orchestration_result.execution_time else None
+        }
+        
+        # Save orchestration data for reference
+        self._save_orchestrated_debate({
+            "id": debate_id,
+            "question": question,
+            "context": context,
+            "complexity": complexity,
+            "orchestration_result": {
+                "session_id": str(orchestration_result.session_id),
+                "final_state": orchestration_result.final_state.value,
+                "llm_decisions_made": orchestration_result.llm_decisions_made,
+                "deterministic_decisions_made": orchestration_result.deterministic_decisions_made,
+                "execution_time_seconds": orchestration_result.execution_time.total_seconds() if orchestration_result.execution_time else None,
+                "error_message": orchestration_result.error_message
+            },
+            "start_time": start_time.isoformat(),
+            "end_time": end_time.isoformat(),
+            "final_decision": decision_text
+        })
+        
+        return result
 
     def _ensure_clients(self):
         """Lazy initialization of AI clients"""
@@ -352,6 +489,13 @@ Be skeptical and thorough. Challenge assumptions. Consider if this is really nec
         filename = self.debates_dir / f"{debate_state['id']}.json"
         with open(filename, "w") as f:
             json.dump(debate_state, f, indent=2)
+
+    def _save_orchestrated_debate(self, orchestration_data: Dict):
+        """Save orchestrated debate data for future reference"""
+        self._ensure_debates_dir()
+        filename = self.debates_dir / f"{orchestration_data['id']}.json"
+        with open(filename, "w") as f:
+            json.dump(orchestration_data, f, indent=2)
 
     async def evolve_self(self) -> Dict:
         """Use debate to improve the debate system itself"""
