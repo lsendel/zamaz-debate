@@ -13,3 +13,7 @@ avro-python3>=1.10.2
 # Testing dependencies for Kafka
 testcontainers>=3.7.1
 pytest-docker>=2.0.0
+
+# Monitoring dependencies
+prometheus_client>=0.18.0
+psutil>=5.9.0
