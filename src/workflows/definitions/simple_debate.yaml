@@ -1,0 +1,69 @@
+# Simple Debate Workflow
+# Basic two-round debate for straightforward decisions
+
+id: "simple_debate"
+name: "Simple Debate"
+description: "Basic two-round debate for straightforward architectural decisions"
+version: "1.0"
+
+participants:
+  - "claude-sonnet-4"
+  - "gemini-2.5-pro"
+
+config:
+  max_rounds: 2
+  min_rounds: 1
+  consensus_threshold: 0.7
+  max_execution_time: "PT10M"  # 10 minutes
+  auto_consensus_check: true
+  allow_dynamic_participants: false
+  require_all_participants: true
+
+steps:
+  - id: "initial_arguments"
+    type: "initial_arguments"
+    name: "Initial Arguments"
+    description: "Each participant presents their initial argument"
+    required_participants: ["claude-sonnet-4", "gemini-2.5-pro"]
+    conditions:
+      min_argument_length: 100
+      max_argument_length: 1000
+    timeout: "PT3M"  # 3 minutes
+    max_retries: 2
+
+  - id: "consensus_check"
+    type: "consensus_check"
+    name: "Consensus Check"
+    description: "Check if consensus has been reached"
+    required_participants: []
+    conditions:
+      threshold: 0.7
+    timeout: "PT1M"  # 1 minute
+    max_retries: 1
+
+  - id: "final_decision"
+    type: "final_decision"
+    name: "Final Decision"
+    description: "Make final decision based on arguments"
+    required_participants: []
+    conditions:
+      require_consensus: false
+    timeout: "PT2M"  # 2 minutes
+    max_retries: 1
+
+# Workflow metadata
+metadata:
+  use_cases:
+    - "Simple feature decisions"
+    - "Code review recommendations"
+    - "Configuration choices"
+    - "Tool selection"
+  
+  estimated_cost: 0.05  # USD
+  estimated_duration: 8  # minutes
+  
+  tags:
+    - "simple"
+    - "fast"
+    - "low-cost"
+    - "basic"
