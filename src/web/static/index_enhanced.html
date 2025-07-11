@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zamaz Debate System - Enhanced</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            text-align: center;
+            font-size: 28px;
+        }
+        
+        .nav-tabs {
+            background: white;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            justify-content: center;
+            padding: 0 20px;
+        }
+        
+        .nav-tab {
+            padding: 15px 30px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .nav-tab:hover {
+            background: #f8f9fa;
+        }
+        
+        .nav-tab.active {
+            border-bottom-color: #3498db;
+            color: #3498db;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #2980b9;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        button.secondary {
+            background: #95a5a6;
+        }
+        
+        button.secondary:hover {
+            background: #7f8c8d;
+        }
+        
+        button.success {
+            background: #27ae60;
+        }
+        
+        button.success:hover {
+            background: #229954;
+        }
+        
+        button.danger {
+            background: #e74c3c;
+        }
+        
+        button.danger:hover {
+            background: #c0392b;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .workflow-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .workflow-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .workflow-card:hover {
+            border-color: #3498db;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .workflow-card h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .workflow-meta {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        .debate-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .debate-table th,
+        .debate-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .debate-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .debate-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .debate-detail {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .debate-round {
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .argument {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        .argument-claude {
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .argument-gemini {
+            border-left: 4px solid #27ae60;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 40px;
+        }
+        
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        
+        .method-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #e3f2fd;
+            border-radius: 3px;
+            font-size: 12px;
+            color: #1976d2;
+            font-weight: 500;
+        }
+        
+        .complexity-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .complexity-badge.simple {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        
+        .complexity-badge.moderate {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .complexity-badge.complex {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+        
+        .filter-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        
+        .filter-controls input,
+        .filter-controls select {
+            flex: 1;
+            max-width: 250px;
+        }
+        
+        .active-workflows {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .workflow-status {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .workflow-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .workflow-controls button {
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #3498db;
+            transition: width 0.3s;
+        }
+        
+        .kafka-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+        
+        .status-indicator.connected {
+            background: #27ae60;
+        }
+        
+        .status-indicator.disconnected {
+            background: #e74c3c;
+        }
+        
+        .manual-debate-form {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .template-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            font-size: 14px;
+        }
+        
+        .implementation-list {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .implementation-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #f39c12;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .implementation-card.completed {
+            border-left-color: #27ae60;
+        }
+        
+        .implementation-meta {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 8px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🤖 Zamaz Debate System - Enhanced Edition</h1>
+    </div>
+    
+    <div class="nav-tabs">
+        <div class="nav-tab active" data-tab="dashboard">Dashboard</div>
+        <div class="nav-tab" data-tab="new-debate">New Debate</div>
+        <div class="nav-tab" data-tab="orchestrated">Orchestrated Debates</div>
+        <div class="nav-tab" data-tab="manual">Manual Debate</div>
+        <div class="nav-tab" data-tab="history">Debate History</div>
+        <div class="nav-tab" data-tab="implementations">Implementations</div>
+        <div class="nav-tab" data-tab="system">System Status</div>
+    </div>
+    
+    <div class="container">
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <h2>System Overview</h2>
+            <div class="stats-grid" id="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">-</div>
+                    <div class="stat-label">Total Decisions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">-</div>
+                    <div class="stat-label">Total Debates</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">-</div>
+                    <div class="stat-label">Active Workflows</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">-</div>
+                    <div class="stat-label">Pending Implementations</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>Recent Activity</h3>
+                <div id="recent-activity" class="loading">Loading recent activity...</div>
+            </div>
+        </div>
+        
+        <!-- New Debate Tab -->
+        <div id="new-debate" class="tab-content">
+            <div class="card">
+                <h2>Start a New Debate</h2>
+                <form id="debate-form">
+                    <div class="form-group">
+                        <label for="question">Decision Question</label>
+                        <input type="text" id="question" name="question" 
+                               placeholder="e.g., Should we migrate to microservices?" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="context">Context (optional)</label>
+                        <textarea id="context" name="context" 
+                                  placeholder="Provide any additional context or constraints..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="debate-type">Debate Type</label>
+                        <select id="debate-type" name="debate-type">
+                            <option value="standard">Standard Debate</option>
+                            <option value="orchestrated">Orchestrated (Auto-select workflow)</option>
+                            <option value="simple">Simple Workflow</option>
+                            <option value="complex">Complex Workflow</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" id="submit-btn">Start Debate</button>
+                    <button type="button" id="evolve-btn" class="secondary">Trigger Evolution</button>
+                </form>
+                
+                <div id="debate-results"></div>
+            </div>
+        </div>
+        
+        <!-- Orchestrated Debates Tab -->
+        <div id="orchestrated" class="tab-content">
+            <div class="card">
+                <h2>Workflow Management</h2>
+                
+                <h3>Available Workflows</h3>
+                <div class="workflow-grid" id="workflow-grid">
+                    <div class="loading">Loading workflows...</div>
+                </div>
+                
+                <h3>Active Workflows</h3>
+                <div class="active-workflows" id="active-workflows">
+                    <div class="loading">Loading active workflows...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Manual Debate Tab -->
+        <div id="manual" class="tab-content">
+            <div class="card manual-debate-form">
+                <h2>Manual Debate Entry</h2>
+                <p>Use this to import debates conducted in Claude.ai</p>
+                
+                <button id="get-template-btn" class="secondary">Get Claude.ai Template</button>
+                
+                <div id="template-container" style="display: none;">
+                    <h3>Claude.ai Template</h3>
+                    <div class="template-box" id="template-box"></div>
+                </div>
+                
+                <form id="manual-debate-form">
+                    <div class="form-group">
+                        <label for="manual-question">Question</label>
+                        <input type="text" id="manual-question" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="manual-context">Context</label>
+                        <textarea id="manual-context"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="manual-complexity">Complexity</label>
+                        <select id="manual-complexity">
+                            <option value="simple">Simple</option>
+                            <option value="moderate" selected>Moderate</option>
+                            <option value="complex">Complex</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="manual-content">Paste Complete Debate from Claude.ai</label>
+                        <textarea id="manual-content" rows="10" required 
+                                  placeholder="Paste the entire debate response including Claude's and Gemini's perspectives..."></textarea>
+                    </div>
+                    
+                    <button type="submit">Import Manual Debate</button>
+                </form>
+                
+                <div id="manual-result"></div>
+            </div>
+        </div>
+        
+        <!-- Debate History Tab -->
+        <div id="history" class="tab-content">
+            <div class="card">
+                <h2>Debate History</h2>
+                
+                <div class="filter-controls">
+                    <input type="text" id="search-debates" placeholder="Search debates...">
+                    <select id="filter-complexity">
+                        <option value="">All Complexities</option>
+                        <option value="simple">Simple</option>
+                        <option value="moderate">Moderate</option>
+                        <option value="complex">Complex</option>
+                    </select>
+                    <select id="filter-method">
+                        <option value="">All Methods</option>
+                        <option value="standard">Standard</option>
+                        <option value="orchestrated_workflow">Orchestrated</option>
+                        <option value="manual_debate">Manual</option>
+                    </select>
+                    <button id="search-btn" class="secondary">Search</button>
+                </div>
+                
+                <table class="debate-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Question</th>
+                            <th>Complexity</th>
+                            <th>Method</th>
+                            <th>Consensus</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="debate-history-body">
+                        <tr><td colspan="6" class="loading">Loading debates...</td></tr>
+                    </tbody>
+                </table>
+                
+                <div id="debate-detail" class="debate-detail"></div>
+            </div>
+        </div>
+        
+        <!-- Implementations Tab -->
+        <div id="implementations" class="tab-content">
+            <div class="card">
+                <h2>Implementation Tracking</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="pending-count">-</div>
+                        <div class="stat-label">Pending</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="in-progress-count">-</div>
+                        <div class="stat-label">In Progress</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="completed-count">-</div>
+                        <div class="stat-label">Completed</div>
+                    </div>
+                </div>
+                
+                <h3>Pending Implementations</h3>
+                <div class="implementation-list" id="pending-implementations">
+                    <div class="loading">Loading implementations...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- System Status Tab -->
+        <div id="system" class="tab-content">
+            <div class="card">
+                <h2>System Status</h2>
+                
+                <h3>Kafka Integration</h3>
+                <div class="kafka-status" id="kafka-status">
+                    <span class="status-indicator"></span>
+                    <span>Checking Kafka status...</span>
+                </div>
+                <button id="test-kafka-btn" class="secondary">Send Test Event</button>
+                
+                <h3>Orchestration Service</h3>
+                <div id="orchestration-stats">
+                    <div class="loading">Loading orchestration statistics...</div>
+                </div>
+                
+                <h3>Rate Limiting</h3>
+                <div id="rate-limit-stats">
+                    <div class="loading">Loading rate limit statistics...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal for debate details -->
+    <div id="debate-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Debate Details</h2>
+                <button class="close-button" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = 'http://localhost:8000';
+        let currentTab = 'dashboard';
+        
+        // Tab switching
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                tab.classList.add('active');
+                const tabId = tab.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+                currentTab = tabId;
+                
+                // Load data for the active tab
+                loadTabData(tabId);
+            });
+        });
+        
+        // Load data based on active tab
+        async function loadTabData(tabId) {
+            switch(tabId) {
+                case 'dashboard':
+                    await loadDashboard();
+                    break;
+                case 'orchestrated':
+                    await loadWorkflows();
+                    await loadActiveWorkflows();
+                    break;
+                case 'history':
+                    await loadDebateHistory();
+                    break;
+                case 'implementations':
+                    await loadImplementations();
+                    break;
+                case 'system':
+                    await loadSystemStatus();
+                    break;
+            }
+        }
+        
+        // Dashboard functions
+        async function loadDashboard() {
+            try {
+                // Load stats
+                const statsResponse = await fetch(`${API_URL}/stats`);
+                const stats = await statsResponse.json();
+                
+                // Load orchestration stats
+                const orchResponse = await fetch(`${API_URL}/orchestration/stats`);
+                const orchStats = await orchResponse.json();
+                
+                // Load pending implementations
+                const pendingResponse = await fetch(`${API_URL}/implementations/pending`);
+                const pending = await pendingResponse.json();
+                
+                // Update stats grid
+                document.querySelector('.stat-card:nth-child(1) .stat-value').textContent = stats.decisions_made;
+                document.querySelector('.stat-card:nth-child(2) .stat-value').textContent = stats.debates_run;
+                document.querySelector('.stat-card:nth-child(3) .stat-value').textContent = orchStats.active_workflows;
+                document.querySelector('.stat-card:nth-child(4) .stat-value').textContent = pending.pending_implementations.length;
+                
+                // Load recent debates
+                const debatesResponse = await fetch(`${API_URL}/debates?limit=5`);
+                const recentDebates = await debatesResponse.json();
+                
+                const activityHtml = recentDebates.debates.map(debate => `
+                    <div style="padding: 10px; border-bottom: 1px solid #e0e0e0;">
+                        <strong>${debate.question}</strong>
+                        <div style="color: #666; font-size: 14px;">
+                            ${new Date(debate.created_at).toLocaleString()} - 
+                            <span class="method-badge">${debate.method}</span>
+                            <span class="complexity-badge ${debate.complexity}">${debate.complexity}</span>
+                        </div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('recent-activity').innerHTML = activityHtml || '<p>No recent activity</p>';
+                
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+        
+        // Standard debate form
+        document.getElementById('debate-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const question = document.getElementById('question').value;
+            const context = document.getElementById('context').value;
+            const debateType = document.getElementById('debate-type').value;
+            const submitBtn = document.getElementById('submit-btn');
+            const resultsDiv = document.getElementById('debate-results');
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+            resultsDiv.innerHTML = '<div class="loading">AI agents are debating your question...</div>';
+            
+            try {
+                let endpoint = '/decide';
+                let body = { question, context };
+                
+                if (debateType === 'orchestrated') {
+                    endpoint = '/orchestrate';
+                } else if (debateType === 'simple' || debateType === 'complex') {
+                    endpoint = `/workflows/${debateType}_debate/execute`;
+                }
+                
+                const response = await fetch(`${API_URL}${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                resultsDiv.innerHTML = `
+                    <div class="success">
+                        <h3>Decision Result</h3>
+                        <p><strong>Decision:</strong> ${data.decision}</p>
+                        <p><strong>Method:</strong> <span class="method-badge">${data.method}</span></p>
+                        <p><strong>Rounds:</strong> ${data.rounds}</p>
+                        <p><strong>Time:</strong> ${data.time}</p>
+                        ${data.workflow_id ? `<p><strong>Workflow:</strong> ${data.workflow_id}</p>` : ''}
+                        ${data.orchestration_cost ? `<p><strong>Cost:</strong> $${data.orchestration_cost.toFixed(4)}</p>` : ''}
+                    </div>
+                `;
+                
+                // Refresh dashboard stats
+                if (currentTab === 'dashboard') {
+                    await loadDashboard();
+                }
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">
+                        <h3>Error</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Start Debate';
+            }
+        });
+        
+        // Evolution button
+        document.getElementById('evolve-btn').addEventListener('click', async () => {
+            const evolveBtn = document.getElementById('evolve-btn');
+            const resultsDiv = document.getElementById('debate-results');
+            
+            evolveBtn.disabled = true;
+            evolveBtn.textContent = 'Evolving...';
+            resultsDiv.innerHTML = '<div class="loading">System is analyzing itself for improvements...</div>';
+            
+            try {
+                const response = await fetch(`${API_URL}/evolve`, { method: 'POST' });
+                const data = await response.json();
+                
+                resultsDiv.innerHTML = `
+                    <div class="success">
+                        <h3>Evolution Result</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">
+                        <h3>Error</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                evolveBtn.disabled = false;
+                evolveBtn.textContent = 'Trigger Evolution';
+            }
+        });
+        
+        // Workflow management
+        async function loadWorkflows() {
+            try {
+                const response = await fetch(`${API_URL}/workflows`);
+                const data = await response.json();
+                
+                const workflowGrid = document.getElementById('workflow-grid');
+                workflowGrid.innerHTML = data.workflows.map(wf => `
+                    <div class="workflow-card" onclick="selectWorkflow('${wf.id}')">
+                        <h3>${wf.name}</h3>
+                        <p>${wf.description}</p>
+                        <div class="workflow-meta">
+                            <span>Steps: ${wf.steps}</span>
+                            <span>Max Rounds: ${wf.max_rounds}</span>
+                            <span>Participants: ${wf.participants.length}</span>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading workflows:', error);
+            }
+        }
+        
+        async function loadActiveWorkflows() {
+            try {
+                const response = await fetch(`${API_URL}/workflows/active`);
+                const data = await response.json();
+                
+                const activeDiv = document.getElementById('active-workflows');
+                
+                if (data.active_workflows.length === 0) {
+                    activeDiv.innerHTML = '<p>No active workflows</p>';
+                    return;
+                }
+                
+                activeDiv.innerHTML = data.active_workflows.map(wf => {
+                    const progress = (wf.current_step / wf.total_steps) * 100;
+                    return `
+                        <div class="workflow-status">
+                            <div>
+                                <strong>${wf.definition_name}</strong>
+                                <div>State: ${wf.state} | Step ${wf.current_step}/${wf.total_steps}</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${progress}%"></div>
+                                </div>
+                            </div>
+                            <div class="workflow-controls">
+                                ${wf.state === 'running' ? `<button onclick="pauseWorkflow('${wf.id}')" class="secondary">Pause</button>` : ''}
+                                ${wf.state === 'paused' ? `<button onclick="resumeWorkflow('${wf.id}')" class="success">Resume</button>` : ''}
+                                <button onclick="abortWorkflow('${wf.id}')" class="danger">Abort</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error loading active workflows:', error);
+            }
+        }
+        
+        // Manual debate functions
+        document.getElementById('get-template-btn').addEventListener('click', async () => {
+            try {
+                const response = await fetch(`${API_URL}/debates/manual/template`);
+                const data = await response.json();
+                
+                document.getElementById('template-container').style.display = 'block';
+                document.getElementById('template-box').textContent = data.template;
+            } catch (error) {
+                console.error('Error getting template:', error);
+            }
+        });
+        
+        document.getElementById('manual-debate-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const question = document.getElementById('manual-question').value;
+            const context = document.getElementById('manual-context').value;
+            const complexity = document.getElementById('manual-complexity').value;
+            const content = document.getElementById('manual-content').value;
+            
+            try {
+                const response = await fetch(`${API_URL}/debates/manual/import`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question, context, content }),
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to import debate');
+                }
+                
+                const data = await response.json();
+                
+                document.getElementById('manual-result').innerHTML = `
+                    <div class="success">
+                        <h3>Manual Debate Imported</h3>
+                        <p><strong>Debate ID:</strong> ${data.debate_id}</p>
+                        <p><strong>Decision:</strong> ${data.decision}</p>
+                    </div>
+                `;
+                
+                // Clear form
+                document.getElementById('manual-debate-form').reset();
+                
+            } catch (error) {
+                document.getElementById('manual-result').innerHTML = `
+                    <div class="error">
+                        <h3>Import Error</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        });
+        
+        // Debate history functions
+        async function loadDebateHistory() {
+            try {
+                const response = await fetch(`${API_URL}/debates?limit=100`);
+                const data = await response.json();
+                
+                const tbody = document.getElementById('debate-history-body');
+                
+                if (data.debates.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6">No debates found</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = data.debates.map(debate => `
+                    <tr>
+                        <td>${new Date(debate.created_at).toLocaleDateString()}</td>
+                        <td>${debate.question.substring(0, 50)}${debate.question.length > 50 ? '...' : ''}</td>
+                        <td><span class="complexity-badge ${debate.complexity}">${debate.complexity}</span></td>
+                        <td><span class="method-badge">${debate.method}</span></td>
+                        <td>${debate.consensus ? '✅' : '❌'}</td>
+                        <td>
+                            <button onclick="viewDebate('${debate.id}')" class="secondary">View</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading debate history:', error);
+            }
+        }
+        
+        // Search debates
+        document.getElementById('search-btn').addEventListener('click', async () => {
+            const search = document.getElementById('search-debates').value;
+            const complexity = document.getElementById('filter-complexity').value;
+            const method = document.getElementById('filter-method').value;
+            
+            try {
+                const response = await fetch(`${API_URL}/debates/search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ search, complexity, method }),
+                });
+                
+                const data = await response.json();
+                
+                const tbody = document.getElementById('debate-history-body');
+                
+                if (data.results.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6">No debates found matching criteria</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = data.results.map(debate => `
+                    <tr>
+                        <td>${new Date(debate.created_at).toLocaleDateString()}</td>
+                        <td>${debate.question.substring(0, 50)}${debate.question.length > 50 ? '...' : ''}</td>
+                        <td><span class="complexity-badge ${debate.complexity}">${debate.complexity}</span></td>
+                        <td><span class="method-badge">${debate.method}</span></td>
+                        <td>${debate.consensus ? '✅' : '❌'}</td>
+                        <td>
+                            <button onclick="viewDebate('${debate.id}')" class="secondary">View</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error searching debates:', error);
+            }
+        });
+        
+        // View debate details
+        async function viewDebate(debateId) {
+            try {
+                const response = await fetch(`${API_URL}/debates/${debateId}`);
+                const debate = await response.json();
+                
+                const modalBody = document.getElementById('modal-body');
+                modalBody.innerHTML = `
+                    <h3>${debate.question}</h3>
+                    <p><strong>Context:</strong> ${debate.context || 'None'}</p>
+                    <p><strong>Complexity:</strong> <span class="complexity-badge ${debate.complexity}">${debate.complexity}</span></p>
+                    <p><strong>Method:</strong> <span class="method-badge">${debate.method}</span></p>
+                    <p><strong>Created:</strong> ${new Date(debate.created_at).toLocaleString()}</p>
+                    <p><strong>Consensus:</strong> ${debate.consensus ? 'Yes' : 'No'}</p>
+                    <p><strong>Cost Estimate:</strong> $${debate.cost_estimate}</p>
+                    
+                    <h4>Final Decision</h4>
+                    <div class="argument">${debate.final_decision}</div>
+                    
+                    <h4>Debate Rounds</h4>
+                    ${debate.rounds.map((round, idx) => `
+                        <div class="debate-round">
+                            <h5>Round ${idx + 1}</h5>
+                            ${round.claude ? `
+                                <div class="argument argument-claude">
+                                    <strong>Claude:</strong><br>
+                                    ${round.claude}
+                                </div>
+                            ` : ''}
+                            ${round.gemini ? `
+                                <div class="argument argument-gemini">
+                                    <strong>Gemini:</strong><br>
+                                    ${round.gemini}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `).join('')}
+                    
+                    ${debate.decision ? `
+                        <h4>Associated Decision</h4>
+                        <p><strong>Type:</strong> ${debate.decision.decision_type}</p>
+                        <p><strong>Assignee:</strong> ${debate.decision.assignee}</p>
+                        ${debate.decision.pr_id ? `<p><strong>PR:</strong> #${debate.decision.pr_id}</p>` : ''}
+                        ${debate.decision.issue_id ? `<p><strong>Issue:</strong> #${debate.decision.issue_id}</p>` : ''}
+                    ` : ''}
+                `;
+                
+                document.getElementById('debate-modal').style.display = 'block';
+            } catch (error) {
+                console.error('Error viewing debate:', error);
+            }
+        }
+        
+        // Implementation tracking
+        async function loadImplementations() {
+            try {
+                const response = await fetch(`${API_URL}/implementations/pending`);
+                const data = await response.json();
+                
+                const pendingDiv = document.getElementById('pending-implementations');
+                
+                if (data.pending_implementations.length === 0) {
+                    pendingDiv.innerHTML = '<p>No pending implementations</p>';
+                    document.getElementById('pending-count').textContent = '0';
+                    return;
+                }
+                
+                document.getElementById('pending-count').textContent = data.pending_implementations.length;
+                
+                pendingDiv.innerHTML = data.pending_implementations.map(impl => `
+                    <div class="implementation-card">
+                        <h4>${impl.question}</h4>
+                        <div class="implementation-meta">
+                            <span>Assignee: ${impl.assignee}</span>
+                            <span>Created: ${new Date(impl.created_at).toLocaleDateString()}</span>
+                            <span>Days Pending: ${impl.days_pending}</span>
+                        </div>
+                        <button onclick="viewDebate('${impl.debate_id}')" class="secondary">View Debate</button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading implementations:', error);
+            }
+        }
+        
+        // System status functions
+        async function loadSystemStatus() {
+            try {
+                // Kafka status
+                const kafkaResponse = await fetch(`${API_URL}/kafka/status`);
+                const kafkaData = await kafkaResponse.json();
+                
+                const kafkaStatusDiv = document.getElementById('kafka-status');
+                if (kafkaData.enabled) {
+                    kafkaStatusDiv.innerHTML = `
+                        <span class="status-indicator ${kafkaData.connected ? 'connected' : 'disconnected'}"></span>
+                        <span>Kafka ${kafkaData.connected ? 'Connected' : 'Disconnected'}</span>
+                        ${kafkaData.topics ? `<span>Topics: ${kafkaData.topics.join(', ')}</span>` : ''}
+                    `;
+                } else {
+                    kafkaStatusDiv.innerHTML = `
+                        <span class="status-indicator disconnected"></span>
+                        <span>Kafka Disabled</span>
+                    `;
+                }
+                
+                // Orchestration stats
+                const orchResponse = await fetch(`${API_URL}/orchestration/stats`);
+                const orchData = await orchResponse.json();
+                
+                document.getElementById('orchestration-stats').innerHTML = `
+                    <p><strong>Available Workflows:</strong> ${orchData.available_workflows}</p>
+                    <p><strong>Active Workflows:</strong> ${orchData.active_workflows}</p>
+                    <p><strong>Intelligent Orchestration:</strong> ${orchData.intelligent_orchestration_enabled ? 'Enabled' : 'Disabled'}</p>
+                    <p><strong>Cost Optimization:</strong> ${orchData.cost_optimization_enabled ? 'Enabled' : 'Disabled'}</p>
+                    <p><strong>Orchestrator Model:</strong> ${orchData.orchestrator_model}</p>
+                `;
+                
+                // Rate limiting stats
+                const rateResponse = await fetch(`${API_URL}/rate-limits/stats`);
+                const rateData = await rateResponse.json();
+                
+                document.getElementById('rate-limit-stats').innerHTML = `
+                    <p><strong>Total Limiters:</strong> ${rateData.total_limiters || 0}</p>
+                    <p><strong>Rate Limiting:</strong> ${rateData.enabled ? 'Enabled' : 'Disabled'}</p>
+                `;
+                
+            } catch (error) {
+                console.error('Error loading system status:', error);
+            }
+        }
+        
+        // Test Kafka
+        document.getElementById('test-kafka-btn').addEventListener('click', async () => {
+            try {
+                const response = await fetch(`${API_URL}/kafka/test`, { method: 'POST' });
+                
+                if (!response.ok) {
+                    throw new Error('Kafka test failed');
+                }
+                
+                const data = await response.json();
+                alert(`Test event sent successfully!\nEvent Type: ${data.event_type}\nDebate ID: ${data.debate_id}`);
+                
+            } catch (error) {
+                alert(`Kafka test failed: ${error.message}`);
+            }
+        });
+        
+        // Workflow control functions
+        async function pauseWorkflow(workflowId) {
+            try {
+                await fetch(`${API_URL}/workflows/${workflowId}/pause`, { method: 'POST' });
+                await loadActiveWorkflows();
+            } catch (error) {
+                console.error('Error pausing workflow:', error);
+            }
+        }
+        
+        async function resumeWorkflow(workflowId) {
+            try {
+                await fetch(`${API_URL}/workflows/${workflowId}/resume`, { method: 'POST' });
+                await loadActiveWorkflows();
+            } catch (error) {
+                console.error('Error resuming workflow:', error);
+            }
+        }
+        
+        async function abortWorkflow(workflowId) {
+            if (confirm('Are you sure you want to abort this workflow?')) {
+                try {
+                    await fetch(`${API_URL}/workflows/${workflowId}/abort`, { method: 'POST' });
+                    await loadActiveWorkflows();
+                } catch (error) {
+                    console.error('Error aborting workflow:', error);
+                }
+            }
+        }
+        
+        function selectWorkflow(workflowId) {
+            document.getElementById('debate-type').value = workflowId;
+            document.querySelector('.nav-tab[data-tab="new-debate"]').click();
+        }
+        
+        function closeModal() {
+            document.getElementById('debate-modal').style.display = 'none';
+        }
+        
+        // Click outside modal to close
+        window.onclick = function(event) {
+            const modal = document.getElementById('debate-modal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+        
+        // Initial load
+        loadDashboard();
+        
+        // Refresh stats every 30 seconds
+        setInterval(() => {
+            if (currentTab === 'dashboard') {
+                loadDashboard();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>

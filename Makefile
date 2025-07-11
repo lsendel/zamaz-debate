@@ -4,7 +4,8 @@
 .PHONY: help install setup run stop test clean debate evolve auto-evolve check-env web logs status \
 	dev-install format format-check isort isort-check lint lint-deep type-check quality quality-fix \
 	test-coverage quality-debate quality-debate-list quality-debate-specific pre-commit-install pre-commit-all \
-	complexity security-scan quality-report
+	complexity security-scan quality-report run-enhanced manual-debate-web orchestrator-demo kafka-test \
+	workflow-list run-mock run-cached check-localhost
 
 # Default target - show help
 help:
@@ -38,6 +39,17 @@ help:
 	@echo "  make quality-debate-list - List available quality debates"
 	@echo "  make quality-debate-specific - Run a specific quality debate"
 	@echo "  make pre-commit-install - Install pre-commit hooks"
+	@echo ""
+	@echo "Enhanced Interface Commands:"
+	@echo "==========================="
+	@echo "  make run-enhanced - Run enhanced web interface"
+	@echo "  make manual-debate-web - Access manual debate via web"
+	@echo "  make orchestrator-demo - Run orchestration demo"
+	@echo "  make kafka-test - Test Kafka integration"
+	@echo "  make workflow-list - List available workflows"
+	@echo "  make run-mock - Run in mock mode (no API calls)"
+	@echo "  make run-cached - Run with response caching"
+	@echo "  make check-localhost - Validate localhost is running"
 
 # Check if virtual environment exists
 VENV_EXISTS := $(shell test -d venv && echo 1 || echo 0)
@@ -285,6 +297,57 @@ pre-commit-install:
 	@echo "Installing pre-commit hooks..."
 	./venv/bin/pre-commit install
 	@echo "✓ Pre-commit hooks installed"
+
+# Enhanced interface commands
+run-enhanced:
+	@echo "Starting enhanced web interface..."
+	@make stop 2>/dev/null || true
+	@cp src/web/static/index_simple.html src/web/static/index.html
+	@echo "Enhanced UI activated. Starting server..."
+	@nohup ./venv/bin/python -m src.web.app_simple > web_interface.log 2>&1 &
+	@sleep 2
+	@echo "✓ Enhanced web interface started at http://localhost:8000"
+	@echo "View logs with: make logs"
+
+manual-debate-web:
+	@echo "Opening manual debate interface..."
+	@make run-enhanced
+	@sleep 2
+	@python3 -c "import webbrowser; webbrowser.open('http://localhost:8000#manual')"
+
+orchestrator-demo:
+	@echo "Running orchestration demo..."
+	@echo "Setting up orchestration environment..."
+	@export USE_ORCHESTRATION=true && \
+	./venv/bin/python -c "from services.orchestration_service import test_orchestration_service; import asyncio; asyncio.run(test_orchestration_service())"
+
+kafka-test:
+	@echo "Testing Kafka integration..."
+	@if [ "$$KAFKA_ENABLED" = "true" ]; then \
+		echo "Kafka is enabled. Sending test event..."; \
+		curl -X POST http://localhost:8000/kafka/test | python3 -m json.tool; \
+	else \
+		echo "Kafka is not enabled. Set KAFKA_ENABLED=true to test."; \
+	fi
+
+workflow-list:
+	@echo "Fetching available workflows..."
+	@curl -s http://localhost:8000/workflows | python3 -m json.tool || echo "Server not running. Start with: make run"
+
+# Run in mock mode (no API calls)
+run-mock:
+	@echo "Starting in mock mode (no API calls)..."
+	@export USE_MOCK_MODE=true && make run
+
+# Run with response caching
+run-cached:
+	@echo "Starting with response caching enabled..."
+	@export USE_CACHED_RESPONSES=true && make run
+
+# Manual debate command (existing, but ensure it's there)
+manual-debate:
+	@echo "Starting manual debate entry..."
+	./venv/bin/python scripts/manual_debate.py
 
 # Run pre-commit on all files
 pre-commit-all:

@@ -24,6 +24,15 @@ make run-cached    # Run with response caching enabled
 make stop          # Stop the web interface
 ```
 
+### Enhanced Interface
+```bash
+make run-enhanced      # Start enhanced web interface with all features
+make manual-debate-web # Access manual debate via web
+make orchestrator-demo # Run orchestration demo
+make kafka-test        # Test Kafka integration
+make workflow-list     # List available workflows
+```
+
 ### Testing and Debugging
 ```bash
 make test          # Run pytest test suite
@@ -63,6 +72,7 @@ python check_localhost.py http://localhost:8000  # Direct validation
 **Web Interface** (`src/web/app.py`):
 - FastAPI-based REST API
 - Endpoints: `/decide`, `/stats`, `/evolve`, `/pr-drafts`, `/webhooks/*`
+- Enhanced endpoints: `/orchestrate`, `/workflows/*`, `/debates/*`, `/implementations/*`
 - Serves static HTML interface at root
 
 **Webhook System** (`src/webhooks/`):
@@ -71,6 +81,12 @@ python check_localhost.py http://localhost:8000  # Direct validation
 - Automatic retry logic with exponential backoff
 - Comprehensive REST API for webhook management
 - Integration with domain event system
+
+**Orchestration Service** (`services/orchestration_service.py`):
+- Intelligent workflow selection using low-cost LLMs
+- Workflow engine with state machine pattern
+- Support for simple and complex debate workflows
+- Cost optimization through local LLMs (Ollama) or Grok
 
 ### Domain-Driven Design Structure
 
@@ -110,6 +126,7 @@ The system is organized into bounded contexts following DDD principles:
 - Repository implementations using JSON file storage
 - Base repository class for common operations
 - Concrete repositories for each bounded context
+- Kafka event bridge for distributed messaging
 
 ### Design Patterns
 
@@ -120,6 +137,7 @@ The system is organized into bounded contexts following DDD principles:
 5. **Self-Evolution**: System can analyze itself and suggest improvements
 6. **Event-Driven Architecture**: Domain events enable loose coupling between contexts
 7. **Repository Pattern**: Abstracts persistence with JSON-based implementations
+8. **Workflow Engine**: State machine pattern for orchestrating complex debates
 
 ## Key Features
 
@@ -127,6 +145,7 @@ The system is organized into bounded contexts following DDD principles:
 - **PR Integration**: Creates GitHub pull requests for complex decisions
 - **Evolution Tracking**: Maintains history to prevent duplicate improvements
 - **Cost Management**: Mock mode, response caching, and manual debate options
+- **Intelligent Orchestration**: Uses low-cost LLMs to select optimal debate workflows
 - **Delegation Rules**:
   - Complex tasks → Assigned to Claude (with Gemini as reviewer)
   - Regular tasks → Assigned to Gemini (with Codex as reviewer and committer)
@@ -220,6 +239,158 @@ Contexts communicate through domain events:
 - This maintains loose coupling between contexts
 - Event handlers orchestrate cross-context workflows
 
+## Orchestration & Workflows
+
+The system includes intelligent workflow orchestration for debates:
+
+### Using Orchestrated Debates
+```bash
+make run-enhanced        # Start enhanced web interface
+make orchestrator-demo   # Run orchestration demo
+make workflow-list       # List available workflows
+```
+
+### Workflow Types
+- **Simple Debate**: 2 rounds, basic consensus check
+- **Complex Debate**: 5 rounds, detailed analysis, higher consensus threshold
+- **Custom Workflows**: Define your own in `src/workflows/definitions/`
+
+### Configuration
+```bash
+# Enable intelligent orchestration
+export USE_ORCHESTRATION=true
+export USE_OLLAMA_ORCHESTRATION=true  # For local LLM
+export GROK_API_KEY=your_key          # For Grok orchestration
+```
+
+### API Endpoints
+- `POST /orchestrate` - Start orchestrated debate with auto workflow selection
+- `GET /workflows` - List available workflows
+- `POST /workflows/{id}/execute` - Execute specific workflow
+- `GET /workflows/active` - View active workflows
+- `POST /workflows/{id}/pause|resume|abort` - Control active workflows
+
+## Manual Debate Integration
+
+Save costs by conducting debates in Claude.ai:
+
+### Web Interface
+```bash
+make manual-debate-web   # Open manual debate UI
+```
+
+### Command Line
+```bash
+make manual-debate       # Use CLI tool
+```
+
+### Process
+1. Get template from system
+2. Conduct debate in Claude.ai
+3. Paste results back into system
+4. Debate is saved with full integration
+
+### API Endpoints
+- `GET /debates/manual/template` - Get Claude.ai template
+- `POST /debates/manual` - Create manual debate
+- `POST /debates/manual/import` - Import from Claude.ai
+
+## Debate History & Search
+
+### Viewing Past Debates
+The enhanced interface includes comprehensive debate history:
+- Search by question content
+- Filter by complexity, method, consensus
+- View full debate details including all rounds
+- Track debate origins (PR/Issue)
+
+### API Endpoints
+- `GET /debates` - List debates with pagination
+- `GET /debates/{id}` - Get specific debate
+- `GET /debates/{id}/rounds` - View all rounds
+- `POST /debates/search` - Advanced search
+- `GET /debates/by-origin/{type}/{id}` - Find debates by PR/issue
+
+## Implementation Tracking
+
+Track what decisions have been implemented:
+
+### Features
+- View pending implementations
+- Track days since decision
+- Link to original debates
+- Monitor implementation status
+
+### API Endpoints
+- `GET /implementations` - List all implementations
+- `GET /implementations/{debate_id}` - Get implementation details
+- `GET /implementations/pending` - View pending only
+
+## Kafka Event Streaming
+
+Real-time event integration:
+
+### Configuration
+```bash
+export KAFKA_ENABLED=true
+export KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+```
+
+### Testing
+```bash
+make kafka-test          # Test Kafka connection
+```
+
+### Features
+- Publish all domain events to Kafka
+- Subscribe to external debate requests
+- Hybrid event bus (local + distributed)
+- Automatic event bridging
+
+### API Endpoints
+- `GET /kafka/status` - Check Kafka connection
+- `POST /kafka/test` - Send test event
+
+## Phase Management
+
+Advanced debate phase orchestration:
+
+### Workflow Phases
+1. **Initial Arguments** - Opening positions
+2. **Counter Arguments** - Rebuttals
+3. **Clarification** - Address uncertainties
+4. **Consensus Check** - Evaluate agreement
+5. **Final Decision** - Conclude debate
+
+### Custom Phases
+- Define in workflow YAML files
+- Set participant requirements
+- Configure retry logic
+- Add conditional transitions
+
+## Enhanced Web Interface
+
+### Running Enhanced UI
+```bash
+make run-enhanced        # Start with all features
+```
+
+### Features
+- **Dashboard**: System overview and stats
+- **New Debate**: Multiple debate modes
+- **Orchestrated**: Workflow management
+- **Manual**: Claude.ai integration
+- **History**: Search and view past debates
+- **Implementations**: Track follow-ups
+- **System**: Monitor Kafka, orchestration, rate limits
+
+### Navigation
+- Tab-based interface
+- Real-time updates
+- Modal debate details
+- Workflow progress tracking
+- Implementation status badges
+
 ## Troubleshooting
 
 ### PR Creation Not Working
@@ -250,3 +421,5 @@ python3 test_pr_and_issue.py   # Test both PR and issue creation
 2. **PR creation fails with same branch error**: Set `PR_USE_CURRENT_BRANCH=false` in `.env`
 3. **Missing module errors**: The system uses Domain-Driven Design with contexts - ensure all context modules have proper `__init__.py` files
 4. **Server not picking up env changes**: Always restart with `make stop && make run` after `.env` modifications
+5. **Orchestrator not working**: Ensure `USE_ORCHESTRATION=true` and either Ollama is running or `GROK_API_KEY` is set
+6. **Kafka events not publishing**: Check `KAFKA_ENABLED=true` and Kafka is running (`docker-compose up -d kafka`)
