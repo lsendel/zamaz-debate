@@ -24,13 +24,26 @@ make run-cached    # Run with response caching enabled
 make stop          # Stop the web interface
 ```
 
-### Enhanced Interface
+### UI Options
 ```bash
-make run-enhanced      # Start enhanced web interface with all features
-make manual-debate-web # Access manual debate via web
-make orchestrator-demo # Run orchestration demo
-make kafka-test        # Test Kafka integration
+make run               # Basic web interface
+make run-professional  # Professional web interface (recommended)
+make run-enhanced      # Enhanced web interface
+make test-professional-ui # Test professional UI with Puppeteer
+```
+
+### Cost-Saving Modes
+```bash
+make run-mock          # Run without API calls (mock mode)
+make run-cached        # Run with response caching enabled
+make manual-debate-web # Access manual debate interface
+```
+
+### Advanced Features
+```bash
 make workflow-list     # List available workflows
+make kafka-test        # Test Kafka integration
+make orchestrator-demo # Run orchestration demo (when available)
 ```
 
 ### Testing and Debugging

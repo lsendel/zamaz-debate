@@ -1,55 +1,84 @@
 # Zamaz Debate System Makefile
 # Run various commands for the debate system
 
-.PHONY: help install setup run stop test clean debate evolve auto-evolve check-env web logs status \
-	dev-install format format-check isort isort-check lint lint-deep type-check quality quality-fix \
-	test-coverage quality-debate quality-debate-list quality-debate-specific pre-commit-install pre-commit-all \
-	complexity security-scan quality-report run-enhanced manual-debate-web orchestrator-demo kafka-test \
-	workflow-list run-mock run-cached check-localhost
+.PHONY: help install setup run stop test clean debate evolve check-env web logs status dev \
+	run-professional run-enhanced test-professional-ui manual-debate-web \
+	evolve-once test-decision pr-drafts workflow-list check-localhost \
+	run-mock run-cached clear-cache usage \
+	kafka-up kafka-down kafka-logs kafka-test test-e2e \
+	auto-evolve configure-auto-evolve \
+	dev-install format format-check isort isort-check lint lint-deep type-check \
+	quality quality-fix test-coverage quality-report \
+	pre-commit-install pre-commit-all pre-commit \
+	complexity security-scan security setup-hooks
 
 # Default target - show help
 help:
 	@echo "Zamaz Debate System - Available Commands:"
 	@echo "==========================================="
-	@echo "  make install    - Install Python dependencies"
-	@echo "  make setup      - Initial setup (venv, deps, directories)"
-	@echo "  make run        - Start the web interface"
-	@echo "  make stop       - Stop the web interface"
-	@echo "  make test       - Run tests"
-	@echo "  make clean      - Clean up generated files"
-	@echo "  make debate     - Run a test debate"
-	@echo "  make evolve     - Trigger system evolution"
-	@echo "  make auto-evolve - Run continuous auto-evolution"
-	@echo "  make check-env  - Verify environment setup"
-	@echo "  make web        - Open web interface in browser"
-	@echo "  make logs       - Show web interface logs"
-	@echo "  make status     - Check system status"
-	@echo "  make dev        - Run in development mode (with logs)"
 	@echo ""
-	@echo "Code Quality Commands:"
-	@echo "====================="
-	@echo "  make quality    - Run all quality checks"
-	@echo "  make quality-fix - Auto-fix formatting and imports"
-	@echo "  make format     - Format code with Black"
-	@echo "  make lint       - Run Flake8 linter"
-	@echo "  make type-check - Run MyPy type checking"
-	@echo "  make test-coverage - Run tests with coverage"
-	@echo "  make quality-report - Generate full quality report"
-	@echo "  make quality-debate - Run AI debates about code quality"
-	@echo "  make quality-debate-list - List available quality debates"
-	@echo "  make quality-debate-specific - Run a specific quality debate"
-	@echo "  make pre-commit-install - Install pre-commit hooks"
+	@echo "Core Commands:"
+	@echo "============="
+	@echo "  make install         - Install Python dependencies"
+	@echo "  make setup           - Initial setup (venv, deps, directories)"
+	@echo "  make run             - Start the basic web interface"
+	@echo "  make run-professional - Start the professional web interface (recommended)"
+	@echo "  make run-enhanced    - Start the enhanced web interface"
+	@echo "  make stop            - Stop the web interface"
+	@echo "  make dev             - Run in development mode (foreground with logs)"
+	@echo "  make logs            - Show web interface logs"
+	@echo "  make status          - Check system status"
+	@echo "  make web             - Open web interface in browser"
 	@echo ""
-	@echo "Enhanced Interface Commands:"
-	@echo "==========================="
-	@echo "  make run-enhanced - Run enhanced web interface"
-	@echo "  make manual-debate-web - Access manual debate via web"
-	@echo "  make orchestrator-demo - Run orchestration demo"
-	@echo "  make kafka-test - Test Kafka integration"
-	@echo "  make workflow-list - List available workflows"
-	@echo "  make run-mock - Run in mock mode (no API calls)"
-	@echo "  make run-cached - Run with response caching"
+	@echo "Testing & Validation:"
+	@echo "===================="
+	@echo "  make test            - Run tests"
+	@echo "  make test-professional-ui - Test professional UI with Puppeteer"
 	@echo "  make check-localhost - Validate localhost is running"
+	@echo "  make test-decision   - Create a test decision"
+	@echo "  make debate          - Run a test debate"
+	@echo ""
+	@echo "Evolution & Enhancement:"
+	@echo "======================="
+	@echo "  make evolve          - Trigger system evolution"
+	@echo "  make auto-evolve     - Run continuous auto-evolution"
+	@echo "  make configure-auto-evolve - Configure auto-evolution settings"
+	@echo ""
+	@echo "Special Modes:"
+	@echo "============="
+	@echo "  make run-mock        - Run in mock mode (no API calls)"
+	@echo "  make run-cached      - Run with response caching"
+	@echo "  make manual-debate-web - Access manual debate interface"
+	@echo ""
+	@echo "Data Management:"
+	@echo "==============="
+	@echo "  make usage           - Show API usage and cache statistics"
+	@echo "  make clear-cache     - Clear AI response cache"
+	@echo "  make pr-drafts       - View PR drafts"
+	@echo "  make clean           - Clean up generated files"
+	@echo "  make clean-all       - Deep clean (including all data)"
+	@echo ""
+	@echo "Code Quality:"
+	@echo "============"
+	@echo "  make quality         - Run all quality checks"
+	@echo "  make quality-fix     - Auto-fix formatting and imports"
+	@echo "  make format          - Format code with Black"
+	@echo "  make lint            - Run Flake8 linter"
+	@echo "  make type-check      - Run MyPy type checking"
+	@echo "  make test-coverage   - Run tests with coverage"
+	@echo "  make quality-report  - Generate full quality report"
+	@echo ""
+	@echo "Advanced Features:"
+	@echo "================="
+	@echo "  make workflow-list   - List available workflows"
+	@echo "  make kafka-test      - Test Kafka integration"
+	@echo "  make kafka-up        - Start Kafka with Docker"
+	@echo "  make kafka-down      - Stop Kafka container"
+	@echo ""
+	@echo "Environment:"
+	@echo "==========="
+	@echo "  make check-env       - Verify environment setup"
+	@echo "  make dev-install     - Install development dependencies"
 
 # Check if virtual environment exists
 VENV_EXISTS := $(shell test -d venv && echo 1 || echo 0)
@@ -92,10 +121,11 @@ check-env:
 	fi
 	@echo "✓ Environment configured"
 
-# Run the web interface
+# Run the basic web interface
 run: check-env
 	@echo "Starting Zamaz Debate System..."
 	@pkill -f "src/web/app.py" || true
+	@pkill -f "src.web.app_simple" || true
 	@sleep 1
 	@if [ -d "venv" ]; then \
 		nohup ./venv/bin/python src/web/app.py > web_interface.log 2>&1 & \
@@ -107,6 +137,33 @@ run: check-env
 	@echo "✓ Web interface started at http://localhost:8000"
 	@echo "  Run 'make logs' to view logs"
 
+# Run the professional web interface (recommended)
+run-professional:
+	@echo "Starting professional web interface..."
+	@make stop 2>/dev/null || true
+	@cp src/web/static/index_professional.html src/web/static/index.html
+	@echo "Professional UI activated. Starting server..."
+	@nohup ./venv/bin/python -m src.web.app_simple > web_interface.log 2>&1 &
+	@sleep 2
+	@echo "✓ Professional web interface started at http://localhost:8000"
+	@echo "View logs with: make logs"
+
+# Run the enhanced web interface
+run-enhanced:
+	@echo "Starting enhanced web interface..."
+	@make stop 2>/dev/null || true
+	@cp src/web/static/index_simple.html src/web/static/index.html
+	@echo "Enhanced UI activated. Starting server..."
+	@nohup ./venv/bin/python -m src.web.app_simple > web_interface.log 2>&1 &
+	@sleep 2
+	@echo "✓ Enhanced web interface started at http://localhost:8000"
+	@echo "View logs with: make logs"
+
+# Test professional UI with Puppeteer
+test-professional-ui:
+	@echo "Testing professional UI..."
+	@python3 test_professional_ui.py
+
 # Run in development mode (foreground with logs)
 dev: check-env
 	@echo "Starting in development mode..."
@@ -115,13 +172,56 @@ dev: check-env
 # Stop the web interface
 stop:
 	@echo "Stopping web interface..."
-	@pkill -f "src/web/app.py" || echo "No process to stop"
+	@pkill -f "src/web/app.py" || true
+	@pkill -f "src.web.app_simple" || true
 	@echo "✓ Stopped"
 
 # Run tests
 test:
 	@echo "Running tests..."
 	./venv/bin/pytest -v
+
+# View logs
+logs:
+	@echo "=== Web Interface Logs ==="
+	@tail -f web_interface.log
+
+# Check system status
+status:
+	@echo "=== System Status ==="
+	@ps aux | grep -E "src/web/app.py|src.web.app_simple" | grep -v grep > /dev/null && \
+		echo "✓ Web interface: Running" || echo "✗ Web interface: Stopped"
+	@echo ""
+	@echo "=== Statistics ==="
+	@curl -s http://localhost:8000/stats 2>/dev/null | python3 -m json.tool || \
+		echo "Unable to fetch stats (web interface not running)"
+	@echo ""
+	@echo "=== Recent Debates ==="
+	@ls -lt data/debates/*.json 2>/dev/null | head -5 || echo "No debates found"
+
+# Open web interface in browser
+web:
+	@echo "Opening web interface..."
+	@open http://localhost:8000 || xdg-open http://localhost:8000 || echo "Please open http://localhost:8000"
+
+# Clean up generated files
+clean:
+	@echo "Cleaning up..."
+	@rm -rf __pycache__ */__pycache__ */*/__pycache__
+	@rm -rf .pytest_cache
+	@rm -f web_interface.log
+	@echo "✓ Cleaned up"
+
+# Deep clean (including data)
+clean-all: clean
+	@echo "⚠️  This will delete all debates and evolutions!"
+	@read -p "Are you sure? [y/N] " confirm; \
+	if [ "$$confirm" = "y" ]; then \
+		rm -rf data/debates/* data/evolutions/* data/decisions/* data/pr_drafts/* data/pr_history/*; \
+		echo "✓ All data cleaned"; \
+	else \
+		echo "Cancelled"; \
+	fi
 
 # Run a simple test debate
 debate: check-env
@@ -145,62 +245,6 @@ evolve: check-env
 evolve-once:
 	@./venv/bin/python scripts/evolve_once.py || python3 scripts/evolve_once.py
 
-# Open web interface in browser
-web:
-	@echo "Opening web interface..."
-	@open http://localhost:8000 || xdg-open http://localhost:8000 || echo "Please open http://localhost:8000"
-
-# View logs
-logs:
-	@echo "=== Web Interface Logs ==="
-	@tail -f web_interface.log
-
-# Check system status
-status:
-	@echo "=== System Status ==="
-	@ps aux | grep -E "web_interface.py" | grep -v grep > /dev/null && \
-		echo "✓ Web interface: Running" || echo "✗ Web interface: Stopped"
-	@echo ""
-	@echo "=== Statistics ==="
-	@curl -s http://localhost:8000/stats 2>/dev/null | python3 -m json.tool || \
-		echo "Unable to fetch stats (web interface not running)"
-	@echo ""
-	@echo "=== Recent Debates ==="
-	@ls -lt debates/*.json 2>/dev/null | head -5 || echo "No debates found"
-
-# Clean up generated files
-clean:
-	@echo "Cleaning up..."
-	@rm -rf __pycache__ */__pycache__ */*/__pycache__
-	@rm -rf .pytest_cache
-	@rm -f web_interface.log
-	@echo "✓ Cleaned up"
-
-# Deep clean (including data)
-clean-all: clean
-	@echo "⚠️  This will delete all debates and evolutions!"
-	@read -p "Are you sure? [y/N] " confirm; \
-	if [ "$$confirm" = "y" ]; then \
-		rm -rf debates/* evolutions/* decisions/* pr_drafts/* pr_history/*; \
-		echo "✓ All data cleaned"; \
-	else \
-		echo "Cancelled"; \
-	fi
-
-# Run with specific PR creation enabled
-run-with-pr: check-env
-	@echo "Starting with PR creation enabled..."
-	@pkill -f web_interface.py || true
-	@sleep 1
-	@CREATE_PR_FOR_DECISIONS=true nohup ./venv/bin/python src/web/app.py > web_interface.log 2>&1 &
-	@sleep 2
-	@echo "✓ Started with PR creation enabled"
-
-# Check localhost with puppeteer
-check-localhost:
-	@echo "Checking localhost with Puppeteer..."
-	./venv/bin/python check_localhost.py
-
 # Create a complex decision (for testing)
 test-decision:
 	@echo "Creating test decision..."
@@ -214,262 +258,64 @@ test-decision:
 # View PR drafts
 pr-drafts:
 	@echo "=== PR Drafts ==="
-	@ls -la pr_drafts/*.json 2>/dev/null || echo "No PR drafts found"
+	@ls -la data/pr_drafts/*.json 2>/dev/null || echo "No PR drafts found"
 	@echo ""
-	@if ls pr_drafts/*.json 2>/dev/null | head -1 > /dev/null; then \
+	@if ls data/pr_drafts/*.json 2>/dev/null | head -1 > /dev/null; then \
 		echo "Latest PR draft:"; \
-		ls -t pr_drafts/*.json | head -1 | xargs cat | python3 -m json.tool | head -20; \
+		ls -t data/pr_drafts/*.json | head -1 | xargs cat | python3 -m json.tool | head -20; \
 	fi
 
-# Install development dependencies
-dev-install: install
-	@echo "Installing development dependencies..."
-	./venv/bin/pip install -r requirements-dev.txt
-	@echo "✓ Development dependencies installed"
-
-# Format code
-format:
-	@echo "Formatting code..."
-	./venv/bin/black src/ services/ domain/
-
-# Check code formatting
-format-check:
-	@echo "Checking code formatting..."
-	./venv/bin/black --check src/ services/ domain/
-
-# Sort imports
-isort:
-	@echo "Sorting imports..."
-	./venv/bin/isort src/ services/ domain/
-
-# Check import sorting
-isort-check:
-	@echo "Checking import sorting..."
-	./venv/bin/isort --check-only src/ services/ domain/
-
-# Lint code
-lint:
-	@echo "Linting code..."
-	./venv/bin/flake8 src/ services/ domain/
-
-# Deep lint with pylint
-lint-deep:
-	@echo "Running deep lint with pylint..."
-	./venv/bin/pylint --disable=R,C src/ services/ domain/ || true
-
-# Type checking
-type-check:
-	@echo "Running type checking..."
-	./venv/bin/mypy src/ services/ domain/ --ignore-missing-imports || true
-
-# Run all quality checks
-quality: format-check isort-check lint type-check
-	@echo "✓ All quality checks passed"
-
-# Run quality fixes
-quality-fix: format isort
-	@echo "✓ Code formatted and imports sorted"
-
-# Run tests with coverage
-test-coverage:
-	@echo "Running tests with coverage..."
-	./venv/bin/pytest --cov=src --cov=services --cov=domain --cov-report=term-missing --cov-report=xml
-
-# Run quality debates
-quality-debate:
-	@echo "Running all quality debates..."
-	./venv/bin/python src/quality_debates.py
-
-# List available quality debates
-quality-debate-list:
-	@echo "Listing available quality debates..."
-	./venv/bin/python src/quality_debates.py --list
-
-# Run specific quality debate
-quality-debate-specific:
-	@./venv/bin/python src/quality_debates.py --list
-	@echo ""
-	@read -p "Enter debate ID: " debate_id; \
-	./venv/bin/python src/quality_debates.py --question $$debate_id
-
-# Install pre-commit hooks
-pre-commit-install:
-	@echo "Installing pre-commit hooks..."
-	./venv/bin/pre-commit install
-	@echo "✓ Pre-commit hooks installed"
-
-# Enhanced interface commands
-run-enhanced:
-	@echo "Starting enhanced web interface..."
-	@make stop 2>/dev/null || true
-	@cp src/web/static/index_simple.html src/web/static/index.html
-	@echo "Enhanced UI activated. Starting server..."
-	@nohup ./venv/bin/python -m src.web.app_simple > web_interface.log 2>&1 &
-	@sleep 2
-	@echo "✓ Enhanced web interface started at http://localhost:8000"
-	@echo "View logs with: make logs"
-
+# Access manual debate interface
 manual-debate-web:
 	@echo "Opening manual debate interface..."
-	@make run-enhanced
+	@make run-professional
 	@sleep 2
 	@python3 -c "import webbrowser; webbrowser.open('http://localhost:8000#manual')"
 
-orchestrator-demo:
-	@echo "Running orchestration demo..."
-	@echo "Setting up orchestration environment..."
-	@export USE_ORCHESTRATION=true && \
-	./venv/bin/python -c "from services.orchestration_service import test_orchestration_service; import asyncio; asyncio.run(test_orchestration_service())"
-
-kafka-test:
-	@echo "Testing Kafka integration..."
-	@if [ "$$KAFKA_ENABLED" = "true" ]; then \
-		echo "Kafka is enabled. Sending test event..."; \
-		curl -X POST http://localhost:8000/kafka/test | python3 -m json.tool; \
-	else \
-		echo "Kafka is not enabled. Set KAFKA_ENABLED=true to test."; \
-	fi
-
+# List available workflows
 workflow-list:
 	@echo "Fetching available workflows..."
 	@curl -s http://localhost:8000/workflows | python3 -m json.tool || echo "Server not running. Start with: make run"
 
+# Check localhost with puppeteer
+check-localhost:
+	@echo "Checking localhost with Puppeteer..."
+	./venv/bin/python check_localhost.py
+
 # Run in mock mode (no API calls)
 run-mock:
 	@echo "Starting in mock mode (no API calls)..."
-	@export USE_MOCK_MODE=true && make run
+	@make stop 2>/dev/null || true
+	@USE_MOCK_AI=true nohup ./venv/bin/python -m src.web.app_simple > web_interface.log 2>&1 &
+	@sleep 2
+	@echo "✓ Started in mock mode - no API costs!"
 
 # Run with response caching
 run-cached:
 	@echo "Starting with response caching enabled..."
-	@export USE_CACHED_RESPONSES=true && make run
-
-# Manual debate command (existing, but ensure it's there)
-manual-debate:
-	@echo "Starting manual debate entry..."
-	./venv/bin/python scripts/manual_debate.py
-
-# Run pre-commit on all files
-pre-commit-all:
-	@echo "Running pre-commit on all files..."
-	./venv/bin/pre-commit run --all-files
-
-# Complexity analysis
-complexity:
-	@echo "Analyzing code complexity..."
-	@./venv/bin/radon cc src/ services/ domain/ -a -nc
-
-# Security scan
-security-scan:
-	@echo "Running security scan..."
-	@./venv/bin/bandit -r src/ services/ domain/ -ll
-
-# Generate quality report
-quality-report:
-	@echo "Generating quality report..."
-	@echo "=== Code Quality Report ===" > quality_report.txt
-	@echo "" >> quality_report.txt
-	@echo "## Complexity Analysis" >> quality_report.txt
-	@./venv/bin/radon cc src/ services/ domain/ -a >> quality_report.txt || true
-	@echo "" >> quality_report.txt
-	@echo "## Type Coverage" >> quality_report.txt
-	@./venv/bin/mypy src/ services/ domain/ --ignore-missing-imports 2>&1 | grep -E "Success:|error:" >> quality_report.txt || true
-	@echo "" >> quality_report.txt
-	@echo "## Security Issues" >> quality_report.txt
-	@./venv/bin/bandit -r src/ services/ domain/ -f txt >> quality_report.txt || true
-	@echo "✓ Quality report generated: quality_report.txt"
-
-# Security check
-security:
-	@echo "Running security audit..."
-	@./scripts/security_check.sh
-
-# Setup git hooks
-setup-hooks:
-	@echo "Setting up git hooks..."
-	@git config core.hooksPath .githooks
-	@echo "✓ Git hooks configured"
-
-# Pre-commit checks (runs security + tests)
-pre-commit: security lint
-	@echo "✓ Pre-commit checks passed"
-
-# Run in mock mode (no API calls)
-run-mock:
-	@echo "Starting in mock mode (no API calls)..."
-	@pkill -f web_interface.py || true
-	@sleep 1
-	@USE_MOCK_AI=true nohup ./venv/bin/python web_interface.py > web_interface.log 2>&1 &
-	@sleep 2
-	@echo "✓ Started in mock mode - no API costs!"
-
-# Run with caching enabled
-run-cached:
-	@echo "Starting with response caching..."
-	@pkill -f web_interface.py || true
-	@sleep 1
-	@USE_CACHED_RESPONSES=true nohup ./venv/bin/python web_interface.py > web_interface.log 2>&1 &
+	@make stop 2>/dev/null || true
+	@USE_CACHED_RESPONSES=true nohup ./venv/bin/python -m src.web.app_simple > web_interface.log 2>&1 &
 	@sleep 2
 	@echo "✓ Started with caching - responses will be reused!"
-
-# Run Kafka integration tests
-test-kafka:
-	@echo "Running Kafka integration tests..."
-	./venv/bin/pytest tests/integration/test_kafka_integration.py -v
-
-# Run end-to-end Kafka demo
-test-e2e:
-	@echo "Running end-to-end Kafka-DDD integration demo..."
-	./venv/bin/python scripts/test_kafka_e2e.py
-
-# Start Kafka using Docker
-kafka-up:
-	@echo "Starting Kafka..."
-	docker run -d --name kafka-zamaz \
-		-p 9092:9092 \
-		-e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 \
-		-e KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092 \
-		-e KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181 \
-		confluentinc/cp-kafka:latest
-
-# Stop Kafka container
-kafka-down:
-	@echo "Stopping Kafka..."
-	docker stop kafka-zamaz || true
-	docker rm kafka-zamaz || true
-
-# View Kafka container logs
-kafka-logs:
-	docker logs -f kafka-zamaz
 
 # Clear AI cache
 clear-cache:
 	@echo "Clearing AI response cache..."
-	@rm -rf ai_cache/*
+	@rm -rf data/ai_cache/*
 	@echo "✓ Cache cleared"
 
 # Show API usage estimate
 usage:
 	@echo "=== API Usage Summary ==="
-	@echo "Cached responses: $$(find ai_cache -name "*.json" 2>/dev/null | wc -l)"
-	@echo "Cache size: $$(du -sh ai_cache 2>/dev/null | cut -f1)"
-	@echo "Manual debates: $$(ls debates/manual_* 2>/dev/null | wc -l)"
+	@echo "Cached responses: $$(find data/ai_cache -name "*.json" 2>/dev/null | wc -l)"
+	@echo "Cache size: $$(du -sh data/ai_cache 2>/dev/null | cut -f1)"
+	@echo "Manual debates: $$(ls data/debates/manual_* 2>/dev/null | wc -l)"
 	@echo ""
 	@echo "Current mode: $$(grep AI_MODE .env | cut -d= -f2)"
 	@echo "Mock AI: $$(grep USE_MOCK_AI .env | cut -d= -f2)"
 	@echo "Caching: $$(grep USE_CACHED_RESPONSES .env | cut -d= -f2)"
 	@echo ""
-	@echo "💰 Estimated API savings: $$$(( ($$(find ai_cache -name "*.json" 2>/dev/null | wc -l) + $$(ls debates/manual_* 2>/dev/null | wc -l)) * 3 )) cents"
-
-# Create manual debate from claude.ai
-manual-debate:
-	@echo "🤖 Creating manual debate from claude.ai..."
-	@./scripts/manual_debate.py
-
-# Open claude.ai in browser
-claude-ai:
-	@echo "Opening claude.ai..."
-	@open https://claude.ai || xdg-open https://claude.ai || echo "Please open https://claude.ai"
+	@echo "💰 Estimated API savings: $$$(( ($$(find data/ai_cache -name "*.json" 2>/dev/null | wc -l) + $$(ls data/debates/manual_* 2>/dev/null | wc -l)) * 3 )) cents"
 
 # Run auto-evolution script
 auto-evolve:
@@ -502,3 +348,128 @@ configure-auto-evolve:
 	fi
 	@echo "  Interval: $$(grep AUTO_EVOLVE_INTERVAL .env | cut -d= -f2)"
 	@echo "  URL: $$(grep AUTO_EVOLVE_URL .env | cut -d= -f2)"
+
+# Kafka commands
+kafka-test:
+	@echo "Testing Kafka integration..."
+	@if [ "$$KAFKA_ENABLED" = "true" ]; then \
+		echo "Kafka is enabled. Sending test event..."; \
+		curl -X POST http://localhost:8000/kafka/test | python3 -m json.tool; \
+	else \
+		echo "Kafka is not enabled. Set KAFKA_ENABLED=true to test."; \
+	fi
+
+test-kafka:
+	@echo "Running Kafka integration tests..."
+	./venv/bin/pytest tests/integration/test_kafka_integration.py -v
+
+test-e2e:
+	@echo "Running end-to-end Kafka-DDD integration demo..."
+	./venv/bin/python scripts/test_kafka_e2e.py
+
+kafka-up:
+	@echo "Starting Kafka..."
+	docker run -d --name kafka-zamaz \
+		-p 9092:9092 \
+		-e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 \
+		-e KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092 \
+		-e KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181 \
+		confluentinc/cp-kafka:latest
+
+kafka-down:
+	@echo "Stopping Kafka..."
+	docker stop kafka-zamaz || true
+	docker rm kafka-zamaz || true
+
+kafka-logs:
+	docker logs -f kafka-zamaz
+
+# Development tools
+dev-install: install
+	@echo "Installing development dependencies..."
+	./venv/bin/pip install -r requirements-dev.txt
+	@echo "✓ Development dependencies installed"
+
+# Code quality commands
+format:
+	@echo "Formatting code..."
+	./venv/bin/black src/ services/ domain/
+
+format-check:
+	@echo "Checking code formatting..."
+	./venv/bin/black --check src/ services/ domain/
+
+isort:
+	@echo "Sorting imports..."
+	./venv/bin/isort src/ services/ domain/
+
+isort-check:
+	@echo "Checking import sorting..."
+	./venv/bin/isort --check-only src/ services/ domain/
+
+lint:
+	@echo "Linting code..."
+	./venv/bin/flake8 src/ services/ domain/
+
+lint-deep:
+	@echo "Running deep lint with pylint..."
+	./venv/bin/pylint --disable=R,C src/ services/ domain/ || true
+
+type-check:
+	@echo "Running type checking..."
+	./venv/bin/mypy src/ services/ domain/ --ignore-missing-imports || true
+
+quality: format-check isort-check lint type-check
+	@echo "✓ All quality checks passed"
+
+quality-fix: format isort
+	@echo "✓ Code formatted and imports sorted"
+
+test-coverage:
+	@echo "Running tests with coverage..."
+	./venv/bin/pytest --cov=src --cov=services --cov=domain --cov-report=term-missing --cov-report=xml
+
+quality-report:
+	@echo "Generating quality report..."
+	@echo "=== Code Quality Report ===" > quality_report.txt
+	@echo "" >> quality_report.txt
+	@echo "## Complexity Analysis" >> quality_report.txt
+	@./venv/bin/radon cc src/ services/ domain/ -a >> quality_report.txt || true
+	@echo "" >> quality_report.txt
+	@echo "## Type Coverage" >> quality_report.txt
+	@./venv/bin/mypy src/ services/ domain/ --ignore-missing-imports 2>&1 | grep -E "Success:|error:" >> quality_report.txt || true
+	@echo "" >> quality_report.txt
+	@echo "## Security Issues" >> quality_report.txt
+	@./venv/bin/bandit -r src/ services/ domain/ -f txt >> quality_report.txt || true
+	@echo "✓ Quality report generated: quality_report.txt"
+
+# Git hooks and pre-commit
+pre-commit-install:
+	@echo "Installing pre-commit hooks..."
+	./venv/bin/pre-commit install
+	@echo "✓ Pre-commit hooks installed"
+
+pre-commit-all:
+	@echo "Running pre-commit on all files..."
+	./venv/bin/pre-commit run --all-files
+
+pre-commit: security lint
+	@echo "✓ Pre-commit checks passed"
+
+setup-hooks:
+	@echo "Setting up git hooks..."
+	@git config core.hooksPath .githooks
+	@echo "✓ Git hooks configured"
+
+# Security and analysis
+complexity:
+	@echo "Analyzing code complexity..."
+	@./venv/bin/radon cc src/ services/ domain/ -a -nc
+
+security-scan:
+	@echo "Running security scan..."
+	@./venv/bin/bandit -r src/ services/ domain/ -ll
+
+security:
+	@echo "Running security audit..."
+	@./scripts/security_check.sh
