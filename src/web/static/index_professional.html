@@ -684,6 +684,8 @@
             display: block;
         }
     </style>
+    <link rel="stylesheet" href="/static/debate_viewer.css">
+    <script src="/static/debate_viewer.js"></script>
 </head>
 <body>
     <!-- Top Navigation -->
@@ -1260,55 +1262,94 @@
         
         async function viewDebate(debateId) {
             try {
-                const response = await fetch(`${API_URL}/debates/${debateId}`);
-                const debate = await response.json();
+                // Create debate viewer instance
+                const viewer = new DebateViewer();
                 
+                // Get the modal body element
                 const modalBody = document.getElementById('modal-body');
-                modalBody.innerHTML = `
-                    <h3>${debate.question}</h3>
-                    <p><strong>Context:</strong> ${debate.context || 'None provided'}</p>
-                    
-                    <div style="display: flex; gap: 12px; margin: 20px 0;">
-                        <span class="badge badge-${debate.complexity === 'complex' ? 'danger' : debate.complexity === 'moderate' ? 'warning' : 'success'}">
-                            ${debate.complexity}
-                        </span>
-                        <span class="badge badge-primary">
-                            ${debate.method}
-                        </span>
-                        <span class="badge badge-${debate.consensus ? 'success' : 'warning'}">
-                            ${debate.consensus ? 'Consensus Reached' : 'No Consensus'}
-                        </span>
-                    </div>
-                    
-                    <h4>Final Decision</h4>
-                    <div style="background: var(--background-light); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
-                        ${debate.final_decision || 'No final decision recorded'}
-                    </div>
-                    
-                    <h4>Debate Rounds</h4>
-                    ${debate.rounds.map((round, idx) => `
-                        <div style="background: white; border: 1px solid var(--border-color); padding: 16px; border-radius: 8px; margin-bottom: 12px;">
-                            <h5 style="margin-bottom: 12px;">Round ${idx + 1}</h5>
-                            ${round.claude ? `
-                                <div style="margin-bottom: 12px;">
-                                    <strong style="color: var(--primary-color);">Claude:</strong>
-                                    <p style="margin-top: 4px;">${round.claude}</p>
-                                </div>
-                            ` : ''}
-                            ${round.gemini ? `
-                                <div>
-                                    <strong style="color: var(--secondary-color);">Gemini:</strong>
-                                    <p style="margin-top: 4px;">${round.gemini}</p>
-                                </div>
-                            ` : ''}
-                        </div>
-                    `).join('')}
-                `;
                 
-                document.getElementById('debate-modal').style.display = 'block';
+                // Display loading state
+                modalBody.innerHTML = '<div style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin fa-3x"></i><p>Loading debate details...</p></div>';
+                
+                // Show the modal
+                showModal('Debate Details');
+                
+                // Load and display debate using the enhanced viewer
+                const debateHtml = await viewer.displayDebate(debateId);
+                modalBody.innerHTML = debateHtml;
+                
             } catch (error) {
                 console.error('Error viewing debate:', error);
-                alert('Error loading debate details');
+                const modalBody = document.getElementById('modal-body');
+                modalBody.innerHTML = `
+                    <div style="text-align: center; color: var(--danger-color); padding: 40px;">
+                        <i class="fas fa-exclamation-circle fa-3x"></i>
+                        <p style="margin-top: 16px;">Error loading debate details</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Check implementation status
+        async function checkImplementationStatus(implId) {
+            const statusDiv = document.getElementById(`status-${implId}`);
+            statusDiv.style.display = 'block';
+            statusDiv.innerHTML = '<div style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Checking status...</div>';
+            
+            try {
+                const response = await fetch(`${API_URL}/implementations/${implId}/status`);
+                const status = await response.json();
+                
+                let html = '<div style="background: var(--background-light); padding: 16px; border-radius: 8px;">';
+                
+                // Issue status
+                if (status.issue_status) {
+                    html += `
+                        <div style="margin-bottom: 12px;">
+                            <strong>Issue Status:</strong>
+                            <span class="badge badge-${status.issue_status.state === 'closed' ? 'success' : 'primary'}">
+                                ${status.issue_status.state}
+                            </span>
+                        </div>
+                    `;
+                }
+                
+                // PR status
+                if (status.pr_status) {
+                    html += `
+                        <div style="margin-bottom: 12px;">
+                            <strong>Pull Request:</strong>
+                            <span class="badge badge-${status.pr_status.merged ? 'success' : status.pr_status.state === 'closed' ? 'danger' : 'warning'}">
+                                #${status.pr_status.number} - ${status.pr_status.merged ? 'Merged' : status.pr_status.state}
+                            </span>
+                        </div>
+                    `;
+                }
+                
+                // Commits
+                if (status.commits && status.commits.length > 0) {
+                    html += `
+                        <div>
+                            <strong>Recent Commits:</strong>
+                            <ul style="margin-top: 8px; margin-bottom: 0;">
+                                ${status.commits.map(commit => `
+                                    <li style="font-size: 14px; color: var(--text-secondary);">
+                                        <code>${commit.sha}</code> - ${commit.message} (by ${commit.author})
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    `;
+                } else {
+                    html += '<div style="color: var(--text-secondary);">No commits found</div>';
+                }
+                
+                html += '</div>';
+                statusDiv.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error checking status:', error);
+                statusDiv.innerHTML = '<div style="color: var(--danger-color);">Error checking status</div>';
             }
         }
         
@@ -1390,25 +1431,47 @@
                     return;
                 }
                 
-                implDiv.innerHTML = data.pending_implementations.map(impl => `
-                    <div class="card" style="border-left: 4px solid var(--warning-color); margin-bottom: 16px;">
-                        <h4 style="margin-bottom: 12px;">${impl.question}</h4>
-                        <div style="display: flex; flex-wrap: wrap; gap: 12px; color: var(--text-secondary); font-size: 14px;">
-                            <span>
-                                <i class="fas fa-user"></i>
-                                Assignee: ${impl.assignee}
-                            </span>
-                            <span>
-                                <i class="fas fa-calendar"></i>
-                                Created: ${impl.created_at}
-                            </span>
-                            <span>
-                                <i class="fas fa-clock"></i>
-                                ${impl.days_pending} days pending
-                            </span>
+                implDiv.innerHTML = data.pending_implementations.map(impl => {
+                    const borderColor = impl.type === 'github_issue' ? 'var(--primary-color)' : 'var(--warning-color)';
+                    const statusIcon = impl.status === 'in_progress' ? 'fa-spinner fa-spin' : 
+                                     impl.status === 'open' ? 'fa-exclamation-circle' : 'fa-file-alt';
+                    
+                    return `
+                        <div class="card" style="border-left: 4px solid ${borderColor}; margin-bottom: 16px;">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div style="flex: 1;">
+                                    <h4 style="margin-bottom: 8px;">
+                                        <i class="fas ${statusIcon}" style="color: ${borderColor}; margin-right: 8px;"></i>
+                                        ${impl.title}
+                                    </h4>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 16px; color: var(--text-secondary); font-size: 14px;">
+                                        <span>
+                                            <i class="fas fa-tag"></i>
+                                            ${impl.type === 'github_issue' ? 'GitHub Issue' : 'PR Draft'}
+                                        </span>
+                                        <span>
+                                            <i class="fas fa-user"></i>
+                                            ${impl.assignee}
+                                        </span>
+                                        <span>
+                                            <i class="fas fa-clock"></i>
+                                            ${impl.days_pending} days
+                                        </span>
+                                        ${impl.url ? `
+                                            <a href="${impl.url}" target="_blank" style="color: var(--primary-color);">
+                                                <i class="fas fa-external-link-alt"></i> View on GitHub
+                                            </a>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                                <button onclick="checkImplementationStatus('${impl.id}')" class="btn btn-outline" style="margin-left: 16px;">
+                                    <i class="fas fa-sync"></i> Check Status
+                                </button>
+                            </div>
+                            <div id="status-${impl.id}" style="margin-top: 16px; display: none;"></div>
                         </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
             } catch (error) {
                 console.error('Error loading implementations:', error);
             }

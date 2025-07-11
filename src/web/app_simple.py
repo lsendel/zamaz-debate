@@ -431,40 +431,126 @@ async def list_workflows():
 
 @app.get("/implementations/pending")
 async def get_pending_implementations():
-    """List pending implementations based on PR drafts"""
+    """Get pending implementation tasks from GitHub and decisions"""
+    implementations = []
+    
+    # Check GitHub for AI-assigned issues
+    try:
+        import subprocess
+        result = subprocess.run(
+            ["gh", "issue", "list", "--label", "ai-assigned", "--state", "open", "--json", "number,title,state,assignees,createdAt,url,labels"],
+            capture_output=True,
+            text=True
+        )
+        
+        if result.returncode == 0 and result.stdout:
+            issues = json.loads(result.stdout)
+            
+            for issue in issues:
+                implementations.append({
+                    "id": f"issue_{issue['number']}",
+                    "title": issue["title"],
+                    "assignee": issue["assignees"][0]["login"] if issue["assignees"] else "unassigned",
+                    "status": "in_progress" if any(label["name"] == "in-progress" for label in issue.get("labels", [])) else "open",
+                    "created_at": issue["createdAt"],
+                    "url": issue["url"],
+                    "type": "github_issue",
+                    "days_pending": (datetime.now() - datetime.fromisoformat(issue["createdAt"].replace("Z", "+00:00"))).days
+                })
+    except Exception as e:
+        print(f"Error fetching GitHub issues: {e}")
+    
+    # Also check PR drafts
     pr_drafts_dir = Path("data/pr_drafts")
-    decisions_dir = Path("data/decisions")
-    
-    pending = []
-    
     if pr_drafts_dir.exists():
         for pr_file in pr_drafts_dir.glob("*.json"):
             try:
                 with open(pr_file, 'r') as f:
                     pr_data = json.load(f)
                 
-                # Check if there's a corresponding decision
-                decision_id = pr_data.get("decision_id")
-                if decision_id:
-                    decision_file = decisions_dir / f"{decision_id}.json"
-                    if decision_file.exists():
-                        with open(decision_file, 'r') as f:
-                            decision_data = json.load(f)
-                        
-                        pending.append({
-                            "pr_id": pr_file.stem,
-                            "question": decision_data.get("question", "Unknown"),
-                            "assignee": pr_data.get("assignee", "Unknown"),
-                            "created_at": pr_data.get("created_at", "Unknown"),
-                            "days_pending": (datetime.now() - datetime.fromisoformat(pr_data.get("created_at", datetime.now().isoformat()))).days
-                        })
+                implementations.append({
+                    "id": f"pr_draft_{pr_file.stem}",
+                    "title": pr_data.get("title", "Unknown PR"),
+                    "assignee": pr_data.get("assignee", "Unknown"),
+                    "status": "draft",
+                    "created_at": pr_data.get("created_at", datetime.now().isoformat()),
+                    "type": "pr_draft",
+                    "days_pending": (datetime.now() - datetime.fromisoformat(pr_data.get("created_at", datetime.now().isoformat()))).days
+                })
             except:
                 continue
     
     # Sort by days pending
-    pending.sort(key=lambda x: x["days_pending"], reverse=True)
+    implementations.sort(key=lambda x: x.get("days_pending", 0), reverse=True)
     
-    return {"pending_implementations": pending}
+    return {"pending_implementations": implementations}
+
+
+@app.get("/implementations/{implementation_id}/status")
+async def get_implementation_status(implementation_id: str):
+    """Get detailed status of an implementation"""
+    status = {
+        "id": implementation_id,
+        "commits": [],
+        "pr_status": None,
+        "issue_status": None
+    }
+    
+    try:
+        # If it's a GitHub issue
+        if implementation_id.startswith("issue_"):
+            issue_number = implementation_id.replace("issue_", "")
+            
+            # Get issue details
+            import subprocess
+            result = subprocess.run(
+                ["gh", "issue", "view", issue_number, "--json", "number,title,state,assignees,createdAt,url,labels,body"],
+                capture_output=True,
+                text=True
+            )
+            
+            if result.returncode == 0:
+                issue = json.loads(result.stdout)
+                status["issue_status"] = {
+                    "number": issue["number"],
+                    "title": issue["title"],
+                    "state": issue["state"],
+                    "url": issue["url"],
+                    "assignee": issue["assignees"][0]["login"] if issue["assignees"] else None
+                }
+                
+                # Check for linked PRs in the issue body or comments
+                if "#" in issue.get("body", ""):
+                    import re
+                    pr_numbers = re.findall(r'#(\d+)', issue["body"])
+                    for pr_num in pr_numbers:
+                        # Get PR details
+                        pr_result = subprocess.run(
+                            ["gh", "pr", "view", pr_num, "--json", "number,state,merged,commits"],
+                            capture_output=True,
+                            text=True
+                        )
+                        if pr_result.returncode == 0:
+                            pr_data = json.loads(pr_result.stdout)
+                            status["pr_status"] = {
+                                "number": pr_data["number"],
+                                "state": pr_data["state"],
+                                "merged": pr_data["merged"]
+                            }
+                            
+                            # Get commits from PR
+                            if pr_data.get("commits"):
+                                for commit in pr_data["commits"][:5]:  # Last 5 commits
+                                    status["commits"].append({
+                                        "sha": commit["oid"][:7],
+                                        "message": commit["messageHeadline"],
+                                        "author": commit["authors"][0]["name"] if commit.get("authors") else "Unknown"
+                                    })
+                
+    except Exception as e:
+        print(f"Error getting implementation status: {e}")
+    
+    return status
 
 
 if __name__ == "__main__":

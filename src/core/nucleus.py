@@ -23,6 +23,7 @@ from domain.models import Debate, Decision, DecisionType, ImplementationAssignee
 from services.ai_client_factory import AIClientFactory
 from services.pr_service import PRService
 from src.core.evolution_tracker import EvolutionTracker
+from src.services.consensus_analyzer import ConsensusAnalyzer
 
 # Error handling imports - these will be initialized later to avoid circular imports
 try:
@@ -86,6 +87,9 @@ class DebateNucleus:
 
         # PR service for creating pull requests
         self.pr_service = PRService()
+        
+        # Consensus analyzer for intelligent consensus detection
+        self.consensus_analyzer = ConsensusAnalyzer()
 
         # Complexity detection
         self.complexity_keywords = {
@@ -250,19 +254,34 @@ class DebateNucleus:
 
         debate_state["rounds"].append({"round": 1, "claude": claude_response, "gemini": gemini_response})
 
-        # Analyze if they reached consensus
-        claude_yes = any(word in claude_response.lower() for word in ["yes", "should", "recommend", "beneficial"])
-        claude_no = any(word in claude_response.lower() for word in ["no", "should not", "avoid", "unnecessary"])
-        gemini_yes = any(word in gemini_response.lower() for word in ["yes", "should", "recommend", "beneficial"])
-        gemini_no = any(word in gemini_response.lower() for word in ["no", "should not", "avoid", "unnecessary"])
+        # Use advanced consensus analyzer
+        consensus_result = self.consensus_analyzer.analyze_debate(claude_response, gemini_response)
+        
+        # Format decision with detailed consensus analysis
+        decision = f"""Claude's Analysis:
+{claude_response}
 
-        consensus = (claude_yes and gemini_yes) or (claude_no and gemini_no)
+Gemini's Analysis:
+{gemini_response}
 
-        # Format decision with consensus indicator
-        decision = f"Claude's Analysis:\n{claude_response}\n\nGemini's Analysis:\n{gemini_response}\n\nConsensus: {'Yes' if consensus else 'No'}"
+Consensus Analysis:
+- Consensus Level: {consensus_result.consensus_level:.1%} ({consensus_result.consensus_type})
+- Areas of Agreement: {'; '.join(consensus_result.areas_of_agreement) if consensus_result.areas_of_agreement else 'None identified'}
+- Areas of Disagreement: {'; '.join(consensus_result.areas_of_disagreement) if consensus_result.areas_of_disagreement else 'None identified'}
+- Combined Recommendation: {consensus_result.combined_recommendation}"""
 
         debate_state["final_decision"] = decision
         debate_state["end_time"] = datetime.now().isoformat()
+        
+        # Add consensus metadata
+        debate_state["consensus"] = {
+            "has_consensus": consensus_result.has_consensus,
+            "level": consensus_result.consensus_level,
+            "type": consensus_result.consensus_type,
+            "areas_of_agreement": consensus_result.areas_of_agreement,
+            "areas_of_disagreement": consensus_result.areas_of_disagreement,
+            "combined_recommendation": consensus_result.combined_recommendation
+        }
 
         self._save_debate(debate_state)
 
@@ -273,6 +292,9 @@ class DebateNucleus:
             "complexity": complexity,
             "debate_id": debate_id,
             "time": debate_state["end_time"],
+            "consensus": consensus_result.has_consensus,
+            "consensus_level": consensus_result.consensus_level,
+            "consensus_type": consensus_result.consensus_type
         }
 
     @with_error_handling(component="nucleus", operation="claude_response", reraise=False)
