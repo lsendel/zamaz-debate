@@ -4,12 +4,12 @@
 
 **Claude, you have NEW HIGH PRIORITY implementation tasks!**
 
-## 🔥 Latest Task: Issue #225
+## 🔥 Latest Task: Issue #202
 
-### 📌 [Complex] LLM Orchestration as Project Management - Problem Statement for Debate
+### 📌 Implement: What is the ONE most important improvement to make to this debate system next? Consider: code qualit...
 - **Status:** URGENT - NEEDS IMMEDIATE IMPLEMENTATION
-- **File:** `.claude-tasks/URGENT_TASK_225.md`
-- **GitHub Issue:** https://github.com/lsendel/zamaz-debate/pull/225
+- **File:** `.claude-tasks/URGENT_TASK_202.md`
+- **GitHub Issue:** https://github.com/lsendel/zamaz-debate/issues/202
 
 ## Instructions
 
