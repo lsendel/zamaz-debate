@@ -46,72 +46,248 @@ class EvolutionTracker:
             json.dump(history_copy, f, indent=2)
 
     def _generate_fingerprint(self, evolution: Dict) -> str:
-        """Generate unique fingerprint for an evolution with improved uniqueness"""
+        """Generate unique fingerprint for an evolution with enhanced deduplication"""
         # Create fingerprint from key aspects of the evolution
         key_parts = [
             evolution.get("type", "").lower().strip(),
             evolution.get("feature", "").lower().strip(),
         ]
 
-        # Include more content for better uniqueness
+        # Include significantly more content for better uniqueness (5x increase)
         description = evolution.get("description", "").lower()
         decision_text = evolution.get("decision_text", "").lower()
 
-        # Include first 200 chars of description and decision text
+        # Include first 1000 chars of description and decision text (vs 200 previously)
         if description:
-            key_parts.append(description[:200])
+            key_parts.append(description[:1000])
         if decision_text:
-            key_parts.append(decision_text[:200])
+            key_parts.append(decision_text[:1000])
+
+        # Add time-window grouping for hour-based clustering
+        if evolution.get("timestamp"):
+            try:
+                timestamp = datetime.fromisoformat(evolution["timestamp"])
+                # Group by hour to prevent rapid duplicates
+                hour_group = timestamp.strftime("%Y%m%d_%H")
+                key_parts.append(f"time_window:{hour_group}")
+            except:
+                pass
 
         # Include debate_id if available for extra uniqueness
         if evolution.get("debate_id"):
             key_parts.append(evolution["debate_id"])
 
-        # Extract key phrases from description to make fingerprint more specific
-        key_phrases = [
-            "performance",
-            "security",
-            "monitoring",
-            "observability",
-            "refactor",
-            "optimization",
-            "caching",
-            "logging",
-            "testing",
-            "documentation",
-            "api",
-            "ui",
-            "validation",
-            "error handling",
-            "metrics",
-            "profiling",
-            "debugging",
-            "adr",
-            "architectural",
-            "usability",
-            "ux",
-            "testing framework",
+        # Enhanced technology recognition - 60+ technical terms
+        technology_terms = [
+            # Performance & Infrastructure
+            "performance", "optimization", "caching", "redis", "memcached", "cdn",
+            "load balancing", "scaling", "horizontal scaling", "vertical scaling",
+            "profiling", "benchmarking", "metrics", "telemetry", "observability",
+            
+            # Security & Authentication
+            "security", "authentication", "authorization", "oauth", "jwt", "ssl", "tls",
+            "encryption", "hashing", "vulnerability", "audit", "compliance", "gdpr",
+            
+            # Development & Testing
+            "testing", "unit test", "integration test", "e2e test", "test coverage",
+            "testing framework", "jest", "pytest", "selenium", "cypress", "junit",
+            "debugging", "profiler", "diagnostic", "logging", "monitoring",
+            
+            # Architecture & Design
+            "architecture", "microservices", "monolith", "api", "rest", "graphql",
+            "websocket", "grpc", "message queue", "kafka", "rabbitmq", "pubsub",
+            "database", "sql", "nosql", "mongodb", "postgresql", "mysql",
+            
+            # DevOps & Deployment  
+            "docker", "kubernetes", "k8s", "container", "deployment", "ci/cd",
+            "jenkins", "github actions", "terraform", "ansible", "helm",
+            
+            # Frontend & UI
+            "ui", "ux", "frontend", "react", "vue", "angular", "javascript",
+            "typescript", "css", "html", "responsive", "mobile", "accessibility",
+            
+            # Backend & Services
+            "backend", "server", "nodejs", "python", "java", "golang", "rust",
+            "api gateway", "service mesh", "istio", "nginx", "apache",
+            
+            # Data & Analytics
+            "analytics", "data", "etl", "pipeline", "spark", "hadoop", "elasticsearch",
+            "search", "indexing", "machine learning", "ai", "ml", "data science",
+            
+            # Quality & Maintenance
+            "refactor", "refactoring", "code quality", "technical debt", "linting",
+            "static analysis", "code review", "documentation", "readme", "api doc",
+            
+            # Business Logic
+            "validation", "business logic", "workflow", "automation", "integration",
+            "plugin", "extension", "webhook", "notification", "event", "async"
         ]
 
-        # Add found key phrases to fingerprint
+        # Extract specific technical content for generic features
         combined_text = (description + " " + decision_text).lower()
-        for phrase in key_phrases:
-            if phrase in combined_text:
-                key_parts.append(phrase)
+        
+        # Add found technology terms to fingerprint for specificity
+        for tech_term in technology_terms:
+            if tech_term in combined_text:
+                key_parts.append(f"tech:{tech_term}")
+
+        # Extract specific content patterns for common generic features
+        if evolution.get("feature") == "performance_optimization":
+            # Look for specific performance areas mentioned
+            perf_specifics = self._extract_performance_specifics(combined_text)
+            key_parts.extend(perf_specifics)
+            
+        elif evolution.get("feature") in ["improvement_enhancement", "enhancement_improvement"]:
+            # Look for what specifically is being improved
+            improvement_specifics = self._extract_improvement_specifics(combined_text)
+            key_parts.extend(improvement_specifics)
 
         content = "|".join(sorted(set(filter(None, key_parts))))  # Sort and dedupe for consistency
-        # Use longer hash (32 chars) to reduce collision probability
-        return hashlib.sha256(content.encode()).hexdigest()[:32]
+        # Use longer hash (64 chars) for better uniqueness vs previous 32
+        return hashlib.sha256(content.encode()).hexdigest()[:64]
+
+    def _extract_performance_specifics(self, text: str) -> List[str]:
+        """Extract specific performance optimization areas from text"""
+        specifics = []
+        perf_patterns = {
+            "database": ["database", "query", "sql", "index", "connection pool"],
+            "memory": ["memory", "heap", "garbage collection", "leak", "allocation"],
+            "cpu": ["cpu", "processor", "thread", "concurrency", "parallel"],
+            "network": ["network", "latency", "bandwidth", "http", "tcp"],
+            "cache": ["cache", "caching", "redis", "memcached", "browser cache"],
+            "frontend": ["frontend", "rendering", "dom", "javascript", "css"],
+            "algorithm": ["algorithm", "complexity", "optimization", "efficiency"],
+            "io": ["disk", "file", "storage", "read", "write", "streaming"]
+        }
+        
+        for category, patterns in perf_patterns.items():
+            if any(pattern in text for pattern in patterns):
+                specifics.append(f"perf_area:{category}")
+        
+        return specifics
+
+    def _extract_improvement_specifics(self, text: str) -> List[str]:
+        """Extract specific improvement areas from generic improvement features"""
+        specifics = []
+        improvement_patterns = {
+            "architecture": ["architecture", "design", "pattern", "structure"],
+            "code_quality": ["code quality", "refactor", "clean", "maintainable"],
+            "testing": ["test", "coverage", "quality assurance", "validation"],
+            "documentation": ["documentation", "readme", "guide", "manual"],
+            "usability": ["usability", "user experience", "interface", "workflow"],
+            "reliability": ["reliability", "stability", "error handling", "resilience"],
+            "security": ["security", "authentication", "encryption", "vulnerability"],
+            "performance": ["performance", "speed", "optimization", "efficiency"]
+        }
+        
+        for category, patterns in improvement_patterns.items():
+            if any(pattern in text for pattern in patterns):
+                specifics.append(f"improvement_area:{category}")
+        
+        return specifics
 
     def is_duplicate(self, evolution: Dict) -> bool:
-        """Check if evolution is similar to previous ones using advanced similarity detection"""
-        # First check exact fingerprint match
+        """Check if evolution is similar to previous ones using enhanced multi-layer detection"""
+        # Layer 1: Primary fingerprint-based detection
         fingerprint = self._generate_fingerprint(evolution)
         if fingerprint in self.history["fingerprints"]:
             return True
         
-        # Check for semantic similarity with recent evolutions
-        return self._check_semantic_similarity(evolution)
+        # Layer 2: Time-based duplicate checking (60-minute window)
+        if self._check_time_based_duplicates(evolution):
+            return True
+        
+        # Layer 3: Semantic similarity analysis (70% threshold)
+        if self._check_semantic_similarity(evolution):
+            return True
+        
+        # Layer 4: Text similarity using Jaccard coefficient
+        if self._check_text_similarity(evolution):
+            return True
+        
+        return False
+    
+    def _check_time_based_duplicates(self, evolution: Dict) -> bool:
+        """Check for duplicates within 60-minute time window"""
+        current_feature = evolution.get("feature", "")
+        current_type = evolution.get("type", "")
+        
+        # Get current time or use provided timestamp
+        current_time = datetime.now()
+        if evolution.get("timestamp"):
+            try:
+                current_time = datetime.fromisoformat(evolution["timestamp"])
+            except:
+                pass
+        
+        # Check last 20 evolutions for time-based duplicates
+        recent_evolutions = self.get_recent_evolutions(20)
+        
+        for recent_evo in recent_evolutions:
+            try:
+                recent_time = datetime.fromisoformat(recent_evo["timestamp"])
+                time_diff = abs((current_time - recent_time).total_seconds())
+                
+                # Within 60-minute window (3600 seconds)
+                if time_diff <= 3600:
+                    # Same feature and type within time window = duplicate
+                    if (current_feature == recent_evo.get("feature", "") and 
+                        current_type == recent_evo.get("type", "")):
+                        return True
+                        
+                    # Performance optimization within time window = likely duplicate
+                    if (current_feature == "performance_optimization" and 
+                        recent_evo.get("feature") == "performance_optimization"):
+                        return True
+                        
+            except:
+                continue
+        
+        return False
+    
+    def _check_text_similarity(self, evolution: Dict) -> bool:
+        """Check for text similarity using Jaccard coefficient"""
+        current_desc = evolution.get("description", "").lower()
+        if not current_desc or len(current_desc) < 50:
+            return False
+            
+        # Get words from current description
+        current_words = set(current_desc.split())
+        
+        # Remove common stop words for better comparison
+        stop_words = {"the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for", 
+                     "of", "with", "by", "is", "are", "was", "were", "be", "been", "being",
+                     "have", "has", "had", "do", "does", "did", "will", "would", "should",
+                     "could", "may", "might", "must", "shall", "can", "this", "that", "these", 
+                     "those", "i", "you", "he", "she", "it", "we", "they"}
+        current_words = current_words - stop_words
+        
+        if len(current_words) < 5:
+            return False
+        
+        # Check recent evolutions for text similarity
+        recent_evolutions = self.get_recent_evolutions(15)
+        
+        for recent_evo in recent_evolutions:
+            recent_desc = recent_evo.get("description", "").lower()
+            if not recent_desc:
+                continue
+                
+            recent_words = set(recent_desc.split()) - stop_words
+            if len(recent_words) < 5:
+                continue
+            
+            # Calculate Jaccard similarity coefficient
+            intersection = len(current_words & recent_words)
+            union = len(current_words | recent_words)
+            
+            if union > 0:
+                jaccard_similarity = intersection / union
+                # 60% text similarity threshold
+                if jaccard_similarity > 0.6:
+                    return True
+        
+        return False
     
     def _check_semantic_similarity(self, evolution: Dict) -> bool:
         """Check for semantic similarity with recent evolutions"""
