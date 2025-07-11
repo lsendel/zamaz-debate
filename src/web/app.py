@@ -962,6 +962,67 @@ async def get_pending_implementations():
     return {"pending_implementations": pending}
 
 
+# Evolution Quality Management Endpoints
+@app.get("/evolution/quality-report")
+async def get_evolution_quality_report():
+    """Get comprehensive evolution quality report"""
+    try:
+        report = nucleus.evolution_tracker.get_evolution_quality_report()
+        return {"quality_report": report}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating quality report: {str(e)}")
+
+
+@app.post("/evolution/{evolution_id}/track-success")
+async def track_evolution_success(evolution_id: str, success_metrics: Dict[str, Any]):
+    """Track the success/failure metrics of an implemented evolution"""
+    try:
+        success = nucleus.evolution_tracker.track_evolution_success(evolution_id, success_metrics)
+        if success:
+            return {"message": "Evolution success metrics recorded", "evolution_id": evolution_id}
+        else:
+            raise HTTPException(status_code=404, detail=f"Evolution {evolution_id} not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error tracking evolution success: {str(e)}")
+
+
+@app.get("/evolution/recommendations")
+async def get_evolution_recommendations():
+    """Get recommendations for improving evolution diversity and quality"""
+    try:
+        recommendations = nucleus.evolution_tracker.get_evolution_recommendations()
+        summary = nucleus.evolution_tracker.get_evolution_summary()
+        return {
+            "recommendations": recommendations,
+            "summary": summary
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting recommendations: {str(e)}")
+
+
+@app.post("/evolution/{evolution_id}/rollback")
+async def rollback_evolution(evolution_id: str):
+    """Rollback a specific evolution (mark as inactive)"""
+    try:
+        success = nucleus.evolution_tracker.rollback_evolution(evolution_id)
+        if success:
+            return {"message": "Evolution rolled back successfully", "evolution_id": evolution_id}
+        else:
+            raise HTTPException(status_code=404, detail=f"Evolution {evolution_id} not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error rolling back evolution: {str(e)}")
+
+
+@app.get("/evolution/active")
+async def get_active_evolutions():
+    """Get all active (non-rolled-back) evolutions"""
+    try:
+        evolutions = nucleus.evolution_tracker.get_active_evolutions()
+        return {"active_evolutions": evolutions}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting active evolutions: {str(e)}")
+
+
 if __name__ == "__main__":
     import uvicorn
 
