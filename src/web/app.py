@@ -82,9 +82,11 @@ init_webhook_api(webhook_service)
 
 # Import and include error handling endpoints
 from src.web.error_endpoints import router as error_router
+from src.web.orchestration_endpoints import router as orchestration_router
 
 app.include_router(error_router)
 app.include_router(webhook_router)
+app.include_router(orchestration_router)
 
 
 @app.on_event("startup")
