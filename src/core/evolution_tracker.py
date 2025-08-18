@@ -455,6 +455,182 @@ class EvolutionTracker:
     def get_active_evolutions(self) -> List[Dict]:
         """Get only active (non-rolled-back) evolutions"""
         return [evo for evo in self.history["evolutions"] if evo.get("status") != "rolled_back"]
+    
+    def track_evolution_success(self, evolution_id: str, success_metrics: Dict) -> bool:
+        """Track the success/failure of an implemented evolution"""
+        for evo in self.history["evolutions"]:
+            if evo.get("id") == evolution_id:
+                evo["success_metrics"] = success_metrics
+                evo["success_timestamp"] = datetime.now().isoformat()
+                
+                # Calculate success score
+                success_score = self._calculate_success_score(success_metrics)
+                evo["success_score"] = success_score
+                evo["status"] = "success" if success_score >= 0.7 else "partial_success" if success_score >= 0.4 else "failed"
+                
+                self._save_history()
+                return True
+        return False
+    
+    def _calculate_success_score(self, metrics: Dict) -> float:
+        """Calculate evolution success score based on metrics"""
+        score = 0.0
+        total_weight = 0.0
+        
+        # Define success criteria with weights
+        criteria = {
+            "implementation_completed": 0.3,
+            "tests_passing": 0.2,
+            "performance_improved": 0.2,
+            "no_regressions": 0.15,
+            "user_feedback_positive": 0.1,
+            "documentation_updated": 0.05
+        }
+        
+        for criterion, weight in criteria.items():
+            if criterion in metrics:
+                value = metrics[criterion]
+                if isinstance(value, bool):
+                    score += weight if value else 0
+                elif isinstance(value, (int, float)):
+                    # Normalize to 0-1 range
+                    normalized_value = min(1.0, max(0.0, value))
+                    score += weight * normalized_value
+                total_weight += weight
+        
+        return score / total_weight if total_weight > 0 else 0.0
+    
+    def get_evolution_quality_report(self) -> Dict:
+        """Generate comprehensive evolution quality report"""
+        evolutions = self.get_active_evolutions()
+        
+        if not evolutions:
+            return {"error": "No active evolutions found"}
+        
+        # Calculate quality metrics
+        total_evolutions = len(evolutions)
+        successful_evolutions = len([e for e in evolutions if e.get("success_score", 0) >= 0.7])
+        failed_evolutions = len([e for e in evolutions if e.get("success_score", 0) < 0.4])
+        
+        # Type distribution analysis
+        type_counts = {}
+        success_by_type = {}
+        for evo in evolutions:
+            evo_type = evo.get("type", "unknown")
+            type_counts[evo_type] = type_counts.get(evo_type, 0) + 1
+            
+            success_score = evo.get("success_score", 0)
+            if evo_type not in success_by_type:
+                success_by_type[evo_type] = []
+            success_by_type[evo_type].append(success_score)
+        
+        # Calculate average success rates by type
+        type_success_rates = {}
+        for evo_type, scores in success_by_type.items():
+            if scores:
+                type_success_rates[evo_type] = {
+                    "average_score": round(sum(scores) / len(scores), 2),
+                    "success_rate": round(len([s for s in scores if s >= 0.7]) / len(scores), 2),
+                    "count": len(scores)
+                }
+        
+        # Identify problematic patterns
+        problems = []
+        if failed_evolutions / total_evolutions > 0.3:
+            problems.append("High failure rate (>30%)")
+        
+        # Check for type imbalance
+        max_type_count = max(type_counts.values()) if type_counts else 0
+        if max_type_count > total_evolutions * 0.7:
+            dominant_type = max(type_counts, key=type_counts.get)
+            problems.append(f"Type imbalance: {dominant_type} dominates ({max_type_count}/{total_evolutions})")
+        
+        # Check for duplicate features
+        feature_counts = {}
+        for evo in evolutions:
+            feature = evo.get("feature", "unknown")
+            feature_counts[feature] = feature_counts.get(feature, 0) + 1
+        
+        duplicates = {f: c for f, c in feature_counts.items() if c > 2}
+        if duplicates:
+            problems.append(f"Duplicate features detected: {duplicates}")
+        
+        return {
+            "total_evolutions": total_evolutions,
+            "success_rate": round(successful_evolutions / total_evolutions, 2),
+            "failure_rate": round(failed_evolutions / total_evolutions, 2),
+            "type_distribution": type_counts,
+            "type_success_rates": type_success_rates,
+            "problems_detected": problems,
+            "recommendations": self._generate_quality_recommendations(type_counts, type_success_rates, problems),
+            "quality_score": self._calculate_overall_quality_score(evolutions)
+        }
+    
+    def _generate_quality_recommendations(self, type_counts: Dict, type_success_rates: Dict, problems: List[str]) -> List[str]:
+        """Generate recommendations for improving evolution quality"""
+        recommendations = []
+        
+        # Type-based recommendations
+        if "feature" in type_counts and type_counts["feature"] > sum(type_counts.values()) * 0.7:
+            recommendations.append("Consider focusing on enhancements and fixes rather than only new features")
+        
+        if "testing" not in type_counts or type_counts.get("testing", 0) == 0:
+            recommendations.append("Add testing-focused evolutions to improve system reliability")
+        
+        if "security" not in type_counts or type_counts.get("security", 0) == 0:
+            recommendations.append("Consider security-focused evolutions for system hardening")
+        
+        # Success rate recommendations
+        for evo_type, metrics in type_success_rates.items():
+            if metrics["success_rate"] < 0.5 and metrics["count"] > 2:
+                recommendations.append(f"Improve {evo_type} evolution planning - low success rate ({metrics['success_rate']})")
+        
+        # Problem-specific recommendations
+        if "High failure rate" in str(problems):
+            recommendations.append("Implement better evolution validation and testing before implementation")
+        
+        if "Type imbalance" in str(problems):
+            recommendations.append("Diversify evolution types to avoid over-focusing on single areas")
+        
+        if "Duplicate features" in str(problems):
+            recommendations.append("Strengthen duplicate detection and feature consolidation")
+        
+        return recommendations
+    
+    def _calculate_overall_quality_score(self, evolutions: List[Dict]) -> float:
+        """Calculate overall evolution system quality score"""
+        if not evolutions:
+            return 0.0
+        
+        # Success rate component (40%)
+        success_scores = [e.get("success_score", 0) for e in evolutions]
+        avg_success = sum(success_scores) / len(success_scores)
+        success_component = avg_success * 0.4
+        
+        # Diversity component (30%)
+        type_counts = {}
+        for evo in evolutions:
+            evo_type = evo.get("type", "unknown")
+            type_counts[evo_type] = type_counts.get(evo_type, 0) + 1
+        
+        diversity_score = self._calculate_diversity_score(type_counts, {}, len(evolutions))
+        diversity_component = diversity_score * 0.3
+        
+        # Freshness component (20%) - penalize old failures
+        recent_evolutions = self.get_recent_evolutions(10)
+        recent_success_scores = [e.get("success_score", 0) for e in recent_evolutions]
+        recent_avg = sum(recent_success_scores) / len(recent_success_scores) if recent_success_scores else 0
+        freshness_component = recent_avg * 0.2
+        
+        # Impact component (10%)
+        impact_scores = [e.get("impact_score", 0) for e in evolutions]
+        avg_impact = sum(impact_scores) / len(impact_scores) if impact_scores else 0
+        # Normalize impact score to 0-1 range (assuming max impact is 15)
+        normalized_impact = min(1.0, avg_impact / 15.0)
+        impact_component = normalized_impact * 0.1
+        
+        total_score = success_component + diversity_component + freshness_component + impact_component
+        return round(min(1.0, total_score), 2)
 
     def suggest_next_evolution(self, debate_results: Dict) -> Optional[Dict]:
         """Analyze debate results and suggest next evolution"""
@@ -478,23 +654,80 @@ class EvolutionTracker:
         return None
 
     def _extract_evolution_type(self, claude: str, gemini: str) -> str:
-        """Extract evolution type from AI suggestions"""
-        types = [
-            "feature",
-            "enhancement",
-            "refactor",
-            "fix",
-            "optimization",
-            "architecture",
-        ]
-
+        """Extract evolution type from AI suggestions with improved classification logic"""
         combined_text = (claude + " " + gemini).lower()
-
-        for evo_type in types:
-            if evo_type in combined_text:
+        
+        # Priority-based pattern matching for accurate type classification
+        type_patterns = [
+            # Security patterns (highest priority)
+            ("security", ["security", "vulnerability", "exploit", "secure", "authentication", "authorization", "encrypt"]),
+            
+            # Fix patterns
+            ("fix", ["fix", "bug", "error", "issue", "problem", "correct", "resolve", "solve", "debug"]),
+            
+            # Enhancement patterns (improve existing functionality)
+            ("enhancement", ["improve", "enhance", "better", "upgrade", "optimize", "refine", "polish", "strengthen"]),
+            
+            # Refactor patterns
+            ("refactor", ["refactor", "restructure", "reorganize", "clean up", "simplify", "modularize", "decouple"]),
+            
+            # Performance patterns
+            ("performance", ["performance", "speed", "faster", "optimize", "efficient", "latency", "throughput", "scalable"]),
+            
+            # Testing patterns
+            ("testing", ["test", "testing", "coverage", "unit test", "integration test", "automated test"]),
+            
+            # Documentation patterns
+            ("documentation", ["document", "documentation", "readme", "docs", "guide", "manual", "help"]),
+            
+            # Feature patterns (new functionality - lowest priority)
+            ("feature", ["add", "implement", "create", "introduce", "new", "build", "develop"])
+        ]
+        
+        # Score each type based on pattern matches
+        type_scores = {}
+        for evo_type, patterns in type_patterns:
+            score = 0
+            for pattern in patterns:
+                # Count occurrences and weight by pattern specificity
+                occurrences = combined_text.count(pattern)
+                if occurrences > 0:
+                    # Give higher weight to longer, more specific patterns
+                    weight = len(pattern.split()) * 1.5 if " " in pattern else 1.0
+                    score += occurrences * weight
+            
+            if score > 0:
+                type_scores[evo_type] = score
+        
+        # Return the type with highest score
+        if type_scores:
+            best_type = max(type_scores, key=type_scores.get)
+            return best_type
+        
+        # Advanced fallback analysis
+        return self._analyze_intent_context(combined_text)
+    
+    def _analyze_intent_context(self, text: str) -> str:
+        """Analyze the intent and context to determine evolution type"""
+        # Look for action verbs and their context
+        action_contexts = {
+            "enhancement": ["make better", "improve quality", "enhance usability", "more robust", "more reliable"],
+            "fix": ["not working", "broken", "fails", "error occurs", "crashes", "stops working"],
+            "refactor": ["clean code", "technical debt", "maintainable", "readable", "modular"],
+            "performance": ["slow", "too long", "bottleneck", "lag", "timeout", "resource usage"],
+            "testing": ["test coverage", "untested", "verify", "validate", "ensure quality"],
+            "documentation": ["unclear", "confusing", "hard to understand", "no documentation", "missing docs"]
+        }
+        
+        for evo_type, contexts in action_contexts.items():
+            if any(context in text for context in contexts):
                 return evo_type
-
-        return "feature"  # default
+        
+        # Final fallback - analyze sentence structure
+        if any(word in text for word in ["should", "could", "might", "consider", "suggest"]):
+            return "enhancement"
+        
+        return "feature"
 
     def _extract_feature(self, claude: str, gemini: str) -> str:
         """Extract main feature from suggestions using advanced pattern matching"""
