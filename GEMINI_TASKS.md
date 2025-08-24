@@ -4,12 +4,12 @@
 
 **Gemini, you have NEW HIGH PRIORITY implementation tasks!**
 
-## 🔥 Latest Task: Issue #215
+## 🔥 Latest Task: Issue #228
 
 ### 📌 Implement: What is the ONE most important improvement to make to this debate system next? Consider: code qualit...
 - **Status:** URGENT - NEEDS IMMEDIATE IMPLEMENTATION
-- **File:** `.gemini-tasks/URGENT_TASK_215.md`
-- **GitHub Issue:** https://github.com/lsendel/zamaz-debate/issues/215
+- **File:** `.gemini-tasks/URGENT_TASK_228.md`
+- **GitHub Issue:** https://github.com/lsendel/zamaz-debate/issues/228
 
 ## Instructions
 
@@ -21,3 +21,4 @@
 ## All Pending Tasks
 
 - URGENT_TASK_215.md
+- URGENT_TASK_228.md
